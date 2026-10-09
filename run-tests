@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# Takes one, optional argument, the executable to use.  If not set, will use
+# ./ammerow in the current build directory.
+
+if test $# -gt 0 ; then
+	if test $# -eq 1 ; then
+		angexe="$1"
+	else
+		echo "run-tests: too many arguments" 2>&1
+		echo "usage: run-tests [executable]" 2>&1
+		exit 1
+	fi
+else
+	angexe=./ammerow
+fi
+
+if [ ! -d tests ]; then
+    echo "run-tests: error: tests/ directory not found" 2>&1
+    exit 1
+fi
+
+RAN=0
+OK=0
+
+for x in `find tests -mindepth 2 -maxdepth 2 -type d -print`; do
+	# Python tests and headless scenarios are not stdin/stdout fixtures.
+	[ -f "$x/input" ] || continue
+	tests/run-test -x "$angexe" "$x"
+	if [ $? -eq 0 ]; then
+		OK=$(expr $OK + 1)
+	fi
+	RAN=$(expr $RAN + 1)
+done
+
+FAIL=$(expr $RAN - $OK)
+
+echo "Total: $OK/$RAN"
+exit $FAIL

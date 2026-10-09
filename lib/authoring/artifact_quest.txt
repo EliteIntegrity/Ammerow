@@ -1,0 +1,41 @@
+# Stable Ammerow quest artefacts.
+# This source-only file is consumed by utils/generate-artifact-slots.py; the
+# runtime artifact parser reads the generated lib/gamedata/artifact.txt.
+
+origin:ammerow-original
+review:release
+
+name:'Last Measure'
+base-object:hafted:Sounding Weight
+level:100
+weight:600
+cost:420000
+alloc:0:100 to 100
+attack:8d12:20:40
+armor:0:0
+flags:IMPACT | SEE_INVIS | PROT_STUN
+values:TUNNEL[6] | RES_SOUND[1]
+act:EARTHQUAKES
+time:35+d15
+desc:An immense handled sounding weight assembled around a black Meridian core.
+desc: Its sliding core returns a delayed impact through the handle.  Bracing the
+desc: weight against the ground releases a deep survey shock; otherwise the core
+desc: takes the jarring force from its bearer.  There are no names on its striking
+desc: face.  Last Measure was built to test foundations, not to judge their makers.
+
+name:'Confluence Skin'
+base-object:cloak:World-Knot Mantle
+level:100
+weight:400
+cost:10000000
+alloc:0:100 to 100
+attack:1d1:0:0
+armor:0:0
+flags:PROT_CONF | SEE_INVIS | TELEPATHY | PROT_FEAR | STICKY
+values:STR[50] | INT[50] | WIS[50] | DEX[50] | CON[50] | INFRA[50]
+values:LIGHT[1]
+values:RES_ACID[1] | RES_ELEC[1] | RES_FIRE[1] | RES_COLD[1] | RES_POIS[1]
+values:RES_LIGHT[1] | RES_DARK[1] | RES_NEXUS[1] | RES_NETHER[1]
+desc:A folded mantle condensed around the World-Knot.  Its surface is dense enough
+desc: to distort its own edge; cold channels close around a wearer and will not
+desc: willingly release what the confluence has accepted.

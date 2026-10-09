@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "file_list": "packaging/public-source-files.txt",
+  "forbidden_extensions": [
+    ".exe",
+    ".dll",
+    ".pdb",
+    ".pyc",
+    ".bmp",
+    ".gif",
+    ".tga",
+    ".svg",
+    ".wav",
+    ".mp3",
+    ".ogg",
+    ".flac",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+    ".ico",
+    ".icns",
+    ".smdh",
+    ".nib",
+    ".art",
+    ".docx"
+  ],
+  "forbidden_prose_patterns": [
+    "docs/records/",
+    "packaging/gpl-source-excludes",
+    "packaging/source-ownership-policy",
+    "_NetHook",
+    "_Vertical Extremes",
+    "[A-Za-z]:[/\\\\]Users[/\\\\]",
+    "build-headless-audit",
+    "private (?:branch|commit)"
+  ],
+  "generated_checks": [
+    [
+      "utils/generate-artifact-slots.py",
+      "--check"
+    ],
+    [
+      "utils/generate-unique-monsters.py",
+      "--check"
+    ],
+    [
+      "utils/generate-original-monsters.py",
+      "--check"
+    ],
+    [
+      "utils/generate-sdl3-sound-map.py",
+      "--check"
+    ],
+    [
+      "utils/generate-ammerow-vaults.py",
+      "--check-vault",
+      "lib/gamedata/vault.txt"
+    ]
+  ]
+}

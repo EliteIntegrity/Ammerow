@@ -1,0 +1,227 @@
+# sound-sdl3.prf
+#
+# GENERATED FILE. Do not edit by hand.
+# Source: docs/audio-cue-manifest.csv
+# Generator: utils/generate-sdl3-sound-map.py
+#
+# Authored ammerow/... identities prefer an exact PCM WAV beneath
+# lib/sounds. Missing effects use deterministic synthesis; missing music
+# is silent. Variant rotation is presentation-only; it does not consume
+# the gameplay random stream.
+# Multi-step timings are authored in that manifest and run without blocking
+# input, rendering, or the turn scheduler.
+#
+# 162 current cue families; 168 message events;
+# 405 current runtime WAV identities are expected;
+# 405 accepted current WAV identities are mapped;
+# 0 families have no accepted WAV and use only their stable synth identity;
+# 16 reserved WAV identities are intentionally not mapped.
+
+# UI.
+sound:UI_NAVIGATE:ammerow/ui/navigate_01 ammerow/ui/navigate_02 ammerow/ui/navigate_03
+sound:UI_ACCEPT:ammerow/ui/accept_01 ammerow/ui/accept_02
+sound:UI_CHANGE:ammerow/ui/change_01 ammerow/ui/change_02
+sound:BELL:ammerow/ui/error_01 ammerow/ui/error_02
+sound:NOTHING_TO_OPEN:ammerow/ui/error_01 ammerow/ui/error_02
+sound:NOTICE:ammerow/ui/notice_01 ammerow/ui/notice_02
+
+# Movement.
+sound:WALK:ammerow/movement/step_01 ammerow/movement/step_02 ammerow/movement/step_03 ammerow/movement/step_04 ammerow/movement/step_05 ammerow/movement/step_06
+sound:HITWALL:ammerow/movement/blocked_01 ammerow/movement/blocked_02 ammerow/movement/blocked_03
+sound:SPELUNK_CLIMB:ammerow/movement/climb_01 ammerow/movement/climb_02 ammerow/movement/climb_03 ammerow/movement/climb_04
+
+# Interaction.
+sound:OPENDOOR:ammerow/interaction/door_open_01 ammerow/interaction/door_open_02 ammerow/interaction/door_open_03
+sound:SHUTDOOR:ammerow/interaction/door_close_01 ammerow/interaction/door_close_02 ammerow/interaction/door_close_03
+sound:LOCKPICK_FAIL:ammerow/interaction/locked_01 ammerow/interaction/locked_02
+sound:LOCKPICK:ammerow/interaction/unlock_01 ammerow/interaction/unlock_02
+sound:STAIRS_UP:ammerow/interaction/stairs_up_01 ammerow/interaction/stairs_up_02
+sound:STAIRS_DOWN:ammerow/interaction/stairs_down_01 ammerow/interaction/stairs_down_02
+sound:DIG:ammerow/interaction/dig_01 ammerow/interaction/dig_02 ammerow/interaction/dig_03 ammerow/interaction/dig_04
+sound:DISARM:ammerow/interaction/disarm_01 ammerow/interaction/disarm_02
+sound:CREATE_TRAP:ammerow/interaction/create_trap_01 ammerow/interaction/create_trap_02 ammerow/interaction/create_trap_03
+
+# Spelunking.
+sound:PITON_HAMMER:ammerow/spelunk/piton_hammer_01 ammerow/spelunk/piton_hammer_02 ammerow/spelunk/piton_hammer_03 ammerow/spelunk/piton_hammer_04
+sound-sequence:PITON_HAMMER:0 165 330
+sound:ROPE_DEPLOY:ammerow/spelunk/rope_deploy_01 ammerow/spelunk/rope_deploy_02 ammerow/spelunk/rope_deploy_03 ammerow/spelunk/rope_deploy_04
+
+# Fishing.
+sound:FISHING_CAST:ammerow/fishing/cast_01 ammerow/fishing/cast_02 ammerow/fishing/cast_03 ammerow/fishing/cast_04
+sound:FISHING_BITE:ammerow/fishing/bite_01 ammerow/fishing/bite_02 ammerow/fishing/bite_03
+sound:FISHING_REEL:ammerow/fishing/reel_01 ammerow/fishing/reel_02 ammerow/fishing/reel_03 ammerow/fishing/reel_04
+sound:FISHING_MOVE:ammerow/fishing/line_move_01 ammerow/fishing/line_move_02 ammerow/fishing/line_move_03 ammerow/fishing/line_move_04
+sound:FISHING_CATCH:ammerow/fishing/catch_01 ammerow/fishing/catch_02 ammerow/fishing/catch_03
+sound:FISHING_ESCAPE:ammerow/fishing/escape_01 ammerow/fishing/escape_02 ammerow/fishing/escape_03
+
+# World.
+sound:STORE_ENTER:ammerow/world/store_enter_01 ammerow/world/store_enter_02
+sound:STORE_LEAVE:ammerow/world/store_leave_01 ammerow/world/store_leave_02
+sound:STORE_HOME:ammerow/world/home_enter_01 ammerow/world/home_enter_02
+
+# Inventory.
+sound:PICKUP:ammerow/inventory/pickup_01 ammerow/inventory/pickup_02 ammerow/inventory/pickup_03 ammerow/inventory/pickup_04
+sound:DROP:ammerow/inventory/drop_01 ammerow/inventory/drop_02 ammerow/inventory/drop_03 ammerow/inventory/drop_04
+sound:WIELD:ammerow/inventory/wield_01 ammerow/inventory/wield_02 ammerow/inventory/wield_03
+sound:QUIVER:ammerow/inventory/quiver_01 ammerow/inventory/quiver_02
+sound:DESTROY:ammerow/inventory/destroy_01 ammerow/inventory/destroy_02 ammerow/inventory/destroy_03
+
+# Commerce.
+sound:MONEY1:ammerow/commerce/coin_small_01 ammerow/commerce/coin_small_02 ammerow/commerce/coin_small_03
+sound:MONEY2:ammerow/commerce/coin_medium_01 ammerow/commerce/coin_medium_02 ammerow/commerce/coin_medium_03
+sound:MONEY3:ammerow/commerce/coin_large_01 ammerow/commerce/coin_large_02 ammerow/commerce/coin_large_03
+sound:STORE1:ammerow/commerce/store_reject_01 ammerow/commerce/store_reject_02
+sound:STORE2:ammerow/commerce/store_poor_01 ammerow/commerce/store_poor_02
+sound:STORE3:ammerow/commerce/store_fair_01 ammerow/commerce/store_fair_02
+sound:STORE4:ammerow/commerce/store_good_01 ammerow/commerce/store_good_02
+sound:STORE5:ammerow/commerce/store_sale_01 ammerow/commerce/store_sale_02 ammerow/commerce/store_sale_03
+
+# Larder.
+sound:LARDER_DONATE:ammerow/larder/donate_01 ammerow/larder/donate_02 ammerow/larder/donate_03
+sound:LARDER_MILESTONE:ammerow/larder/milestone_01
+sound:OBJECTIVE_COMPLETE:ammerow/larder/milestone_01
+
+# Progress.
+sound:LEVEL:ammerow/progress/level_01
+sound:STUDY:ammerow/progress/study_01 ammerow/progress/study_02
+sound:IDENT_BAD:ammerow/progress/identify_bad_01
+sound:IDENT_EGO:ammerow/progress/identify_ego_01
+sound:IDENT_ART:ammerow/progress/identify_artifact_01
+
+# Combat.
+sound:MISS:ammerow/combat/swing_miss_01 ammerow/combat/swing_miss_02 ammerow/combat/swing_miss_03 ammerow/combat/swing_miss_04
+sound:HIT:ammerow/combat/hit_light_01 ammerow/combat/hit_light_02 ammerow/combat/hit_light_03 ammerow/combat/hit_light_04 ammerow/combat/hit_light_05
+sound:HIT_GOOD:ammerow/combat/hit_good_01 ammerow/combat/hit_good_02 ammerow/combat/hit_good_03 ammerow/combat/hit_good_04
+sound:HIT_GREAT:ammerow/combat/hit_heavy_01 ammerow/combat/hit_heavy_02 ammerow/combat/hit_heavy_03 ammerow/combat/hit_heavy_04
+sound:HIT_SUPERB:ammerow/combat/hit_superb_01 ammerow/combat/hit_superb_02 ammerow/combat/hit_superb_03
+sound:HIT_HI_GREAT:ammerow/combat/hit_exceptional_01 ammerow/combat/hit_exceptional_02 ammerow/combat/hit_exceptional_03
+sound:HIT_HI_SUPERB:ammerow/combat/hit_exceptional_01 ammerow/combat/hit_exceptional_02 ammerow/combat/hit_exceptional_03
+sound:SHOOT:ammerow/combat/shoot_01 ammerow/combat/shoot_02 ammerow/combat/shoot_03 ammerow/combat/shoot_04
+sound:SHOOT_HIT:ammerow/combat/shoot_hit_01 ammerow/combat/shoot_hit_02 ammerow/combat/shoot_hit_03 ammerow/combat/shoot_hit_04
+sound:KILL:ammerow/combat/kill_01 ammerow/combat/kill_02 ammerow/combat/kill_03
+sound:KILL_UNIQUE:ammerow/combat/kill_unique_01
+sound:KILL_KING:ammerow/combat/kill_final_01
+
+# Player.
+sound:DEATH:ammerow/player/death_01 ammerow/player/death_02
+sound:FLEE:ammerow/player/flee_01 ammerow/player/flee_02
+sound:HITPOINT_WARN:ammerow/player/low_health_01
+
+# Ability.
+sound:TELEPORT:ammerow/ability/teleport_01 ammerow/ability/teleport_02 ammerow/ability/teleport_03
+sound:TPOTHER:ammerow/ability/teleport_other_01 ammerow/ability/teleport_other_02
+sound:TPLEVEL:ammerow/ability/teleport_level_01 ammerow/ability/teleport_level_02
+sound:SPELL:ammerow/ability/spell_01 ammerow/ability/spell_02 ammerow/ability/spell_03 ammerow/ability/spell_04
+sound:PRAYER:ammerow/ability/prayer_01 ammerow/ability/prayer_02
+sound:ACT_ARTIFACT:ammerow/ability/artifact_01 ammerow/ability/artifact_02 ammerow/ability/artifact_03
+sound:USE_STAFF:ammerow/ability/staff_01 ammerow/ability/staff_02 ammerow/ability/staff_03
+sound:ZAP_ROD:ammerow/ability/rod_01 ammerow/ability/rod_02 ammerow/ability/rod_03
+sound:RUNE:ammerow/ability/rune_01 ammerow/ability/rune_02 ammerow/ability/rune_03
+
+# Consumable.
+sound:QUAFF:ammerow/consumable/quaff_01 ammerow/consumable/quaff_02 ammerow/consumable/quaff_03
+sound:EAT:ammerow/consumable/eat_01 ammerow/consumable/eat_02 ammerow/consumable/eat_03 ammerow/consumable/eat_04
+
+# Status.
+sound:RECOVER:ammerow/status/recover_01 ammerow/status/recover_02 ammerow/status/recover_03
+sound:BLIND:ammerow/status/blind_01 ammerow/status/blind_02
+sound:CONFUSED:ammerow/status/confused_01 ammerow/status/confused_02
+sound:POISONED:ammerow/status/poisoned_01 ammerow/status/poisoned_02
+sound:AFRAID:ammerow/status/afraid_01 ammerow/status/afraid_02
+sound:PARALYZED:ammerow/status/paralyzed_01 ammerow/status/paralyzed_02
+sound:DRUGGED:ammerow/status/drugged_01 ammerow/status/drugged_02
+sound:SPEED:ammerow/status/speed_01 ammerow/status/speed_02
+sound:SLOW:ammerow/status/slow_01 ammerow/status/slow_02
+sound:SHIELD:ammerow/status/shield_01 ammerow/status/shield_02
+sound:BLESSED:ammerow/status/blessed_01 ammerow/status/blessed_02
+sound:HERO:ammerow/status/hero_01 ammerow/status/hero_02
+sound:BOLD:ammerow/status/bold_01 ammerow/status/bold_02
+sound:BERSERK:ammerow/status/berserk_01 ammerow/status/berserk_02
+sound:PROT_EVIL:ammerow/status/protection_01 ammerow/status/protection_02
+sound:INVULN:ammerow/status/invulnerable_01 ammerow/status/invulnerable_02
+sound:SEE_INVIS:ammerow/status/see_invisible_01 ammerow/status/see_invisible_02
+sound:INFRARED:ammerow/status/infravision_01 ammerow/status/infravision_02
+sound:RES_ACID:ammerow/status/resist_acid_01 ammerow/status/resist_acid_02
+sound:RES_ELEC:ammerow/status/resist_electric_01 ammerow/status/resist_electric_02
+sound:RES_FIRE:ammerow/status/resist_fire_01 ammerow/status/resist_fire_02
+sound:RES_COLD:ammerow/status/resist_cold_01 ammerow/status/resist_cold_02
+sound:RES_POIS:ammerow/status/resist_poison_01 ammerow/status/resist_poison_02
+sound:STUN:ammerow/status/stun_01 ammerow/status/stun_02 ammerow/status/stun_03
+sound:CUT:ammerow/status/cut_01 ammerow/status/cut_02 ammerow/status/cut_03
+sound:CURSED:ammerow/status/cursed_01 ammerow/status/cursed_02
+sound:HUNGRY:ammerow/status/hungry_01 ammerow/status/hungry_02
+sound:DRAIN_STAT:ammerow/status/drain_01 ammerow/status/drain_02
+sound:SCRAMBLE:ammerow/status/scramble_01 ammerow/status/scramble_02
+
+# Monster.
+sound:MON_HIT:ammerow/monster/hit_01 ammerow/monster/hit_02 ammerow/monster/hit_03 ammerow/monster/hit_04
+sound:MON_TOUCH:ammerow/monster/touch_01 ammerow/monster/touch_02 ammerow/monster/touch_03
+sound:MON_PUNCH:ammerow/monster/punch_01 ammerow/monster/punch_02 ammerow/monster/punch_03
+sound:MON_KICK:ammerow/monster/kick_01 ammerow/monster/kick_02 ammerow/monster/kick_03
+sound:MON_CLAW:ammerow/monster/claw_01 ammerow/monster/claw_02 ammerow/monster/claw_03
+sound:MON_BITE:ammerow/monster/bite_01 ammerow/monster/bite_02 ammerow/monster/bite_03
+sound:MON_STING:ammerow/monster/sting_01 ammerow/monster/sting_02 ammerow/monster/sting_03
+sound:MON_BUTT:ammerow/monster/butt_01 ammerow/monster/butt_02 ammerow/monster/butt_03
+sound:MON_CRUSH:ammerow/monster/crush_01 ammerow/monster/crush_02 ammerow/monster/crush_03
+sound:MON_ENGULF:ammerow/monster/engulf_01 ammerow/monster/engulf_02 ammerow/monster/engulf_03
+sound:MON_CRAWL:ammerow/monster/crawl_01 ammerow/monster/crawl_02 ammerow/monster/crawl_03
+sound:MON_DROOL:ammerow/monster/drool_01 ammerow/monster/drool_02
+sound:MON_SPIT:ammerow/monster/spit_01 ammerow/monster/spit_02 ammerow/monster/spit_03
+sound:MON_GAZE:ammerow/monster/gaze_01 ammerow/monster/gaze_02
+sound:MON_WAIL:ammerow/monster/wail_01 ammerow/monster/wail_02 ammerow/monster/wail_03
+sound:MON_SPORE:ammerow/monster/spore_01 ammerow/monster/spore_02 ammerow/monster/spore_03
+sound:MON_BEG:ammerow/monster/beg_01 ammerow/monster/beg_02
+sound:MON_INSULT:ammerow/monster/insult_01 ammerow/monster/insult_02 ammerow/monster/insult_03
+sound:MON_MOAN:ammerow/monster/moan_01 ammerow/monster/moan_02 ammerow/monster/moan_03
+sound:SHRIEK:ammerow/monster/shriek_01 ammerow/monster/shriek_02 ammerow/monster/shriek_03
+sound:CAST_FEAR:ammerow/monster/fear_cast_01 ammerow/monster/fear_cast_02
+sound:MULTIPLY:ammerow/monster/multiply_01 ammerow/monster/multiply_02 ammerow/monster/multiply_03
+
+# Breath.
+sound:BR_FIRE:ammerow/breath/fire_01 ammerow/breath/fire_02 ammerow/breath/fire_03
+sound:BR_ELEMENTS:ammerow/breath/elements_01 ammerow/breath/elements_02
+sound:BR_FROST:ammerow/breath/frost_01 ammerow/breath/frost_02
+sound:BR_ELEC:ammerow/breath/electric_01 ammerow/breath/electric_02
+sound:BR_ACID:ammerow/breath/acid_01 ammerow/breath/acid_02
+sound:BR_GAS:ammerow/breath/gas_01 ammerow/breath/gas_02
+sound:BR_DISEN:ammerow/breath/disenchant_01 ammerow/breath/disenchant_02
+sound:BR_CHAOS:ammerow/breath/chaos_01 ammerow/breath/chaos_02
+sound:BR_SHARDS:ammerow/breath/shards_01 ammerow/breath/shards_02
+sound:BR_SOUND:ammerow/breath/sound_01 ammerow/breath/sound_02
+sound:BR_LIGHT:ammerow/breath/light_01 ammerow/breath/light_02
+sound:BR_DARK:ammerow/breath/dark_01 ammerow/breath/dark_02
+sound:BR_NETHER:ammerow/breath/nether_01 ammerow/breath/nether_02
+sound:BR_NEXUS:ammerow/breath/nexus_01 ammerow/breath/nexus_02
+sound:BR_TIME:ammerow/breath/time_01 ammerow/breath/time_02
+sound:BR_INERTIA:ammerow/breath/inertia_01 ammerow/breath/inertia_02
+sound:BR_GRAVITY:ammerow/breath/gravity_01 ammerow/breath/gravity_02
+sound:BR_PLASMA:ammerow/breath/plasma_01 ammerow/breath/plasma_02
+sound:BR_FORCE:ammerow/breath/force_01 ammerow/breath/force_02
+
+# Summon.
+sound:SUM_MONSTER:ammerow/summon/generic_01 ammerow/summon/generic_02 ammerow/summon/generic_03
+sound:SUM_WORLD_ECHO:ammerow/summon/world_echo_01 ammerow/summon/world_echo_02
+sound:SUM_UNDEAD:ammerow/summon/undead_01 ammerow/summon/undead_02 ammerow/summon/undead_03
+sound:SUM_HI_UNDEAD:ammerow/summon/undead_01 ammerow/summon/undead_02 ammerow/summon/undead_03
+sound:SUM_ANIMAL:ammerow/summon/animal_01 ammerow/summon/animal_02
+sound:SUM_SPIDER:ammerow/summon/spider_01 ammerow/summon/spider_02
+sound:SUM_HOUND:ammerow/summon/hound_01 ammerow/summon/hound_02
+sound:SUM_HYDRA:ammerow/summon/hydra_01 ammerow/summon/hydra_02
+sound:SUM_DEMON:ammerow/summon/demon_01 ammerow/summon/demon_02 ammerow/summon/demon_03
+sound:SUM_HI_DEMON:ammerow/summon/demon_01 ammerow/summon/demon_02 ammerow/summon/demon_03
+sound:SUM_DRAGON:ammerow/summon/dragon_01 ammerow/summon/dragon_02 ammerow/summon/dragon_03
+sound:SUM_HI_DRAGON:ammerow/summon/dragon_01 ammerow/summon/dragon_02 ammerow/summon/dragon_03
+sound:SUM_WRAITH:ammerow/summon/wraith_01 ammerow/summon/wraith_02
+sound:SUM_UNIQUE:ammerow/summon/unique_01 ammerow/summon/unique_02
+
+# Music.
+sound:MUSIC_HOME:ammerow/music/home_theme_01
+
+# Ambient.
+sound:AMBIENT_DAY:ammerow/ambient/surface_day_01 ammerow/ambient/surface_day_02
+sound:AMBIENT_NITE:ammerow/ambient/surface_night_01 ammerow/ambient/surface_night_02
+sound:AMBIENT_DNG1:ammerow/ambient/meridian_shallow_01 ammerow/ambient/meridian_shallow_02
+sound:AMBIENT_DNG2:ammerow/ambient/meridian_upper_01 ammerow/ambient/meridian_upper_02
+sound:AMBIENT_DNG3:ammerow/ambient/meridian_middle_01 ammerow/ambient/meridian_middle_02
+sound:AMBIENT_DNG4:ammerow/ambient/meridian_lower_01 ammerow/ambient/meridian_lower_02
+sound:AMBIENT_DNG5:ammerow/ambient/meridian_deep_01 ammerow/ambient/meridian_deep_02

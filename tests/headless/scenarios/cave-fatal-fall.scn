@@ -1,0 +1,17 @@
+# A separate fatal branch for cave lifecycle acceptance.  The semantic bot
+# reconstructs the generated entrance rail, walks to its first shaft lip, and
+# steps off through ordinary commands.  No seed-specific coordinate is known.
+name:cave-fatal-fall
+seed:260901
+race:Nearlander
+class:Warrior
+player:Fall Tester
+location:core.cave.east.001
+entry:shaft.spelunk
+enter-route:core.route.spelunk.east.in
+bot:cave-fatal-fall
+steps:100
+capture:final
+expect:dead
+screen-width:1280
+screen-height:720

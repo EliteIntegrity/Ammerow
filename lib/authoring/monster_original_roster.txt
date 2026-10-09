@@ -1,0 +1,533 @@
+# Original Ammerow ordinary-monster identities.
+# Mechanics are assigned independently by broad band at generation time.
+
+origin:ammerow-original
+review:release
+
+name:bootlace crab
+art:bootlace-crab
+band:1-9
+family:beast
+premise:A hand-sized cave crab steals loose laces and knots them into a portable nest beneath its shell.
+
+name:rainpipe mites
+art:rainpipe-mites
+band:1-9
+family:colony
+premise:Blue-grey mites pour from broken drains in a single thread and scatter when the stone dries.
+
+name:tallow newt
+art:tallow-newt
+band:10-19
+family:beast
+premise:A waxy cave newt follows warm lamps and stores melted tallow in translucent throat sacs.
+
+name:chalk tick
+art:chalk-tick
+band:10-19
+family:stone
+premise:A flat white parasite locks onto exposed rock and leaps when a passing body changes the strain.
+
+name:sump skater
+art:sump-skater
+band:10-19
+family:beast
+premise:Six splayed feet let this blind scavenger sprint across water too shallow to hide it.
+
+name:loose-screw swarm
+art:loose-screw-swarm
+band:10-19
+family:colony
+premise:A clicking carpet of abandoned fasteners dismantles small machines and carries the useful pieces inside itself.
+
+name:backward survey wheel
+art:backward-survey-wheel
+band:10-19
+family:machine
+premise:A brass measuring wheel records every yard correctly while rolling toward the place it began.
+
+name:pocket fog
+art:pocket-fog
+band:10-19
+family:current
+premise:A cold bank of vapour squeezes through clothing seams and condenses around carried food.
+
+name:hookjaw packling
+art:hookjaw-packling
+band:10-19
+family:beast
+premise:A pale nook predator uses its hooked lower jaw to drag provisions from packs without opening them.
+
+name:bellglass brood
+art:bellglass-brood
+band:10-19
+family:colony
+premise:Clear burrow insects share a resonant shell and strike it whenever the surrounding rock moves.
+
+name:mislaid toll frame
+art:mislaid-toll-frame
+band:10-19
+family:machine
+premise:A walking gate mechanism blocks whichever passage it enters and reacts violently to unpaid crossings.
+
+name:silt-leg castaway
+art:silt-leg-castaway
+band:10-19
+family:survivor
+premise:A stranded marsh-dweller walks on articulated columns of dried silt that rebuild themselves from damp ground.
+
+name:borrowed footfall
+art:borrowed-footfall
+band:10-19
+family:echo
+premise:A pressure imprint copies the gait of its last visitor and pursues the owner of a fresher set of steps.
+
+name:rust cropper
+art:rust-cropper
+band:10-19
+family:stone
+premise:A low mineral grazer rasps rust from buried machinery and leaves clean metal scored with feeding arcs.
+
+name:floodmark fraud
+art:floodmark-fraud
+band:10-19
+family:road
+premise:A roadside extortionist paints false high-water marks and sells frightened travellers directions to higher ground.
+
+name:drainback
+art:drainback
+band:10-19
+family:current
+premise:A crawling plug of runoff, grit and weed moves uphill through culverts while swallowing anything behind it.
+
+name:resin nursery
+art:resin-nursery
+band:10-19
+family:colony
+premise:A fungal mat seals live insects in warm resin and follows the last movements preserved inside each hardened lump.
+
+name:red warning gauge
+art:red-warning-gauge
+band:10-19
+family:machine
+premise:A pressure gauge torn from its boiler hunts for danger severe enough to justify its permanent alarm.
+
+name:brineback eel
+art:brineback-eel
+band:20-29
+family:beast
+premise:A land-crawling sump eel grows sharp salt plates wherever its skin dries between pools.
+
+name:walking plumbline
+art:walking-plumbline
+band:20-29
+family:machine
+premise:A survey weight on jointed legs insists that every surface should hang directly beneath it.
+
+name:quarry objection
+art:quarry-objection
+band:20-29
+family:echo
+premise:Each hammer blow wakes a delayed pressure reply that has learned to strike the mason instead of the wall.
+
+name:rope shearer
+art:rope-shearer
+band:20-29
+family:road
+premise:A cave brigand carries spring shears made from bent pitons and regards every fixed rope as abandoned property.
+
+name:bubble locksmith
+art:bubble-locksmith
+band:20-29
+family:survivor
+premise:A castaway from a drowned street opens cracks in stone with keys made from trapped bubbles.
+
+name:slate ballot
+art:slate-ballot
+band:20-29
+family:colony
+premise:Thousands of sharp fragments choose a direction by falling, then pursue the warmest voter they find there.
+
+name:cavewater strainer
+art:cavewater-strainer
+band:20-29
+family:beast
+premise:A translucent filter-feeder packs dissolved metal into its belly until the body rings when struck.
+
+name:three-step stair
+art:three-step-stair
+band:20-29
+family:machine
+premise:Three mobile stone treads chase travellers in the hope that someone will finally build the remaining staircase.
+
+name:ashboot exile
+art:ashboot-exile
+band:20-29
+family:survivor
+premise:A traveller from a buried ashfall walks inside personal weather that leaves footprints on ceilings as readily as floors.
+
+name:listening stalactite
+art:listening-stalactite
+band:20-29
+family:stone
+premise:A hanging mineral organ lowers itself toward repeated sounds and grows a fresh ring for every voice collected.
+
+name:paper district guide
+art:paper-district-guide
+band:20-29
+family:survivor
+premise:A lost cartographer unfolds a street map whose buried district rearranges whenever the paper creases.
+
+name:absent bellstroke
+art:absent-bellstroke
+band:20-29
+family:echo
+premise:A bronze note drags an invisible swinging mass that dents rock where its missing bell should pass.
+
+name:needle-ridge swimmer
+art:needle-ridge-swimmer
+band:20-29
+family:beast
+premise:A muscular pool hunter grows rows of metal needles from whatever ore dissolves into its water.
+
+name:wall menagerie
+art:wall-menagerie
+band:30-39
+family:colony
+premise:Flat stone animals peel from a shared surface and recombine into whichever outline can surround prey.
+
+name:loose-level keeper
+art:loose-level-keeper
+band:30-39
+family:survivor
+premise:A stranded engineer releases bubbles from shattered spirit levels to decide which direction is presently up.
+
+name:limestone squall
+art:limestone-squall
+band:30-39
+family:current
+premise:A travelling climate of chalk dust, hard rain and sudden calcification moves through otherwise still passages.
+
+name:lantern leech
+art:lantern-leech
+band:30-39
+family:beast
+premise:A bladdered cave animal drinks illumination and stores the stolen colours in bands beneath its skin.
+
+name:unsafe recollection
+art:unsafe-recollection
+band:30-39
+family:echo
+premise:A discarded route memory insists that firm ground lies one pace beyond every actual ledge.
+
+name:climbing basin
+art:climbing-basin
+band:30-39
+family:current
+premise:A bowl of dark water carries its stone rim uphill in search of the rain that once filled it.
+
+name:iron cropper
+art:iron-cropper
+band:30-39
+family:stone
+premise:A heavy mineral feeder cuts buried iron into thin curls with a rotating mouth.
+
+name:anchor moth
+art:anchor-moth
+band:30-39
+family:beast
+premise:A broad cave moth hangs from driven pitons and drops whenever it feels weight settle on the rope.
+
+name:wrong-way winch
+art:wrong-way-winch
+band:30-39
+family:machine
+premise:A compact hauling rig pays out cable when loaded and reels itself toward anyone trying to release it.
+
+name:borrowed shadow
+art:borrowed-shadow
+band:30-39
+family:echo
+premise:A detached patch of darkness fits itself beneath moving bodies until it can pull one flat against the floor.
+
+name:brackish bellows
+art:brackish-bellows
+band:30-39
+family:current
+premise:A pair of waterlogged air sacs inflates across a corridor and sprays old seawater through cracks in its skin.
+
+name:hinge collector
+art:hinge-collector
+band:30-39
+family:road
+premise:A plated scavenger prizes hinges above treasure and tests each new specimen by closing it on the donor.
+
+name:seamfruit cluster
+art:seamfruit-cluster
+band:30-39
+family:colony
+premise:Mineral pods swell along a fault and burst into coordinated crawling seeds when exposed to breath.
+
+name:upfall scavenger
+art:upfall-scavenger
+band:30-39
+family:survivor
+premise:A slight figure wears hooks on every limb because loose objects in its buried home fall toward the roof.
+
+name:wire-root thicket
+art:wire-root-thicket
+band:30-39
+family:colony
+premise:A copper-veined plant spreads through masonry and snaps its roots toward passing metal.
+
+name:pressure mimic
+art:pressure-mimic
+band:30-39
+family:echo
+premise:A moving dent in the air copies the outline of nearby creatures but never the empty space inside them.
+
+name:marlback
+art:marlback
+band:30-39
+family:beast
+premise:A squat burrower packs wet cave clay onto its hide until the shell is thicker than its body.
+
+name:unattended core drill
+art:unattended-core-drill
+band:30-39
+family:machine
+premise:A survey drill continues sampling in widening circles and catalogues armour as an unusually mobile stratum.
+
+name:spillway jaw
+art:spillway-jaw
+band:30-39
+family:stone
+premise:A toothed slab opens only when water crosses it and closes hard enough to redirect the stream.
+
+name:lost weather parcel
+art:lost-weather-parcel
+band:30-39
+family:survivor
+premise:A sealed oilskin bundle crawls on folded corners while a small thunderstorm struggles inside.
+
+name:thimble burrower
+art:thimble-burrower
+band:40-49
+family:beast
+premise:A compact tunneller unfolds to impossible length when threatened and retreats into a thumb-wide hole.
+
+name:walking fault plate
+art:walking-fault-plate
+band:40-49
+family:machine
+premise:A layered survey plate flexes along every recorded fracture and forces nearby cracks to match the drawing.
+
+name:foreign anchor chain
+art:foreign-anchor-chain
+band:40-49
+family:survivor
+premise:A castaway drags a chain whose unseen far end still falls toward another world's gravity.
+
+name:salt orchard
+art:salt-orchard
+band:40-49
+family:colony
+premise:White mineral branches grow brine bladders that burst whenever a shadow crosses them.
+
+name:pressure bell
+art:pressure-bell
+band:40-49
+family:current
+premise:A bell-shaped front of compressed air rings only after it has passed through bone.
+
+name:door hide
+art:door-hide
+band:40-49
+family:road
+premise:A road scavenger wears doors from vanished rooms as overlapping armour and opens them when cornered.
+
+name:glass lung
+art:glass-lung
+band:40-49
+family:machine
+premise:A transparent breathing engine filters cave air and exhales everything it decides does not belong.
+
+name:obsolete fathom
+art:obsolete-fathom
+band:40-49
+family:echo
+premise:An abandoned unit of length makes adjacent distances disagree whenever anyone tries to measure it.
+
+name:scaffold animal
+art:scaffold-animal
+band:40-49
+family:stone
+premise:A jointed mineral organism grows temporary limbs from timber, rope and anything else supporting weight.
+
+name:drywater shoal
+art:drywater-shoal
+band:40-49
+family:colony
+premise:A school of translucent shapes swims through damp air and strips moisture from whatever it surrounds.
+
+name:route defector
+art:route-defector
+band:40-49
+family:survivor
+premise:A former expedition guide steps onto paths visible only from the wrong side and brings pieces back behind it.
+
+name:reservoir teeth
+art:reservoir-teeth
+band:50-59
+family:current
+premise:A moving crescent of submerged stone closes whenever the water above becomes still.
+
+name:violet load-bearer
+art:violet-load-bearer
+band:50-59
+family:stone
+premise:A purple mineral frame carries a mountain's missing weight and transfers it through each deliberate step.
+
+name:under-rain
+art:under-rain
+band:50-59
+family:current
+premise:A storm falling upward from the floor fills lungs before it wets clothing.
+
+name:chalk broodmother
+art:chalk-broodmother
+band:50-59
+family:beast
+premise:A many-legged hunter sketches young in cave dust and feeds them until their white outlines become solid.
+
+name:brass thirst
+art:brass-thirst
+band:50-59
+family:machine
+premise:A pumping assembly drinks clean water to cool a boiler that no longer exists.
+
+name:knot eater
+art:knot-eater
+band:50-59
+family:beast
+premise:A long-jawed rope predator extracts knots without cutting fibres and stores the released tension behind its teeth.
+
+name:fastener choir
+art:fastener-choir
+band:50-59
+family:colony
+premise:A rolling congregation of screws sings in machine pitches while dismantling everything resonant.
+
+name:fathomless puddle
+art:fathomless-puddle
+band:50-59
+family:echo
+premise:A handspan of black water contains descending weather and resents every attempt to step over it.
+
+name:folded road hunter
+art:folded-road-hunter
+band:50-59
+family:road
+premise:A traveller from an embedded highway carries a bend in the route and unfolds it across fleeing prey.
+
+name:gravel comet
+art:gravel-comet
+band:60-69
+family:stone
+premise:A hot mineral nucleus drags loose cave floor behind it and orbits any source of sudden movement.
+
+name:atmosphere smuggler
+art:atmosphere-smuggler
+band:60-69
+family:survivor
+premise:A castaway carries sealed foreign air beneath a patched coat and tears the pockets open when threatened.
+
+name:walking reservoir
+art:walking-reservoir
+band:60-69
+family:current
+premise:A load-bearing skin of water stands upright around fish, silt and an intact drowned doorway.
+
+name:unpaid alarm
+art:unpaid-alarm
+band:60-69
+family:echo
+premise:A warning note repeats with compounding force because the settlement it served never acknowledged it.
+
+name:gristleglass ambusher
+art:gristleglass-ambusher
+band:60-69
+family:beast
+premise:A transparent hunter replaces wounded tissue with whichever sharp mineral caused the injury.
+
+name:heatless furnace
+art:heatless-furnace
+band:60-69
+family:machine
+premise:A vast kiln removes heat from fuel, flame and flesh to fire bricks colder than the surrounding dark.
+
+name:compass animal
+art:compass-animal
+band:60-69
+family:beast
+premise:Every armoured limb of this organism points toward a different buried world's north.
+
+name:masonry fever
+art:masonry-fever
+band:60-69
+family:colony
+premise:A red crystalline infection makes fitted stone shiver, sweat grit and reject neighbouring blocks.
+
+name:countercurrent walker
+art:countercurrent-walker
+band:60-69
+family:current
+premise:A human-shaped pressure front walks against flowing water and turns every channel back on itself.
+
+name:evacuation remnant
+art:evacuation-remnant
+band:60-69
+family:echo
+premise:Dropped tools and urgent footfalls move together toward an exit that never arrived with their buried district.
+
+name:ceiling air pocket
+art:ceiling-air-pocket
+band:70-79
+family:current
+premise:A breathable bubble rolls along flooded ceilings and violently excludes anything already carrying air.
+
+name:patient collapse
+art:patient-collapse
+band:70-79
+family:stone
+premise:A cave-in has held itself one instant before impact for centuries and advances whenever watched.
+
+name:parcelled climate
+art:parcelled-climate
+band:70-79
+family:survivor
+premise:A stranded trader unwraps small hostile climates from waxed parcels when escape routes close.
+
+name:long-winded automaton
+art:long-winded-automaton
+band:70-79
+family:machine
+premise:A survey frame explains every fault in exhaustive whistles while spare bellows keep inflating its body.
+
+name:salt recollection
+art:salt-recollection
+band:70-79
+family:echo
+premise:A preserved memory of an ocean crystallizes around creatures that have never seen a shore.
+
+name:solid rainfront
+art:solid-rainfront
+band:80-89
+family:current
+premise:A vertical field of glass-hard drops advances without falling and fractures into fresh weather when struck.
+
+name:unnumbered depth
+art:unnumbered-depth
+band:90-99
+family:echo
+premise:A moving section of passage erases every survey mark and climbs upward whenever assigned a lower sounding.

@@ -1,0 +1,18 @@
+# Bounded procedural cave-system topology.
+#
+# system:<stable id>:<graph version>
+# root:<root recipe id>
+# location:<stable spelunking world location id>
+# portal:<stable portal id>:<world entry id>:<root|deepest>:<minimum depth %>:<maximum depth %>:<route|upper-rail>:<open|sealed>
+# sections:<minimum>:<maximum>
+# shape:<minimum root children>:<maximum root children>:<maximum children per node>:<minimum depth>:<maximum depth>
+
+system:deepwell:1
+name:The Deepwell
+description:A weathered cave system of branching chambers, descending shafts, mineral bands, and deep water.
+root:deepwell.root
+location:core.spelunk.east.001
+portal:deepwell.surface:shaft.surface:root:2:18:upper-rail:open
+portal:deepwell.underflow:shaft.underflow:deepest:68:92:route:sealed
+sections:6:9
+shape:2:3:3:3:5

@@ -1,0 +1,325 @@
+# File: p_race.txt
+
+
+# This file is used to initialize Ammerow's player-origin information.  The
+# engine retains the inherited player_race data type, while the game presents
+# these records as origins.
+
+# Do not modify this file unless you know exactly what you are doing,
+# unless you wish to risk possible system crashes and broken savefiles.
+
+# === Understanding p_race.txt ===
+
+# Format:
+# name:race name
+# stats:str:int:wis:dex:con
+# skill-disarm:base
+# skill-device:base
+# skill-save:base
+# skill-stealth:base
+# skill-search:base
+# skill-melee:base
+# skill-shoot:base
+# skill-throw:base
+# skill-dig:base
+# hitdie:hitdie
+# exp:expbase
+# infravision:infra
+# history:history
+# age:agebase:agemod
+# height:hgt:modhgt
+# weight:wgt:modwgt
+# bash-mass:mechanical base mass:mechanical mass spread
+# obj-flags:object flags
+# player-flags:player flags
+# values:values
+
+# 'name' indicates the beginning of an entry.
+
+# 'stats' is for the stat modifiers - strength, intelligence, wisdom,
+# dexterity, constitution.
+
+# 'skill-<skill name>' is for skills that get added at birth - physical
+# and magical disarming, magic devices, saving throws, stealth,
+# to hit (normal), to hit (bows), to hit (throwing), digging.
+
+# 'hitdie' is for max. hitpoints gained per level.
+
+# 'exp' is for percent of "standard" experience needed to gain a level.
+
+# 'infravision' is for range of infravision in multiples of 10 feet.
+
+# 'history' is for starting point of the player history (see history.txt).
+
+# 'age' is age info - base age, random age modifier.
+
+# 'height' is height info - base height, random height modifier.
+
+# 'weight' is weight info - base weight, random weight modifier.
+
+# 'obj-flags' is for object flags (as in src/list-obj-flags.h) that
+# races possess innately.
+
+# 'player-flags' is for player flags (as in src/list-player-flags.h) that
+# races possess innately.
+
+# 'values' is for object modifiers which take a value that races possess
+# innately.
+
+
+name:Nearlander
+lore:Nearlanders are the varied village and field families of the Nine Near Lands. Their records begin on this side of the oldest known seams, so they share no single trade, body type or inherited field adaptation. That breadth leaves them free to shape an expedition around any discipline.
+stats:0:0:0:0:0
+skill-disarm-phys:0
+skill-disarm-magic:0
+skill-device:0
+skill-save:0
+skill-stealth:0
+skill-search:0
+skill-melee:0
+skill-shoot:0
+skill-throw:0
+skill-dig:0
+hitdie:10
+exp:100
+infravision:0
+history:1
+age:14:6
+height:69:10
+weight:165:35
+bash-mass:165:35
+
+name:Crossborn
+lore:Crossborn descend from households joined when a stable buried-world crossing closed behind one branch of the family. Habits learned under two skies make them observant, adaptable and quick with ranged tools, though neither set of conditions quite feels like home.
+stats:0:1:-1:1:-1
+skill-disarm-phys:2
+skill-disarm-magic:2
+skill-device:3
+skill-save:3
+skill-stealth:1
+skill-search:3
+skill-melee:-1
+skill-shoot:5
+skill-throw:5
+skill-dig:0
+hitdie:10
+exp:120
+infravision:2
+history:4
+age:24:16
+height:71:8
+weight:115:25
+bash-mass:115:25
+obj-flags:SUST_DEX
+
+name:Rainfolk
+lore:Rainfolk maintain reed terraces, storm-marked groves and elevated water gauges beyond the village fields. Long practice reading wind and reflected light makes them exceptional archers and patient instrument users, but close fighting and heavy loads do not suit their lean frames.
+stats:-1:2:-1:1:-1
+skill-disarm-phys:5
+skill-disarm-magic:5
+skill-device:6
+skill-save:6
+skill-stealth:2
+skill-search:6
+skill-melee:-5
+skill-shoot:15
+skill-throw:15
+skill-dig:0
+hitdie:9
+exp:120
+infravision:3
+history:5
+age:75:75
+height:73:7
+weight:90:10
+bash-mass:90:10
+obj-flags:SUST_DEX
+values:RES_LIGHT[1]
+
+name:Burrowhand
+lore:Burrowhands survey the low drainage galleries and food cellars beneath the oldest fields. Exact hands, shared stores and generations of fungal work make them gifted scouts and foragers. They recognise useful mushrooms at a glance and prefer patience, distance and stealth to close combat.
+stats:-2:2:1:3:2
+skill-disarm-phys:15
+skill-disarm-magic:15
+skill-device:18
+skill-save:18
+skill-stealth:4
+skill-search:6
+skill-melee:-10
+skill-shoot:20
+skill-throw:20
+skill-dig:0
+hitdie:7
+exp:120
+infravision:4
+history:10
+age:20:20
+height:65:7
+weight:125:20
+bash-mass:55:5
+obj-flags:HOLD_LIFE
+player-flags:KNOW_MUSHROOM
+
+name:Coilwise
+lore:Coilwise households build, catalogue and repair the charged instruments used by field parties. Bench discipline gives them remarkable control over mechanisms and lets them identify zappers by construction, while a lifetime among live coils teaches the reflex that prevents a body from locking under hostile force.
+stats:-1:2:0:2:1
+skill-disarm-phys:10
+skill-disarm-magic:10
+skill-device:22
+skill-save:12
+skill-stealth:3
+skill-search:4
+skill-melee:-8
+skill-shoot:12
+skill-throw:12
+skill-dig:0
+hitdie:8
+exp:120
+infravision:4
+history:13
+age:25:25
+height:67:7
+weight:145:25
+bash-mass:80:5
+obj-flags:FREE_ACT
+player-flags:KNOW_ZAPPER
+
+name:Quarryhand
+lore:Quarryhands work the pressure quarries and listening cuts beneath settled ground. They read ore through fractures, keep moving when dust blinds others and bring immense leverage to stonework. Fine footwork and delicate shooting matter less in their training than endurance, judgment and a decisive close blow.
+stats:2:-3:2:-2:2
+skill-disarm-phys:2
+skill-disarm-magic:2
+skill-device:9
+skill-save:9
+skill-stealth:-1
+skill-search:2
+skill-melee:15
+skill-shoot:0
+skill-throw:0
+skill-dig:40
+hitdie:11
+exp:120
+infravision:5
+history:16
+age:30:20
+height:68:6
+weight:170:30
+bash-mass:135:20
+obj-flags:PROT_BLIND
+player-flags:SEE_ORE
+
+name:Tollborn
+lore:Tollborn families survived for generations in the sealed stations of a buried road system. Low light, hard food and uncertain shelter favoured broad frames and direct solutions. They resist depth-dark and fight well at close range, though fine instruments and quiet field work demand extra patience.
+stats:2:-1:0:0:1
+skill-disarm-phys:-3
+skill-disarm-magic:-3
+skill-device:-3
+skill-save:-3
+skill-stealth:-1
+skill-search:-3
+skill-melee:12
+skill-shoot:-5
+skill-throw:-5
+skill-dig:0
+hitdie:10
+exp:120
+infravision:3
+history:19
+age:20:15
+height:70:8
+weight:175:30
+bash-mass:135:15
+values:RES_DARK[1]
+
+name:Stonebody
+lore:Stonebodies descend from survivors whose tissues bonded with a living mineral colony during worldfall. Their immense, deliberate bodies slowly rebuild torn flesh and shrug off labour that exhausts others. Delicate mechanisms, subtle field work and quiet movement demand unusual patience.
+stats:4:-4:-2:-4:3
+skill-disarm-phys:-5
+skill-disarm-magic:-5
+skill-device:-8
+skill-save:-8
+skill-stealth:-2
+skill-search:-9
+skill-melee:20
+skill-shoot:-10
+skill-throw:-10
+skill-dig:0
+hitdie:12
+exp:120
+infravision:3
+history:21
+age:25:20
+height:78:10
+weight:230:45
+bash-mass:240:60
+obj-flags:SUST_STR | REGEN
+
+name:Routekeeper
+lore:Routekeepers maintain the cairns, flood marks and emergency stores between settlements. Long patrols through broken weather make them resilient, perceptive and broadly capable. They possess no special night sight, but disciplined endurance protects their constitution on prolonged expeditions.
+stats:1:2:2:2:3
+skill-disarm-phys:4
+skill-disarm-magic:4
+skill-device:5
+skill-save:5
+skill-stealth:1
+skill-search:3
+skill-melee:15
+skill-shoot:10
+skill-throw:10
+skill-dig:0
+hitdie:10
+exp:120
+infravision:0
+history:1
+age:25:20
+height:70:8
+weight:170:30
+bash-mass:190:20
+obj-flags:SUST_CON
+
+name:Riftlistener
+lore:Riftlisteners come from households altered by generations of work beside buried-world seams. They hear small discontinuities, notice what ordinary sight omits and learn field instruments with uncanny speed. Threshold senses reveal hidden presences and resist harsh light, though unfamiliar experience takes longer to absorb.
+stats:1:3:-1:3:1
+skill-disarm-phys:4
+skill-disarm-magic:4
+skill-device:20
+skill-save:20
+skill-stealth:2
+skill-search:10
+skill-melee:10
+skill-shoot:25
+skill-throw:25
+skill-dig:0
+hitdie:10
+exp:145
+infravision:4
+history:7
+age:35:25
+height:69:7
+weight:150:25
+bash-mass:190:20
+obj-flags:SEE_INVIS
+values:RES_LIGHT[1]
+
+name:Sumpborn
+lore:Sumpborn communities keep the flood tunnels, settling pools and refuse sluices beneath wet ground. Constant exposure to bad water gives them a powerful resistance to poison, while quick hands and careful footing serve them well around traps. Heavy weapons and formal field instruments are less familiar.
+stats:-1:-1:0:2:2
+skill-disarm-phys:10
+skill-disarm-magic:10
+skill-device:5
+skill-save:0
+skill-stealth:3
+skill-search:10
+skill-melee:-5
+skill-shoot:10
+skill-throw:10
+skill-dig:0
+hitdie:8
+exp:120
+infravision:5
+history:23
+age:18:12
+height:64:6
+weight:125:20
+bash-mass:65:5
+values:RES_POIS[1]

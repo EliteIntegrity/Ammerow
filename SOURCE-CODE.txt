@@ -1,0 +1,25 @@
+AMMEROW: LANDS BEYOND - CORRESPONDING SOURCE
+
+Official playable releases include the complete corresponding GPLv2 program
+source, editable game data and build/install scripts in:
+
+    source/Ammerow-source.zip
+
+Extract that archive separately, then read README.md and docs/building.md.
+SOURCE-REVISION.txt inside it identifies the exported source snapshot.
+The adjacent Ammerow-source.zip.sha256 records the archive's SHA-256 checksum.
+No Internet connection, account, purchase or request is needed to obtain this
+included source. It is not necessary to extract it to play the game.
+
+Official public source repository:
+    https://github.com/EliteIntegrity/Ammerow
+
+The included archive is the source supplied for this release. A newer repository
+revision is not a substitute for it. The source-only repository/export itself
+does not contain a second, nested copy of the source archive.
+
+The program is licensed under GNU GPL version 2; see COPYING. Separately licensed
+Ammerow illustrations, sprites, sound effects and music are not included in the
+source archive. Source-only builds use ordinary glyphs and synthesised effects.
+Those asset restrictions do not restrict rights in the GPL-covered program.
+See ASSET-LICENSE.md and THIRD_PARTY_NOTICES.md for the separate component terms.

@@ -1,0 +1,9 @@
+# Village larder progression.
+#
+# save-index is an append-only identity persisted in existing savefiles.
+# Never reorder or renumber released milestones; add future milestones after
+# the existing highest index and give each a strictly higher target.
+
+milestone:1:emergency-reserve:20:first emergency reserve
+message:The village's first emergency food reserve is secure.
+reward:Expedition Rations are now stocked at the General Store.

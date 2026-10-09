@@ -1,0 +1,511 @@
+# File: artifact_lore.txt
+#
+# Release-reviewed Ammerow language for procedurally generated artefacts.
+# Mechanics choose a compatible frame; the frame and its vocabulary produce a
+# coherent name and microstory.  Complete frames are authored here so the
+# result cannot become an arbitrary bag of disconnected fragments.
+#
+# Allowed substitutions are {kind}, {maker}, or the ID of a pool below.  A
+# repeated substitution in one name and description resolves to the same
+# value.  Every mechanical tag must have at least one complete frame.
+
+origin:ammerow-original
+review:release
+
+pool:place
+value:Bellwater
+value:Brass Hollow
+value:Cold Measure
+value:Deep Ledger
+value:Dry Basin
+value:East Sump
+value:Ember Shelf
+value:Grey Incline
+value:Iscarn
+value:Last Landing
+value:Low Archive
+value:Meridian
+value:Moth Gallery
+value:Narrow Weather
+value:North Window
+value:Old Spillway
+value:Quiet Shaft
+value:Red Cistern
+value:Salt Reach
+value:Underbridge
+
+pool:office
+value:Basin Survey
+value:Cartographic Office
+value:Deep Claims Desk
+value:Dry Stores
+value:Field Measures Board
+value:Lake Sounding Office
+value:Lower Archive
+value:Missing Persons Ledger
+value:Rope and Rivet Office
+value:Salvage Committee
+value:Subsurface Registry
+value:Water Table Commission
+
+pool:role
+value:air tester
+value:bridge measurer
+value:cave naturalist
+value:depth clerk
+value:failed cartographer
+value:lamp keeper
+value:line measurer
+value:night surveyor
+value:pool watcher
+value:rope inspector
+value:salvage runner
+value:shaft listener
+value:stone reader
+value:weather recorder
+
+pool:material
+value:blue iron
+value:brass mesh
+value:calcite glass
+value:cave pearl
+value:copper thread
+value:eelbone
+value:green slate
+value:lake iron
+value:mica cloth
+value:red flint
+value:saltwood
+value:shale foil
+value:smoke glass
+value:white basalt
+
+pool:weather
+value:ash rain
+value:dry thunder
+value:falling fog
+value:green frost
+value:heat without flame
+value:inward wind
+value:mineral storm
+value:rain from below
+value:red sleet
+value:stone mist
+value:warm hail
+value:upward drizzle
+
+pool:number
+value:7
+value:11
+value:13
+value:17
+value:19
+value:23
+value:29
+value:31
+value:41
+value:47
+value:53
+value:61
+
+pool:measure
+value:one disputed inch
+value:two dry yards
+value:three false fathoms
+value:four careful steps
+value:five bent degrees
+value:seven missing minutes
+value:eleven cold ounces
+value:thirteen rope marks
+value:nineteen quiet knocks
+value:twenty-three wet feet
+value:forty-one heartbeats
+value:a clerk's best estimate
+
+pool:creature
+value:blind eel
+value:cave moth
+value:chalk beetle
+value:cold crab
+value:glass minnow
+value:lake spider
+value:mud wren
+value:rope beetle
+value:salt lizard
+value:silt mouse
+value:stone cricket
+value:water moth
+
+pool:mark
+value:an inverted depth mark
+value:a crossed-out inventory number
+value:a map of no recorded passage
+value:a row of patient teeth
+value:a survey stamp dated tomorrow
+value:a warning in mirror writing
+value:eleven tiny umbrellas
+value:four names with one handwriting
+value:one unnecessary hinge
+value:the outline of a locked window
+value:three corrections and no claim
+value:two arrows pointing inward
+
+# General provenance: useful when no single mechanical trait dominates.
+
+frame:any-inventory-dispute
+tone:dry
+weight:4
+tag:any
+name:{place} Inventory Dispute
+text:The {office} logged this {kind} as recovered, lost, and recovered again on the same afternoon. It bears {mark}.
+
+frame:any-duplicate
+tone:archaeological
+weight:4
+tag:any
+name:Duplicate in {material}
+text:This {kind} is made from {material}, including the parts that should not be. A {role} found its exact twin embedded in an older wall.
+
+frame:any-missing-receipt
+tone:peculiar
+weight:3
+tag:any
+name:{maker} and the Missing Receipt
+text:A receipt from the {office} names {maker} as maker, owner, witness, and item. Only this {kind} was present when the drawer was opened.
+
+frame:any-field-measure
+tone:practical
+weight:4
+tag:any
+name:Field Measure {number}
+text:A working {kind} carried by the {role} crews of {place}. The scratched calibration reads {measure} and has never been corrected.
+
+# Weapons: force, consequence and field use without inherited heroes.
+
+frame:weapon-argument
+tone:practical
+weight:4
+tag:weapon
+name:The {place} Argument
+text:A {role} used this {kind} to settle a blocked survey after every tool failed. The edge still points toward fractures before it strikes them.
+
+frame:weapon-final-word
+tone:ominous
+weight:3
+tag:weapon
+name:{maker} Final Word
+text:{maker} left this {kind} on the last mapped step beneath {place}. The return party found fresh impacts and no footprints.
+
+frame:weapon-objection
+tone:dry
+weight:3
+tag:weapon
+name:Objection in {material}
+text:The {office} rejected this {kind} as an unsuitable measuring instrument. Its owner demonstrated that all measurements become final at close range.
+
+frame:weapon-quiet-blows
+tone:archaeological
+weight:4
+tag:weapon
+name:{number} Quiet Blows
+text:The face of this {kind} records {mark}. Microscopic bruises in the {material} suggest every old blow landed twice.
+
+# Armour: survival records, repairs and stubborn materials.
+
+frame:armor-field-shell
+tone:practical
+weight:4
+tag:armor
+name:{place} Field Shell
+text:This {kind} was rebuilt after every expedition from {place}. Each layer is labelled with the danger it survived rather than the name of its wearer.
+
+frame:armor-rain-ledger
+tone:archaeological
+weight:4
+tag:armor
+name:Weather Ledger of {place}
+text:Every plate of this {kind} carries a separate account of {weather}. The accounts disagree, but none of the wearers were wet.
+
+frame:armor-working-coat
+tone:practical
+weight:4
+tag:armor
+name:{maker} Working Coat
+text:{maker} fitted this {kind} for a {role} who expected the ceiling to arrive before rescue. The reinforcement is inelegant and exceptionally sound.
+
+frame:armor-refusal
+tone:ominous
+weight:3
+tag:armor
+name:Refusal in {material}
+text:Recovered upright from a collapsed chamber, this {kind} contains no remains and no empty space. Its {material} panels will not bend inward.
+
+# Jewellery: small objects carrying disproportionate authority.
+
+frame:jewelry-token
+tone:archaeological
+weight:4
+tag:jewelry
+name:{place} Token
+text:The {office} issued this {kind} to people permitted below {place}. No surviving rule explains why the stone itself continues to recognise the permit.
+
+frame:jewelry-promises
+tone:ominous
+weight:3
+tag:jewelry
+name:{number} Promises
+text:{number} promises are engraved inside this {kind}; the first concerns safe return and the last concerns silence. The middle promises have been worn smooth.
+
+frame:jewelry-closed-circuit
+tone:practical
+weight:4
+tag:jewelry
+name:{maker} Closed Circuit
+text:{maker} wound this {kind} from copper thread recovered at {place}. It quietly corrects disturbances that ordinary instruments only report.
+
+frame:jewelry-small-authority
+tone:dry
+weight:3
+tag:jewelry
+name:The Small Authority of {place}
+text:A {role} wore this {kind} while ordering an evacuation nobody had authorised. The order was obeyed by people, doors, and eventually the water.
+
+# Ranged weapons: measurement at a distance and lines that carry intent.
+
+frame:ranged-long-answer
+tone:practical
+weight:4
+tag:ranged
+name:{place} Long Answer
+text:Survey crews used this {kind} when a question stood beyond rope range. Its sight line was certified by the {office} to within {measure}.
+
+frame:ranged-correction
+tone:dry
+weight:3
+tag:ranged
+name:Correction at {place}
+text:The ledger's stated range for this {kind} is wrong by {measure}. Nobody has yet found a target far enough away to justify the amendment.
+
+frame:ranged-sightline
+tone:archaeological
+weight:4
+tag:ranged
+name:{maker} Sightline
+text:{maker} laminated this {kind} from {material} and a map strip. When drawn, the erased route on the strip becomes briefly legible.
+
+frame:ranged-late-shot
+tone:ominous
+weight:3
+tag:ranged
+name:The Late Shot from {place}
+text:This {kind} was found strung beside a shaft whose far wall had not yet been excavated. A matching impact appeared there the following year.
+
+# Speed: stories of impossible schedules and missing intervals.
+
+frame:speed-early-return
+tone:dry
+weight:4
+tag:speed
+name:{place} Early Return
+text:The {office} issued this {kind} to a {role} who returned before the departure had been entered. Its balance still urges every movement forward.
+
+frame:speed-missing-interval
+tone:archaeological
+weight:4
+tag:speed
+name:The Missing Interval of {place}
+text:Records place this {kind} at both ends of a journey measured as {measure}, with no time between. Dust along its leading edge continues to stream backward.
+
+frame:speed-steps-ahead
+tone:practical
+weight:4
+tag:speed
+name:{number} Steps Ahead
+text:A {role} adjusted this {kind} until it anticipated the next foothold. The {office} stopped testing it after the observer was repeatedly left behind.
+
+frame:speed-unscheduled
+tone:peculiar
+weight:3
+tag:speed
+name:{maker} Unscheduled Arrival
+text:{maker} arrived at {place} carrying this {kind}, apologised for being early, and departed yesterday. The entry remains open in the visitor ledger.
+
+# Stealth: omissions, quiet crossings and blank records.
+
+frame:stealth-quiet-entry
+tone:practical
+weight:4
+tag:stealth
+name:{place} Quiet Entry
+text:This {kind} was standard issue for counting the {creature} colonies beneath {place}. Even loose grit seems reluctant to report its wearer.
+
+frame:stealth-uncounted-step
+tone:archaeological
+weight:4
+tag:stealth
+name:The Uncounted Step
+text:A route tally skips exactly one step whenever this {kind} crosses it. The missing mark moves with the object and has reached {number} separate ledgers.
+
+frame:stealth-creature-walk
+tone:peculiar
+weight:3
+tag:stealth
+name:Walk of the {creature}
+text:A {role} copied the movement of a {creature} into the joints of this {kind}. The creature later began making boot prints of its own.
+
+frame:stealth-blank-column
+tone:ominous
+weight:3
+tag:stealth
+name:{maker} Blank Column
+text:The {office} kept a column for every bearer of this {kind}. {maker} is the only visible name, though the paper is worn by many hands.
+
+# Watchfulness: unseen hazards, witnesses and instruments that look back.
+
+frame:watch-second-watch
+tone:practical
+weight:4
+tag:watch
+name:{place} Second Watch
+text:A {role} fitted this {kind} with redundant warning marks after the first watch saw nothing. The second watch has never stopped signalling.
+
+frame:watch-looking-rivet
+tone:archaeological
+weight:4
+tag:watch
+name:The Looking Rivet
+text:One rivet in this {kind} always faces the nearest concealed movement. Removing it produces an identical rivet elsewhere in the fitting.
+
+frame:watch-open-eye
+tone:ominous
+weight:3
+tag:watch
+name:{maker} Open Eye
+text:{maker} carried this {kind} into the dark beyond {place}. It returned in a salvage basket, warm and still watching the route behind it.
+
+frame:watch-witness-mark
+tone:dry
+weight:3
+tag:watch
+name:The Witness Mark of {place}
+text:The {office} accepts this {kind} as an independent witness because it notices what its wearers miss. Its testimony is mostly scratches and disapproving clicks.
+
+# Elemental protection or force: local weather captured in worked matter.
+
+frame:element-after-weather
+tone:archaeological
+weight:4
+tag:element
+name:After {weather}
+text:This {kind} was recovered from {place} after {weather}. Analysis found the event distributed evenly through its {material} instead of damaging it.
+
+frame:element-test-piece
+tone:practical
+weight:4
+tag:element
+name:{place} Test Piece
+text:The {office} exposed this {kind} to every dangerous condition it could reproduce. The surviving material now answers hazards before the test begins.
+
+frame:element-material-weather
+tone:peculiar
+weight:3
+tag:element
+name:Weather in {material}
+text:A pocket of {weather} travels inside this {kind} without escaping. A patient listener can hear the {office} arguing somewhere within it.
+
+frame:element-survival-sample
+tone:ominous
+weight:3
+tag:element
+name:{maker} Survival Sample
+text:{maker} labelled this {kind} safe after the loss of {place}. The label is scorched, frozen, dissolved at the edges, and technically correct.
+
+# Light: illumination with a history, not merely a brightness statistic.
+
+frame:light-noon-below
+tone:archaeological
+weight:4
+tag:light
+name:Noon Under {place}
+text:A {role} found this {kind} shining beneath {place} at the exact angle of an absent sun. Its noon has persisted through {number} recorded nights.
+
+frame:light-objected
+tone:dry
+weight:3
+tag:light
+name:The Lamp That Objected
+text:The {office} ordered this {kind} extinguished during a secrecy inspection. It complied by illuminating only the inspector.
+
+frame:light-spare-dawn
+tone:practical
+weight:4
+tag:light
+name:{maker} Spare Dawn
+text:{maker} sealed a measured morning inside this {kind} for an overdue survey crew. The charge was never collected and remains serviceable.
+
+frame:light-candles-below
+tone:ominous
+weight:3
+tag:light
+name:{number} Candles Below
+text:This {kind} brightened whenever one of {number} lights vanished under {place}. Only its own light remained when the search was abandoned.
+
+# Digging: the language of faults, persistence and listening to rock.
+
+frame:digging-fault-finder
+tone:practical
+weight:4
+tag:digging
+name:{place} Fault Finder
+text:A {role} tuned this {kind} against the fractures beneath {place}. It pulls toward the easiest honest route through stone.
+
+frame:digging-patient-argument
+tone:archaeological
+weight:4
+tag:digging
+name:The Patient Argument
+text:Each strike of this {kind} leaves a mark only {measure} deep. The marks continue growing after the tool has been put away.
+
+frame:digging-persuader
+tone:dry
+weight:3
+tag:digging
+name:{maker} Persuader
+text:{maker} insisted this {kind} did not break rock but convinced it to stand elsewhere. The {office} recorded the distinction and reinforced its floor.
+
+frame:digging-inches-further
+tone:ominous
+weight:3
+tag:digging
+name:{number} Inches Further
+text:The last {role} to carry this {kind} reported a wall only {measure} thick. The opening behind it has not yet found a far side.
+
+# Curses: warnings with specific provenance and human-scale consequences.
+
+frame:curse-return-stores
+tone:dry
+weight:4
+tag:curse
+name:{place} Return to Stores
+text:The {office} stamped this {kind} RETURN UNUSED. Every attempt to obey has delivered it to a different owner.
+
+frame:curse-signed-waiver
+tone:ominous
+weight:4
+tag:curse
+name:The Signed Waiver of {place}
+text:A waiver tied to this {kind} releases the {office} from consequences including {weather}. The signature changes to match whoever reads it.
+
+frame:curse-adverse-finding
+tone:practical
+weight:3
+tag:curse
+name:{maker} Adverse Finding
+text:{maker} documented the defect in this {kind} with unusual precision. The defect now follows the documented procedure rather than disappearing.
+
+frame:curse-apology
+tone:peculiar
+weight:3
+tag:curse
+name:Apology in {material}
+text:This {kind} contains an apology folded into its {material}. It grows more sincere, more detailed, and less helpful whenever trouble approaches.

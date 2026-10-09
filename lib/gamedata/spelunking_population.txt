@@ -1,0 +1,28 @@
+# Deterministic population profiles for generated side-view cave sections.
+# Counts, depth bands and protected-space radii are data. Placement uses the
+# section seed and never advances gameplay randomness.
+
+profile:deepwell.upper-sparse:1
+name:Upper Reaches — Sparse Life
+description:A few chasm skitters inhabit the dry shelves, with modest emergency supplies left among the galleries.
+# Manhattan exclusion radii around the route origin, landmarks and endpoints.
+exclusion:5:3:4
+actor:core.spelunk.actor.chasm-skitter:1:2:24:86
+object:potion:1:2:20:88:Cure Light Wounds
+object:scroll:0:1:30:88:Magic Mapping
+
+profile:deepwell.gallery-sparse:1
+name:Broken Galleries — Sparse Life
+description:Small skitter groups patrol the wider shelves while useful supplies remain uncommon.
+exclusion:5:3:4
+actor:core.spelunk.actor.chasm-skitter:2:3:18:92
+object:potion:1:2:18:92:Cure Light Wounds
+object:scroll:0:1:28:92:Magic Mapping
+
+profile:deepwell.fault-sparse:1
+name:Drowned Fault — Sparse Life
+description:The lower fault supports a denser skitter presence and a thin trail of expedition supplies.
+exclusion:5:3:4
+actor:core.spelunk.actor.chasm-skitter:3:4:16:92
+object:potion:1:2:18:92:Cure Light Wounds
+object:scroll:1:1:28:92:Magic Mapping

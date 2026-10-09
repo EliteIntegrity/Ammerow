@@ -1,0 +1,248 @@
+# file: terrain_visuals.txt
+#
+# Presentation colours for semantic terrain.  The default profile is the
+# fallback for every location; biome profiles override only materials whose
+# real-world identity changes there.  RGB values describe world materials,
+# not interface chrome, and are therefore independent of the selected UI
+# theme.
+#
+# profile <id>
+# material <semantic material id>
+# base <red> <green> <blue>
+
+# Semantic square flags resolve through these mappings rather than renderer
+# string constants.  Each target must have a complete default recipe.
+semantic:water:water
+semantic:road:road
+semantic:wood:wood
+
+profile:default
+
+material:floor
+base:94:101:106
+tile:open-floor
+
+material:wall
+base:154:163:170
+tile:granite-wall
+
+material:permanent-wall
+base:116:128:157
+tile:permanent-wall
+
+material:magma
+base:151:88:48
+tile:magma-vein
+
+material:quartz
+base:171:153:187
+tile:quartz-vein
+
+material:lava
+base:218:76:39
+tile:lava
+
+material:road
+base:139:108:70
+tile:dirt
+
+material:water
+base:56:127:150
+tile:shallow-water
+
+material:wood
+base:97:112:56
+tile:tree
+
+# Generated side-view geology uses the same material authority.  These have
+# no tile mapping yet, so tile mode intentionally retains its ASCII fallback.
+material:limestone
+base:139:145:137
+
+material:shale
+base:91:104:112
+
+material:iron-stained
+base:142:96:65
+
+# A village landmark, not another variety of ordinary grey wall or ore.
+material:meridian-stone
+base:190:135:224
+
+# The main underground world uses a cool slate structure over warmer worn
+# stone.  This is deliberately a site profile, leaving the compatibility
+# default neutral for old or third-party locations.
+profile:meridian
+
+material:floor
+base:105:91:72
+tile:meridian-floor
+
+material:wall
+base:116:139:151
+tile:meridian-wall
+
+material:permanent-wall
+base:92:111:137
+tile:permanent-wall
+
+# The surface cave is earthier and less blue than the Meridian, while still
+# separating traversable ground from enclosing rock at a glance.
+profile:eastern-cave
+
+material:floor
+base:105:88:57
+tile:open-floor
+
+material:wall
+base:132:151:95
+tile:granite-wall
+
+material:permanent-wall
+base:100:116:76
+tile:permanent-wall
+
+# Reserved now so the forthcoming side-view overhaul has a stable authored
+# profile instead of inheriting top-down dungeon colours by accident.
+profile:deepwell
+
+material:floor
+base:83:76:66
+tile:open-floor
+
+material:wall
+base:99:116:125
+tile:granite-wall
+
+material:permanent-wall
+base:73:87:108
+tile:permanent-wall
+
+material:limestone
+base:122:132:128
+
+material:shale
+base:78:94:104
+
+material:iron-stained
+base:132:91:64
+
+# The village reads as damp grass, packed roads, timber and warm local stone.
+profile:village
+
+material:floor
+base:70:126:66
+tile:patch-of-grass
+
+material:wall
+base:172:158:123
+tile:village-wall
+
+material:wood
+base:103:119:58
+tile:tree
+
+# Completing the hundredth sounding changes the same semantic materials rather
+# than swapping in a bespoke map.  Water is cleaner and brighter; maintained
+# grass and roads make the village state legible in either ASCII or tile mode.
+profile:village-restored
+
+material:floor
+base:79:143:72
+tile:patch-of-grass
+
+material:wall
+base:184:169:132
+tile:granite-wall
+
+material:road
+base:153:119:76
+tile:dirt
+
+material:water
+base:56:157:188
+tile:village-restored-water
+
+material:wood
+base:108:130:61
+tile:tree
+
+# Cavewood is wet, shaded ground interrupted by blue-grey outcrops.
+profile:cavewood
+
+material:floor
+base:54:99:60
+tile:cavewood-floor
+
+material:wall
+base:129:140:145
+tile:cavewood-wall
+
+material:wood
+base:64:94:55
+tile:tree
+
+# Open lake margins are lighter and water carries the strongest cool colour.
+profile:lake
+
+material:floor
+base:100:119:66
+tile:lake-margin
+
+material:water
+base:48:121:158
+tile:shallow-water
+
+profile:pine-wood
+
+material:floor
+base:52:91:59
+tile:pine-wood-floor
+
+material:wood
+base:53:83:54
+tile:pine-tree
+
+# Marsh colours deliberately separate olive vegetation from blue-green water.
+profile:marsh
+
+material:floor
+base:80:98:50
+tile:marsh-ground
+
+material:water
+base:52:102:94
+tile:marsh-water
+
+profile:heath
+
+material:floor
+base:112:91:102
+tile:heath-ground
+
+profile:meadow
+
+material:floor
+base:76:137:68
+tile:meadow-ground
+
+# Ruins use weathered limestone and lichen rather than dungeon granite.
+profile:ruins
+
+material:floor
+base:91:107:72
+tile:ruins-floor
+
+material:wall
+base:174:164:135
+tile:ruins-wall
+
+profile:scrub
+
+material:floor
+base:126:113:60
+tile:scrub-ground
+
+material:wood
+base:96:94:48
+tile:brake

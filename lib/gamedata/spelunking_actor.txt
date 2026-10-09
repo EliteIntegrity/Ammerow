@@ -1,0 +1,14 @@
+# Side-view actor archetypes and persistent authored spawns.
+# Stable IDs are save identities; file order is presentation only.
+
+actor:core.spelunk.actor.chasm-skitter:chasm skitter
+death-cause:a chasm skitter
+appearance:s:Light Red
+combat:4:24:1:2
+vitals:4:110:2
+
+# Candidate priority is explicit.  The first supported, unoccupied tile wins.
+spawn:core.spelunk.spawn.east.skitter:core.spelunk.east.001:core.spelunk.actor.chasm-skitter
+candidate:10:10:4
+candidate:20:6:4
+candidate:30:23:21

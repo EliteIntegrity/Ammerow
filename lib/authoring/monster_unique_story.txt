@@ -1,0 +1,174 @@
+# Stable original Ammerow unique-monster records.
+# This source-only file is consumed by utils/generate-unique-monsters.py.
+
+origin:ammerow-original
+review:release
+
+name:Iscarn, the Last Surveyor
+art:iscarn-the-last-surveyor
+base:world-echo
+color:p
+speed:130
+hit-points:8000
+hearing:100
+armor-class:192
+sleepiness:0
+depth:99
+rarity:1
+experience:50000
+blow:HIT:DISENCHANT:10d12
+blow:HIT:DISENCHANT:10d12
+blow:HIT:DRAIN_CHARGES:8d12
+blow:HIT:DRAIN_CHARGES:8d12
+flags:UNIQUE | QUESTOR | NAME_COMMA | REGENERATE
+flags:DROP_4 | DROP_GOOD | DROP_GREAT
+flags:MOVE_BODY
+flags:IM_ELEC | NO_FEAR
+flags:FORCE_DEPTH
+spell-freq:2
+spell-power:130
+spells:BRAIN_SMASH | WOUND | TELE_LEVEL | TPORT
+spells:BA_DARK | BA_FIRE | BA_NETH
+spells:BO_ICE | BO_MANA | BO_PLAS
+spells:SHAPECHANGE
+spells:S_HI_DEMON | S_HI_DRAGON | S_HI_UNDEAD | S_UNIQUE | S_WORLD_ECHO
+shape:Iscarn's fault rig
+shape:Iscarn's pressure body
+shape:Iscarn's glass choir
+desc:Iscarn led the last complete survey and concluded that the hundredth sounding
+desc: must remain shut.  No single body survived the work; the remaining intelligence
+desc: now moves among three purpose-built structures.  Two blows strip calibration
+desc: and two empty charged devices.  Iscarn attacks mind and body, crosses or ejects
+desc: between layers, releases destructive fields and pulls dangerous life through
+desc: old joins, using the expedition's records to defend the final seal.
+
+name:Iscarn's fault rig
+art:iscarn-s-fault-rig
+base:survey body
+color:p
+speed:140
+hearing:100
+armor-class:164
+sleepiness:0
+depth:99
+rarity:0
+blow:HIT:POISON:8d10
+blow:HIT:POISON:8d10
+blow:HIT:CONFUSE:6d8
+blow:HIT:PARALYZE:6d8
+flags:UNIQUE | REGENERATE
+flags:FORCE_SLEEP | FORCE_DEPTH
+flags:SMART | OPEN_DOOR | BASH_DOOR | MOVE_BODY
+flags:IM_POIS | IM_ELEC | IM_FIRE | IM_COLD | IM_NETHER
+flags:NO_CONF | NO_SLEEP | NO_FEAR
+innate-freq:3
+spell-freq:3
+spell-power:105
+spells:BLINK | TPORT | TELE_LEVEL | TELE_SELF_TO
+spells:BLIND | CONF | SCARE | WOUND
+spells:BR_FIRE | BR_NETH | BA_DARK
+spells:S_HOUND | S_DRAGON | S_HI_DEMON | S_HI_UNDEAD
+desc:Iscarn's fault rig is a jointed excavation frame whose cracked reservoirs leak
+desc: hostile compounds.  Two driven tools poison and two control joints confuse or
+desc: arrest movement; five energies feed its patched field skin.  It renews, forces
+desc: doors and bodies, crosses layers, releases flame or grave pressure, and pulls
+desc: dangerous bodies through fractures in the survey route.
+
+name:Iscarn's pressure body
+art:iscarn-s-pressure-body
+base:survey body
+color:p
+speed:130
+hearing:100
+armor-class:164
+sleepiness:0
+depth:99
+rarity:0
+blow:ENGULF:POISON:7d12
+blow:ENGULF:POISON:7d12
+blow:CRUSH:HURT:8d12
+blow:SPIT:ACID:4d12
+flags:UNIQUE
+flags:FORCE_SLEEP | FORCE_DEPTH
+flags:SMART | OPEN_DOOR | MOVE_BODY | REGENERATE
+flags:IM_POIS | IM_ACID | IM_ELEC | IM_COLD
+flags:NO_CONF | NO_SLEEP | NO_FEAR
+innate-freq:4
+spell-freq:4
+spell-power:108
+spells:BLINK | TPORT | TELE_LEVEL | TELE_SELF_TO
+spells:BLIND | CONF | SCARE | WOUND
+spells:BRAIN_SMASH | FORGET
+spells:BR_POIS | BR_CHAO | BR_ACID
+spells:S_DRAGON | S_HI_DEMON | S_HI_UNDEAD
+desc:Iscarn's pressure body is water and silt held inside a moving load envelope.
+desc: Two toxic fronts engulf, a dense fold crushes and a narrow jet throws acid;
+desc: poison, acid, lightning and cold feed its renewal.  It opens doors, drives bodies
+desc: aside, crosses layers, attacks memory and nerve, vents unstable pressure, and
+desc: pulls dangerous creatures through flooded joins.
+
+name:Iscarn's glass choir
+art:iscarn-s-glass-choir
+base:survey body
+color:p
+speed:130
+hearing:100
+armor-class:164
+sleepiness:0
+depth:99
+rarity:0
+blow:TOUCH:EXP_80:6d12
+blow:GAZE:TERRIFY:8d12
+blow:HIT:DRAIN_CHARGES:8d12
+blow:HIT:DRAIN_CHARGES:8d12
+flags:UNIQUE
+flags:FORCE_DEPTH
+flags:MOVE_BODY | IM_ELEC
+flags:NO_FEAR
+spell-freq:2
+spell-power:130
+spells:BLINK | TPORT | TELE_LEVEL | BLIND | CONF
+spells:BRAIN_SMASH | FORGET
+spells:BO_ICE | BO_PLAS | BE_NETH
+spells:BA_NETH | STORM | BA_DARK | BA_POIS | BA_ACID
+spells:S_DRAGON | S_HI_DEMON | S_HI_UNDEAD
+desc:Iscarn's glass choir is a distributed array of lenses holding charge, recorded
+desc: voices and pieces of lived history.  One contact draws memory, one aligned gaze
+desc: terrifies and two converging fronts empty charged devices.  It crosses layers,
+desc: attacks sight and thought, projects ice, plasma, storm, darkness, poison or
+desc: acid, and refracts dangerous creatures into the chamber.
+
+name:Ormeq, the World-Knot
+art:ormeq-the-world-knot
+base:Ormeq
+color:D
+speed:140
+hit-points:20000
+hearing:100
+armor-class:180
+sleepiness:0
+depth:100
+rarity:1
+experience:60000
+blow:HIT:SHATTER:20d10
+blow:HIT:SHATTER:20d10
+blow:HIT:LOSE_ALL:10d12
+blow:TOUCH:DRAIN_CHARGES
+flags:UNIQUE | QUESTOR | NAME_COMMA | SMART | REGENERATE | SPIRIT | FINAL_VICTORY
+flags:DROP_4 | DROP_GOOD | DROP_GREAT | ONLY_ITEM
+flags:SMASH_WALL | MOVE_BODY | ATTR_FLICKER
+flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | IM_POIS | NO_FEAR
+flags:NO_CONF | NO_SLEEP | NO_HOLD
+flags:FORCE_DEPTH | FORCE_SLEEP
+spell-freq:3
+spells:BRAIN_SMASH
+spells:BA_MANA | BA_NETH
+spells:BO_MANA
+spells:S_HI_DEMON | S_HI_DRAGON | S_HI_UNDEAD | S_MONSTERS | S_UNIQUE
+desc:At the hundredth sounding, incompatible pressures have organized around the
+desc: sound Ormeq.  The World-Knot rises like a buried mountain under stormlight.
+desc: Water falls upward and the strata open into places that cannot share one world;
+desc: summoned creatures are incursions dragged through those joins, not servants.
+desc: Whether the knot is intelligence, repeated process, constructed body or local
+desc: consequence remains unproved.  The Upwelling pours from its fractures.  Break
+desc: this convergence and the watershed may yet live.

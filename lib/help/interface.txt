@@ -1,0 +1,114 @@
+Interface and Accessibility
+===========================
+
+F1 or ?
+  Open this field guide from home, settings, the in-game menu, or play.
+
+Home references
+  Lore introduces the world, its peoples, and Classes & Ranks. Memorial lists
+  scored expeditions. Help / Field Guide opens these practical instructions.
+  Settings changes presentation; About holds the version, credits and licences.
+
+Escape
+  Open the small in-game menu during play.  It also backs out of menus and
+  cancels temporary modes such as Look or fishing.
+
+Ctrl+1 / Ctrl+2 / Ctrl+3
+  Toggle top messages, left-hand statistics, and bottom messages.  These are
+  transparent overlays: the playfield continues beneath them.
+
+Mouse wheel or Ctrl+Plus / Ctrl+Minus / Ctrl+0
+  Magnify, reduce, or reset the playfield.  Map zoom is independent of menu and
+  message size, remains crisp, and also works in side-view caves.
+
+Mouse in menus
+  Moving the pointer highlights Home, Settings, and in-game menu choices.
+  Click uses the highlighted choice; keyboard controls remain fully equivalent.
+
+Character creation
+  Press = on the origin, class, or attribute-method menu for birth options.
+  Enter toggles the selected option; Y/N sets it and Escape returns.  S saves
+  defaults, R restores saved defaults, and X resets factory defaults.  Birth
+  options are locked after starting a run; experimental options remain labelled.
+  Attribute allocation shows base values, origin/class modifiers, final values,
+  point costs and live derived values.  R resets allocation.  In the roller,
+  R rerolls and P swaps with the previous candidate; colours and +/- marks
+  compare the final stats.  Stat effects have thresholds, not linear gains.
+
+Ctrl+Alt+S
+  Open settings.  Appearance controls theme, map font, ASCII treatment, and
+  the ASCII/Hybrid playfield choice. Hybrid uses portrait sprites at 32 x 32
+  or 64 x 64 detail, with ordinary ASCII terrain and fallback glyphs. Detail
+  changes do not change map scale. Cards and shopkeepers remain coloured
+  ASCII illustrations. Interface controls the non-map font,
+  density, statistics and message overlays.  Sound and display/performance
+  have their own pages.
+
+F11 or Alt+Enter
+  Toggle fullscreen.
+
+Look and examine
+  Press L, move one tile at a time with direction keys, and press Escape to
+  clear the card.  The examined cell is visibly marked.  Side-view Peek is a
+  different safety action described in 'spelunking.txt'.
+  A selected combat target may retain its marker after an attack, but its
+  examination card closes when you finish aiming. Use L to inspect it again.
+
+Shops
+  Highlight stock with the arrow keys. L examines it immediately; Enter opens
+  its actions, including Examine. Use d to sell carried items. Shift+D also
+  sells except at larder donation shops, where it donates a catch instead.
+  The shop footer shows the available actions. If nothing is suitable to sell,
+  the explanation stays above the stock until your next action.
+
+Poison
+  While poisoned, the statistics panel shows Poisoned beside the HP display,
+  in addition to messages and the status line. It clears when poison ends.
+
+Learning and using magic
+------------------------
+
+Formula, prayer, practice and ritual are the different realms' names for
+book magic. Learning one does NOT make it a passive ability or activate it.
+
+  G       Learn book magic (if your class has a study slot available).
+  m       Use learned magic: choose its book, then the learned ability.
+  b       Browse a book without using it (P in the roguelike keyset).
+
+Carry the relevant book so it is available when you need it. Top-down play
+also allows using a book on the floor at your feet; caves require it in your
+pack. The list shows the required character level, Focus cost per attempt,
+current failure chance and learning status. Descriptions are shown by default;
+? hides or shows them. Arrow keys can inspect unlearned entries too, but Enter
+or a letter only activates eligible magic. "Not learned" means you must first
+leave this menu and study with G; being the right level is not enough.
+Attempting magic spends action time and Focus, even if
+concentration fails. With insufficient Focus you can risk overexertion, which
+may make you faint or harm your Constitution. Cancelling a selection is free.
+
+Remove Hunger is a one-off top-up to roughly half fed when you are below that
+amount. It does nothing if you are already at least half fed, and does not slow
+future digestion. Learn it, then use m when hungry; it must be used again when
+needed. A temporary protection such as Resist Poison likewise needs to be
+used, and then lasts only for its duration. By contrast, an equipped item's
+Slow Digestion works automatically while worn; learning magic is unrelated.
+
+S opens the origin/class abilities reference. It describes traits and their
+conditions; it is not the menu for activating learned book magic.
+
+Performance
+-----------
+
+The renderer redraws changed cells and caps weather animation work.  Turn
+Visible weather off in Display / Performance on older or battery-powered
+hardware.  Weather chooses itself automatically; this switch hides its visuals
+without muting sound or changing gameplay.  Use Sound for audio controls.
+Interface density and map zoom can be adjusted
+independently, so a dense menu does not make the map tiny.
+
+The map camera keeps the player (or active Look cursor) clear of a visible
+statistics overlay.  It can reveal a blank margin at the map edge to do so;
+terrain elsewhere still draws beneath the transparent overlays.
+
+The terminal renderer remains the compatibility fallback.  Some infrequent
+ancestral screens deliberately use it until they receive a native screen.

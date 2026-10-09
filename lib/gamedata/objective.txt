@@ -1,0 +1,18 @@
+# Compact optional objectives. Progress is derived from the named source of
+# truth; this file owns presentation and target linkage, never a second tally.
+
+objective:lost-longline:item:Lost Longline
+description:Acquire a Yew Longline Rod by recovering the one in the Deepwell or buying Mara's costly spare.
+item:tool:Yew Longline Rod
+completion-sound:OBJECTIVE_COMPLETE
+reward:Reach the deepest cave water and fish for Glassfin.
+
+objective:emergency-reserve:larder:Emergency Reserve
+description:Donate caught fish to the General Store until the village larder holds twenty portions. Catching and donating fish each earns a little experience.
+larder:emergency-reserve
+reward:Unlock Expedition Rations in the General Store.
+
+objective:underflow-sounding:route:Sound the Underflow
+description:Land a Glassfin at full Yew Longline depth in the Deepwell and trace the buried current.
+route:core.route.underflow.out
+reward:Reveal a reciprocal passage between the deepest cave and Meridian 5.

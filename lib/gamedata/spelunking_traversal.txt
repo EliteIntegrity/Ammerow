@@ -1,0 +1,23 @@
+# Traversal proof budgets for procedurally generated side-view cave sections.
+#
+# These limits constrain validation.  They do not grant equipment to a player.
+# Rope is counted in the same per-tile (two metre) lengths used by inventory.
+
+profile:deepwell.launch:1
+name:Deepwell launch route
+description:A measured rope-route contract for the longline, fishing pool, and safe return through the upper reaches.
+equipment:12:80
+# Expensive upward free climbing makes every available certified main-route
+# shaft a deliberate piton-and-rope obstacle; side exploration may still be
+# free-climbed.  A count above a recipe's chamber count means "all available".
+rope-shafts:9
+safety:0:0
+return:1
+
+profile:deepwell.expedition:1
+name:Deepwell expedition route
+description:A broader optional-exploration contract which still fits within the outfitter's finite climbing stock.
+equipment:12:80
+rope-shafts:9
+safety:0:6
+return:1

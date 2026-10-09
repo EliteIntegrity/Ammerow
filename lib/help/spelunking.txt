@@ -1,0 +1,74 @@
+Side-View Caves
+===============
+
+These caves are turn-based locations with their own movement rules.  A wrong
+direction can step away from support and begin a real fall.  Read the stamina,
+posture and Air display; animation never changes the resolved outcome.
+
+The bottom status strip keeps HP, stamina, air and movement state separate
+from messages. The cave section appears beneath them, followed by directional
+climbing costs when relevant. These resources stay visible even with the
+statistics sidebar hidden or while fishing.
+
+Movement and safety
+-------------------
+
+Arrows or keypad    move, climb, descend, swim, or choose jump direction
+Space / . / KP5     wait one turn
+H                   cycle or set an adjacent grip target (free)
+J                   begin the multi-stage jump
+Down after J        abandon the reach and drop straight down
+Hold P + direction  peek one tile from a safe offset viewpoint
+'                   hammer a piton at the current position
+;                   deploy rope downward from the current piton
+g                   pick up local objects
+<                   use the exit under the player
+Escape              open the normal in-game menu
+
+Bare-rock gripping costs much more stamina than rope.  Stable ground allows
+recovery by waiting; hanging from a piton does not.  A piton can support the
+start of a jump, and a valid grip can arrest the rise or the held
+ledge-reaching pause.
+Diagonal grips and deliberate release are allowed.  Falls beyond a short safe
+distance deal sharply increasing damage and may kill immediately.
+
+You can step diagonally up from rope or a piton onto an adjoining supported
+ledge without selecting a grip first. A diagonal step down can land on a
+piton or catch a rope; without support, you fall. A suspended piton still
+does not restore stamina.
+
+Peek is not Look.  Hold P before pressing the direction: without P, that same
+direction is a movement attempt.  Releasing P returns the viewpoint while
+keeping legitimately seen cells.  Ordinary sight shows only the first part of
+a drop; a downward diagonal Peek can reveal a long clear shaft and its enclosing
+rock faces.  Visible passages retain their continuous floors and ceilings, but
+rock still blocks creatures, objects and open space around corners.  Focus loss,
+menus and Escape clear Peek.
+
+Shared equipment and survival
+-----------------------------
+
+i / e / I / C / S / ~    inventory, equipment, examine, character, abilities,
+                         and knowledge
+w / t / { / } / F / d    wield, take off, inscribe, uninscribe, refuel, drop
+E / q                    eat carried food or quaff a safe carried potion
+r / u / a / z / A / U    read scrolls, use devices, activate, or use an item
+b / G / m                browse a spellbook, study, or cast
+f / v                    fire ammunition or throw a carried item
+l                        inspect the cave with the cave-native Look cursor
+
+Spellbooks must be carried.  Studying remains possible for every normal spell,
+including one whose effect only works outside a side-view cave.  Casting keeps
+the normal focus cost, failure chance and turn cost.  Aimed spells use the
+familiar eight directions; they collide with cave rock and creatures.  Effects
+without side-view meaning are refused before focus or a turn is spent.
+
+Scuba gear supplies a visible reserve underwater.  When it is exhausted,
+ordinary Breath drains until you surface.  Surface recovery does not recharge
+the gear.
+
+Commands which still need side-view spatial rules are blocked rather than
+silently using a top-down target.  These include conventional targeting,
+opening, closing, tunnelling, disarming, the ordinary dungeon-map view, nearby
+monster/item lists, and multi-turn Rest.  Cave Survey and cave-native Look are
+the deliberate side-view alternatives to the two map screens.

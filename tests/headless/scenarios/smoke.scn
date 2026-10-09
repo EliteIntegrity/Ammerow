@@ -1,0 +1,13 @@
+# A short deterministic no-window smoke run through the production game core.
+name:hub-random-walk-smoke
+seed:20260828
+race:Nearlander
+class:Warrior
+player:Smoke Tester
+location:core.hub
+entry:default
+bot:random-walk
+steps:12
+capture:both
+screen-width:1280
+screen-height:720

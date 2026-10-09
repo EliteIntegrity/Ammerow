@@ -1,0 +1,47 @@
+/*
+ * Ammerow modifications Copyright (c) 2026 John Horton
+ * SPDX-License-Identifier: GPL-2.0-only
+ */
+
+/**
+ * \file list-tvals.h
+ * \brief List of object base types
+ */
+/* code_name, string_name */
+TV(NULL, "none")
+TV(CHEST, "chest")
+TV(SHOT, "shot")
+TV(ARROW, "arrow")
+TV(BOLT, "bolt")
+TV(BOW, "bow")
+TV(DIGGING, "digger")
+TV(HAFTED, "hafted")
+TV(POLEARM, "polearm")
+TV(SWORD, "sword")
+TV(BOOTS, "boots")
+TV(GLOVES, "gloves")
+TV(HELM, "helm")
+TV(CROWN, "crown")
+TV(SHIELD, "shield")
+TV(CLOAK, "cloak")
+TV(SOFT_ARMOR, "soft armor")
+TV(HARD_ARMOR, "hard armor")
+TV(DRAG_ARMOR, "dragon armor")
+TV(LIGHT, "light")
+TV(AMULET, "amulet")
+TV(RING, "ring")
+TV(STAFF, "staff")
+TV(WAND, "wand")
+TV(ROD, "rod")
+TV(SCROLL, "scroll")
+TV(POTION, "potion")
+TV(FLASK, "flask")
+TV(FOOD, "food")
+TV(MUSHROOM, "mushroom")
+TV(MAGIC_BOOK, "magic book")
+TV(PRAYER_BOOK, "prayer book")
+TV(NATURE_BOOK, "nature book")
+TV(SHADOW_BOOK, "shadow book")
+TV(OTHER_BOOK, "other book")
+TV(TOOL, "tool")
+TV(GOLD, "gold")

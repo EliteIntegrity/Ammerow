@@ -1,0 +1,83 @@
+# Player-facing copyright and licence summary.
+# Complete terms are in the referenced files shipped with the game.
+# Supported directives: version, subtitle, component, status, licence, notice,
+# source, and end. Private release decisions are not player-facing notices.
+
+version:1
+subtitle:Copyright, asset permissions and third-party licences.
+
+component:AMMEROW ARTWORK AND AUDIO
+status:SEPARATELY LICENSED ASSETS - NOT GPL
+licence:Ammerow Asset Licence 1.1
+notice:Copyright (c) 2026 John Horton. All rights reserved except as expressly permitted. The complete terms reserve rights to the extent copyright and related rights subsist.
+notice:Ammerow's tiles, ASCII illustrations, sound effects and music are separately licensed assets. They are not licensed under the GNU GPL.
+notice:You may not redistribute, repackage, sell or reuse these assets, either separately or within a modified or unmodified game, without prior written permission from John Horton, except where applicable law permits otherwise.
+notice:You may play the official game, make personal backups and private modifications, and publish normal gameplay videos, livestreams, screenshots, reviews and guides, including monetised coverage. These permissions do not authorise asset dumps.
+notice:The GPL-covered program remains available for modification and redistribution under its licence. Public forks must omit or replace the separately licensed assets unless separately authorised. Third-party components retain their own licences.
+source:ASSET-LICENSE.md; lib/art/NOTICE.md; lib/tiles/NOTICE.md; lib/sounds/ammerow/NOTICE.md
+end:
+
+component:AMMEROW NAME AND OFFICIAL RELEASES
+status:TRADE MARKS RESERVED
+licence:No trade mark licence is granted with the program or assets
+notice:AMMEROW and AMMEROW: LANDS BEYOND are trade marks of John Horton. Public forks must use distinct, non-confusing branding unless separately authorised. Truthful, non-confusing source attribution is permitted.
+notice:Only releases published by John Horton or through a channel he expressly identifies are official.
+source:ASSET-LICENSE.md; NOTICE.md
+end:
+
+component:AMMEROW SOURCE AND INHERITED ENGINE
+status:GPL-COVERED PROGRAM - MODIFICATION AND REDISTRIBUTION PERMITTED
+licence:GNU General Public License version 2; compatible file-level notices retained
+notice:Ammerow began from Angband upstream commit 5c45eb9588b8227d4f1b1998e0a627ad7ee11a75, 174 commits after the Angband 4.2.6 release. Copyright in inherited work remains with its respective authors.
+notice:Ammerow is distributed under GPLv2. The inherited alternative Angband licence and contributor notices are preserved; the alternative licence's non-commercial restriction is not an additional restriction on the GPLv2 distribution.
+notice:The complete corresponding program source and build scripts are included with this download in source/Ammerow-source.zip. Read SOURCE-CODE.txt beside the game for instructions. No Internet connection or separate purchase is needed.
+notice:Official public source repository: https://github.com/EliteIntegrity/Ammerow. The included source archive corresponds to this release; a newer repository revision is not a substitute.
+notice:The program is supplied without warranty to the extent permitted by law. See COPYING for the full GPLv2 terms and warranty disclaimer. Asset restrictions do not limit rights in the GPL-covered program or separately licensed third-party components.
+source:COPYING; NOTICE.md; SOURCE-CODE.txt; source/Ammerow-source.zip; docs/copying.rst; docs/thanks.rst
+end:
+
+component:MORIA AND UMORIA ANCESTRY
+status:INHERITED ATTRIBUTION PRESERVED
+licence:See the inherited contributor and licence notices
+notice:Moria copyright 1985 Robert Alan Koeneke. Umoria copyright 1989 James E. Wilson. The inherited Angband notice also names Ben Harrison. Their contributions and those of later contributors are acknowledged in Credits and the retained source notices.
+source:docs/thanks.rst; docs/copying.rst; Credits
+end:
+
+component:SDL RUNTIME FAMILY
+status:INCLUDED IN THE WINDOWS X64 PACKAGE
+licence:zlib licence; embedded components retain their listed terms
+notice:This package uses SDL 3.4.4, SDL_ttf 3.2.2, and SDL_image 3.4.2. Copyright notices name Sam Lantinga and their respective contributors.
+notice:Exact DLL hashes, source revisions, and the FreeType, HarfBuzz, Pluto and STB notices are recorded in the installed third-party notice bundle.
+source:THIRD_PARTY_NOTICES.md; third_party/licenses
+end:
+
+component:BUNDLED INTERFACE AND MAP FONTS
+status:INCLUDED UNDER THEIR OWN LICENCES
+licence:Roboto Mono, VT323, IBM Plex Mono and Share Tech Mono: OFL-1.1; Cozette: MIT
+notice:Font copyright notices, reserved names, exact versions and complete terms are preserved in the third-party notice bundle. Ammerow's asset restrictions do not apply to these third-party fonts.
+source:THIRD_PARTY_NOTICES.md; third_party/licenses
+end:
+
+component:ASCII PORTRAITS, MAP TILES AND SOUND
+status:INCLUDED UNDER THE AMMEROW ASSET LICENCE
+licence:Ammerow Asset Licence 1.1 - not GPLv2
+notice:The full-content release includes compiled FROGART3 ASCII portraits, 32x32 and 64x64 Hybrid sprite sheets (pixel-*.png), 404 authored sound effects and one home theme. Source portrait PNGs, the earlier 16px map tiles and reserved sound variants are not included.
+notice:Missing map tiles use ordinary glyphs; missing portraits use the normal fallback presentation. Missing effects use the program's code-synthesised fallback; missing music is silent.
+notice:The ASCII portraits and Hybrid sprites derive from the same image-generated source illustrations, made under human direction. The Hybrid conversion crops and samples those illustrations; it does not convert rendered ASCII glyphs and uses no new image generation. Conversion does not change the source provenance or separate asset terms.
+notice:The effects were produced with custom deterministic synthesis under human direction. The home theme was composed through Claude Compose and rendered using licensed virtual instruments in Ableton Live. Their production records distinguish those processes from image generation.
+source:ASSET-LICENSE.md; lib/art/NOTICE.md; lib/tiles/NOTICE.md; lib/sounds/ammerow/NOTICE.md; packaging/runtime-art.txt; packaging/runtime-audio.txt
+end:
+
+component:EMBEDDED RANDOM NUMBER GENERATOR
+status:INCLUDED
+licence:Public-domain dedication to the extent possible, with unrestricted permission fallback
+notice:xoshiro128** 1.1 by David Blackman and Sebastiano Vigna supplies the gameplay state transition; SplitMix64 by Sebastiano Vigna expands Ammerow seeds. The original notices and permission fallback are retained.
+source:THIRD_PARTY_NOTICES.md; third_party/licenses/Xoshiro-SplitMix-public-domain.txt; docs/randomness.md; src/z-rand.c
+end:
+
+component:CONTRIBUTED PROTOTYPE ADAPTATIONS
+status:SELECTED IMPLEMENTATIONS INCLUDED IN THE GPL-COVERED PROGRAM
+licence:GPLv2 for the deliberately integrated contributions
+notice:John Horton authorised selected implementation work from his Vertical Extremes and NetHook prototypes for integration into Ammerow. This does not grant rights in the separate reference projects or their unrelated assets.
+source:AUTHORS.md
+end:

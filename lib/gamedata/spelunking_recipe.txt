@@ -1,0 +1,57 @@
+# Procedural side-view cave recipes.
+#
+# Recipe IDs select data; generator code recognizes macro families only.  The
+# handcrafted layout remains only a rollback/reference and legacy-save source;
+# normal entry uses the generated system after its publication contract passes.
+
+recipe:deepwell.root:deepwell:root:100:1:100
+name:Upper Reaches
+description:A weathered entrance gives way to old chambers, broken shelves, and a route descending beyond the sound of running water.
+size:84:104:64:84
+macro:chamber-chain
+# Chambers, radii, branches, margins, entrance, and vertical gap.
+route:6:9:5:10:2:5:3:6:8:2:5:4:5
+# One measured tile is safe.  Longer rock landings inflict 15 damage, then
+# double for every additional tile: 15, 30, 60, 120, and so on.
+rules:1:15:10:23:15:20:1:6:10:2
+stamina-costs:30:23:16:3:2:1
+perception:10:6:2:16:28:5:2:24:.:Slate:.:Light Dark
+# Both profiles are operative and resolved through dedicated registries.
+water:deepwell.lower-basin
+material:deepwell.limestone-shale
+traversal:deepwell.launch
+population:deepwell.upper-sparse
+passage:down:60:96:3
+landmark:deepwell.root.longline:object:20:65:tool:Yew Longline Rod
+landmark:deepwell.root.fishing-stance:fishing-stance:60:94:none:-
+
+recipe:deepwell.broken-galleries:deepwell:optional:65:1:100
+name:Broken Galleries
+description:Wide shelves and fractured side chambers cross an older descending route.
+size:76:96:60:76
+macro:chamber-chain
+route:5:7:5:9:2:4:3:6:7:2:5:4:5
+rules:1:15:10:23:15:20:1:6:10:2
+stamina-costs:30:23:16:3:2:1
+perception:10:6:2:16:28:5:2:24:.:Slate:.:Light Dark
+water:deepwell.lower-basin
+material:deepwell.limestone-shale
+traversal:deepwell.expedition
+population:deepwell.gallery-sparse
+passage:up:5:42:1
+passage:down:60:96:3
+
+recipe:deepwell.drowned-fault:deepwell:deep:35:1:100
+name:The Drowned Fault
+description:A steep mineral fault opens into high chambers above a black, contained reservoir.
+size:88:112:72:92
+macro:chamber-chain
+route:6:9:5:11:2:5:3:7:8:2:6:4:5
+rules:1:15:10:23:15:20:1:6:10:2
+stamina-costs:30:23:16:3:2:1
+perception:10:6:2:16:28:5:2:24:.:Slate:.:Light Dark
+water:deepwell.lower-basin
+material:deepwell.limestone-shale
+traversal:deepwell.expedition
+population:deepwell.fault-sparse
+passage:up:5:42:1

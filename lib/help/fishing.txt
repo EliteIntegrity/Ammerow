@@ -1,0 +1,54 @@
+Fishing
+=======
+
+Stand beside eligible water and press Ctrl+C (Cast).  Fishing opens across the
+playfield while leaving the surrounding world visible.  Opening and cancelling
+are free; every rod movement, line movement, wait, strike and reel is a normal
+turn.  Creatures and hazards therefore keep acting while you fish.
+
+Waiting for a bite
+------------------
+
+Left / keypad 4      extend the rod one column
+Right / keypad 6     retract the rod one column
+Down / keypad 2      lower the hook one depth row
+Up / keypad 8        raise the hook one depth row
+Space / keypad 5     hold position for one turn
+Escape               stop fishing
+
+Fish move before a stationary hook can receive a bite.  Moving the hook cannot
+also cause a bite on that turn.  A longer rod reaches farther and deeper water,
+where more valuable fish may occur.  After a long quiet spell, the nearest fish
+which can live at the hook's depth begins moving visibly toward it.  It must
+still cross the water and occupy the hook's exact cell before it can bite, so
+casting near fish matters.
+
+Bite and winding
+----------------
+
+When BITE appears, press Enter to strike or Space to wait one turn.  A missed
+moment lets the fish escape.  After a successful strike, press Up or keypad 8
+once per turn to reel.  The fish may pull line back before it is landed.
+
+A catch becomes an ordinary carried item which can be eaten or sold.  To feed
+the village, carry fish into the General Store and press uppercase D (Donate
+catch), then choose the catch and quantity.  Rain Minnows, Mudbellies, and
+Glassfins contribute 1, 3, and 6 portions respectively.  Securing the first
+20-portion emergency reserve makes Expedition Rations available from the
+General Store.  The Fishing Shop keeper knows where a full-depth Yew Longline
+was lost.  Check the visible map and message history before casting: the water
+is not a pause screen.
+
+Rain Minnows and Mudbellies give 1 XP when caught and another 1 XP when
+donated. Glassfins give 2 XP for each. Donation XP counts fish, not portions;
+giving a stack at once pays the same as donating its fish individually. These
+small rewards continue after the larder unlock. Selling fish gives gold, not XP.
+
+Cave pools
+----------
+
+In a side-view cave, stand securely on an air tile directly beside the pool.
+The status line shows "Ctrl-C Fish" when the position is valid.  You cannot cast
+while falling, climbing, hanging, or swimming.  Fishing actions use the cave's
+normal action cadence, so nearby cave creatures continue to act; a catch which
+does not fit in the pack falls onto the persistent cave tile at your feet.

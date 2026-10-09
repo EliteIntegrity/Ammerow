@@ -1,0 +1,44 @@
+# File: user.prf
+
+#
+# This file defines "override" actions of various kinds
+#
+# This file includes, if appropriate, various "sub-files"
+#
+# See "docs/data-authoring.md" and "src/ui-prefs.c" for more information.
+#
+
+##### Class Specific Subfiles #####
+
+?:[EQU $CLASS Warrior]
+%:Warrior.prf
+
+?:[EQU $CLASS Mage]
+%:Mage.prf
+
+?:[EQU $CLASS Priest]
+%:Priest.prf
+
+?:[EQU $CLASS Rogue]
+%:Rogue.prf
+
+?:[EQU $CLASS Ranger]
+%:Ranger.prf
+
+?:[EQU $CLASS Paladin]
+%:Paladin.prf
+
+?:[EQU $CLASS Druid]
+%:Druid.prf
+
+?:[EQU $CLASS Necromancer]
+%:Necromancer.prf
+%:Necro.prf
+
+?:[EQU $CLASS Blackguard]
+%:Blackguard.prf
+%:BG.prf
+
+
+?:1
+

@@ -1,0 +1,13 @@
+# Procedural spelunking hydrology profiles.
+#
+# profile:<stable id>:<algorithm family>:<version>
+# surface:<minimum map-depth percent>:<maximum map-depth percent>
+# width:<minimum map-width percent>:<maximum map-width percent>
+# depth:<minimum water tiles>:<maximum water tiles>
+# shore:<minimum dry approach tiles>
+
+profile:deepwell.lower-basin:lower-basin:1
+surface:70:84
+width:20:36
+depth:3:6
+shore:4

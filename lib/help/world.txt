@@ -1,0 +1,43 @@
+The Known World and Travel
+==========================
+
+Ammerow's launch basin is a deliberately compact three-by-three surface.  The
+village, roads, woods, lake and cave approaches are real local maps joined at
+their edges.  Green arrows mark a physical route out of the current region.
+Stepping onto a travel arrow crosses to its connected region and teaches
+that direction of the route, regardless of your direction of approach.
+
+The known-world screen
+----------------------
+
+Open the screen with '<' while on the surface, or choose Known world / travel
+from the Enter menus.  Direction keys move its cursor one map cell.  '@' marks
+your current surface region, 'v' marks the surface above your underground
+location, '*' is a discovered region, and '?' remains unknown.
+
+Enter travels to a selected discovered region only after its route has been
+learned in the required direction.  Fast travel is refused while threatened,
+restrained, affected by an unsafe temporary condition, or already being moved
+by another effect.  It advances world time, hunger and light fuel.  It does not
+simulate or animate every step of the journey.
+
+Entrances and the Meridian
+--------------------------
+
+'>' uses a down entrance under the player.  The Meridian is the hundred-layer
+descent that anchors the first release.  Satellite caves can hold different
+rewards or connect to a side-view cave through a marked hole.  Ordinary trap
+doors never count as a side-view entrance.
+
+Cavewood Cavern is one top-down area. Its exits lead back to
+Cavewood or down the shaft into the Deepwell's side-view caves. It has no
+ordinary down staircases leading to lower regular dungeon floors.
+
+Look names these entrances for their destinations. Cavewood Cavern's mossy
+green rock and earthy floor contrast with the Meridian's cool slate walls.
+Green Y trees on the surface can be walked through, but their foliage blocks
+sight and missiles. Ordinary grey rock is still solid.
+
+Only sites physically discovered by this character are named on the map.  The
+small launch basin is a complete expedition boundary, not the claimed full
+extent of Ammerow; later regions can attach through the same route system.

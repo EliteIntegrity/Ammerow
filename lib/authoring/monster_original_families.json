@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "origin": "ammerow-original",
+  "review": "release",
+  "control_by_tier": [
+    "SCARE", "SLOW", "CONF", "BLIND", "HOLD",
+    "WOUND", "WOUND", "FORGET", "FORGET", "FORGET"
+  ],
+  "control_blow_by_tier": [
+    "TERRIFY", "CONFUSE", "POISON", "CONFUSE", "PARALYZE",
+    "DRAIN_CHARGES", "DISENCHANT", "EXP_40", "EXP_80", "EXP_80"
+  ],
+  "families": {
+    "road": {
+      "base": "road stranger",
+      "colors": "oUyws",
+      "methods": ["HIT", "KICK", "BUTT"],
+      "effect": "HURT",
+      "companion": "person",
+      "action": "closes with weathered tools and the practised force of a road ambush",
+      "offence": ["ARROW", "BOULDER", "BO_FIRE"],
+      "summons": ["S_KIN", "S_MONSTER", "S_MONSTERS", "S_WORLD_ECHO", "S_MONSTERS"],
+      "wall_mobility": "PASS_WALL"
+    },
+    "machine": {
+      "base": "survey machine",
+      "colors": "sWUB",
+      "methods": ["HIT", "CRUSH", "TOUCH"],
+      "effect": "ELEC",
+      "companion": "golem",
+      "action": "brings misaligned tools and stored charge to bear",
+      "offence": ["BO_ELEC", "BO_PLAS", "BA_MANA"],
+      "summons": ["S_KIN", "S_MONSTER", "S_MONSTERS", "S_WORLD_ECHO", "S_MONSTERS"],
+      "wall_mobility": "KILL_WALL"
+    },
+    "beast": {
+      "base": "sump beast",
+      "colors": "GgUyr",
+      "methods": ["BITE", "CLAW", "SPIT"],
+      "effect": "ACID",
+      "companion": "reptile",
+      "action": "rushes from broken ground with jaws, claws and mineral growths",
+      "offence": ["BO_ACID", "BR_POIS", "BR_ACID"],
+      "summons": ["S_KIN", "S_MONSTER", "S_MONSTERS", "S_ANIMAL", "S_HI_DRAGON"],
+      "wall_mobility": "PASS_WALL"
+    },
+    "echo": {
+      "base": "pressure echo",
+      "colors": "pBDv",
+      "methods": ["TOUCH", "GAZE", "HIT"],
+      "effect": "COLD",
+      "companion": "elemental",
+      "action": "folds distance and pressure around a borrowed outline",
+      "offence": ["MIND_BLAST", "BO_MANA", "BA_DARK"],
+      "summons": ["S_KIN", "S_MONSTER", "S_MONSTERS", "S_WORLD_ECHO", "S_MONSTERS"],
+      "wall_mobility": "PASS_WALL"
+    },
+    "colony": {
+      "base": "seam colony",
+      "colors": "Ggyov",
+      "methods": ["CRAWL", "TOUCH", "ENGULF"],
+      "effect": "HURT",
+      "companion": "spider",
+      "action": "surrounds movement with coordinated fragments of its shared body",
+      "offence": ["BO_ACID", "BA_POIS", "BA_ACID"],
+      "summons": ["S_KIN", "S_MONSTER", "S_MONSTERS", "S_ANIMAL", "S_MONSTERS"],
+      "wall_mobility": "PASS_WALL"
+    },
+    "survivor": {
+      "base": "embedded survivor",
+      "colors": "wUoIB",
+      "methods": ["HIT", "KICK", "CRUSH"],
+      "effect": "HURT",
+      "companion": "person",
+      "action": "uses salvaged field craft with the certainty of a different world",
+      "offence": ["ARROW", "BO_FIRE", "BO_ICE"],
+      "summons": ["S_KIN", "S_MONSTER", "S_MONSTERS", "S_WORLD_ECHO", "S_MONSTERS"],
+      "wall_mobility": "PASS_WALL"
+    },
+    "current": {
+      "base": "walking current",
+      "colors": "BDbsv",
+      "methods": ["ENGULF", "CRUSH", "TOUCH"],
+      "effect": "COLD",
+      "companion": "vortex",
+      "action": "moves as a pressure front, filling every opening it reaches",
+      "offence": ["BO_WATE", "BA_WATE", "STORM"],
+      "summons": ["S_KIN", "S_MONSTER", "S_MONSTERS", "S_WORLD_ECHO", "S_WORLD_ECHO"],
+      "wall_mobility": "PASS_WALL"
+    },
+    "stone": {
+      "base": "fault organism",
+      "colors": "sUuWI",
+      "methods": ["HIT", "CRUSH", "BUTT"],
+      "effect": "HURT",
+      "companion": "stone feeder",
+      "action": "transfers its weight through the rock before its body follows",
+      "offence": ["BOULDER", "BA_SHAR", "BR_WALL"],
+      "summons": ["S_KIN", "S_MONSTER", "S_MONSTERS", "S_WORLD_ECHO", "S_MONSTERS"],
+      "wall_mobility": "KILL_WALL"
+    }
+  }
+}

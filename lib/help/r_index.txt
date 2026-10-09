@@ -1,0 +1,34 @@
+Ammerow Field Guide
+===================
+
+Controls and practical guidance for Ammerow: Lands Beyond.
+This index uses the roguelike keyset. Choose a section by letter:
+
+    (a) Roguelike-keyset controls
+    (b) Map symbols
+    (c) Interface and accessibility
+    (d) The known world and travel
+    (e) Fishing
+    (f) Side-view cave controls
+
+
+
+
+Browser/help commands:
+  #     go to line         %  go to file         ?  close the whole guide
+  ESC   back one page      Up/Down scroll        Home/End first/last page
+  SPACE advance 1 page     -  back up 1 page     /  search for text
+  RET   advance 1 line     =  back up 1 line     &  show (highlight) some text
+  +     advance 1/2 page   _  back up 1/2 page   !  toggle case sensitivity
+
+.. menu:: [a] r_comm.txt
+
+.. menu:: [b] symbols.txt
+
+.. menu:: [c] interface.txt
+
+.. menu:: [d] world.txt
+
+.. menu:: [e] fishing.txt
+
+.. menu:: [f] spelunking.txt

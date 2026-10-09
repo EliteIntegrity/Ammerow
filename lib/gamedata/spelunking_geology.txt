@@ -1,0 +1,19 @@
+# Procedural spelunking geology and non-colliding decoration profiles.
+#
+# profile:<stable id>:<version>
+# strata:<minimum band height>:<maximum band height>
+# decoration-budget:<minimum count>:<maximum count>
+# material:<stable tag>:<id>:<weight>:<terrain visual material>:<Look name>
+# decoration:<stable tag>:<id>:<placement>:<weight>:<minimum spacing>:<glyph>:<colour>:<Look name>
+
+profile:deepwell.limestone-shale:1
+strata:4:9
+decoration-budget:9:18
+material:1:limestone:55:limestone:Weathered limestone
+material:2:shale:35:shale:Blue-grey shale
+material:3:iron-stained:10:iron-stained:Iron-stained stone
+decoration:1:calcite-seam:rock-face:30:4:%:Light White:Calcite seam
+decoration:2:stalactite:ceiling:25:5:v:Light Slate:Calcite stalactite
+decoration:3:stalagmite:floor:20:5:^:Slate:Calcite stalagmite
+decoration:4:shale-rubble:floor:15:4:*:Umber:Shale rubble
+decoration:5:pool-algae:water-edge:10:3:,:Light Green:Pool algae

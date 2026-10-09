@@ -1,0 +1,9 @@
+# Curated Home-screen feature portraits. Entries are current, visually generic
+# creature art IDs. One is chosen once per application launch; the Home screen
+# itself is static.
+hero:cave-lizard
+hero:giant-spider
+hero:water-elemental
+hero:earth-elemental
+hero:air-elemental
+hero:fire-elemental

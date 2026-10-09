@@ -1,0 +1,38 @@
+/*
+ * Copyright (c) 2026 John Horton
+ * SPDX-License-Identifier: GPL-2.0-only
+ */
+
+#include <winver.h>
+
+@AMMEROW_ICON_RESOURCE@
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION @AMMEROW_VERSION_MAJOR@,@AMMEROW_VERSION_MINOR@,@AMMEROW_VERSION_PATCH@,@AMMEROW_VERSION_BUILD@
+ PRODUCTVERSION @AMMEROW_VERSION_MAJOR@,@AMMEROW_VERSION_MINOR@,@AMMEROW_VERSION_PATCH@,@AMMEROW_VERSION_BUILD@
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+ FILEFLAGS @AMMEROW_VERSION_FILE_FLAGS@
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "John Horton\0"
+            VALUE "FileDescription", "Ammerow: Lands Beyond\0"
+            VALUE "FileVersion", "@AMMEROW_VERSION@\0"
+            VALUE "InternalName", "ammerow\0"
+            VALUE "LegalCopyright", "Copyright (c) 2026 John Horton\0"
+            VALUE "LegalTrademarks", "AMMEROW and AMMEROW: LANDS BEYOND are trade marks of John Horton.\0"
+            VALUE "OriginalFilename", "ammerow.exe\0"
+            VALUE "ProductName", "Ammerow: Lands Beyond\0"
+            VALUE "ProductVersion", "@AMMEROW_VERSION@\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END

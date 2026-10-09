@@ -1,0 +1,302 @@
+# File: store.txt
+
+# Syntax for this file:
+
+# store: feature code                  - feature code is from list-terrain.h.
+#                                        store's name is name for that feature
+#                                        from terrain.txt.  Will raise an error
+#                                        if the feature in terrain.txt does not
+#                                        have the SHOP flag.
+# owner: max purse : name              - must be specfied at least once, may
+#                                        appear multiple times
+# turnover: turnover                   - how many items the store turns over
+# slots: min : max                     - number of 'normal' slots to keep stocked
+# normal: type name : item name        - for the normal stocking list
+# always: type name : ?item name       - for things to always stock
+# buy: type name                       - base types the store will buy
+# buy-flag: flag : type name           - types to buy if the flag is present
+
+
+# General store
+store:STORE_GENERAL
+art:general-store
+owner:5000:Bramble Fen the Provisioner
+owner-art:bramble-fen-the-provisioner
+owner:10000:Orren Vale the Cautious
+owner-art:orren-vale-the-cautious
+owner:20000:Kett Brassbuttons
+owner-art:kett-brassbuttons
+owner:30000:Selra Reed the Even-Handed
+owner-art:selra-reed-the-even-handed
+welcome:Supplies from the Nine Near Lands, weighed fairly and kept dry.
+slots:0:4
+turnover:2
+always:cloak:Cloak
+always:food:Ration of Food
+larder-stock:emergency-reserve:food:Expedition Ration
+always:light:Wooden Torch
+always:flask:Flask of Oil
+always:digger:Shovel
+always:digger:Pick
+always:shot:Iron Shot
+always:arrow:Arrow
+always:bolt:Bolt
+normal:food:Pint of Fine Wine
+normal:food:Slime Mold
+normal:food:Flask of Whisky
+normal:food:Hard Biscuit
+normal:mushroom:Stoneskin
+normal:mushroom:Purging
+buy:light
+buy:food
+buy:mushroom
+buy:flask
+buy:digger
+buy:cloak
+buy:shot
+buy:bolt
+buy:arrow
+
+# Armoury
+store:STORE_ARMOR
+art:armoury
+owner:5000:Varruk Ironhide
+owner-art:varruk-ironhide
+owner:10000:Halen Ward the Exacting
+owner-art:halen-ward-the-exacting
+owner:25000:Tavin Marchguard
+owner-art:tavin-marchguard
+owner:30000:Borra Flint the Patient
+owner-art:borra-flint-the-patient
+welcome:Repairs cost less than funerals. Try every strap before you trust it.
+slots:6:18
+turnover:9
+normal:boots:Pair of Leather Sandals
+normal:boots:Pair of Leather Boots
+normal:boots:Pair of Iron Shod Boots
+normal:helm:Hard Leather Cap
+normal:helm:Metal Cap
+normal:helm:Iron Helm
+normal:soft armour:Robe
+normal:soft armour:Soft Leather Armour
+normal:soft armour:Studded Leather Armour
+normal:soft armour:Hard Leather Armour
+normal:soft armour:Leather Scale Mail
+normal:hard armour:Metal Scale Mail
+normal:hard armour:Chain Mail
+normal:gloves:Set of Leather Gloves
+normal:gloves:Set of Gauntlets
+normal:shield:Wicker Shield
+normal:shield:Small Metal Shield
+normal:shield:Leather Shield
+buy:boots
+buy:gloves
+buy:crown
+buy:helm
+buy:shield
+buy:cloak
+buy:soft armor
+buy:hard armor
+buy:dragon armor
+
+# Weaponsmith
+store:STORE_WEAPON
+art:weapon-smiths
+owner:5000:Grath Coilbreaker
+owner-art:grath-coilbreaker
+owner:10000:Cael Ashhand
+owner-art:cael-ashhand
+owner:25000:Tibbin Farshot
+owner-art:tibbin-farshot
+owner:30000:Dorren Forgevoice
+owner-art:dorren-forgevoice
+welcome:Every edge is tested on Meridian stone; every string is waxed against the rain.
+slots:3:14
+turnover:9
+normal:shot:Iron Shot
+normal:arrow:Arrow
+normal:bolt:Bolt
+normal:sword:Dagger
+normal:sword:Main Gauche
+normal:sword:Rapier
+normal:sword:Short Sword
+normal:sword:Cutlass
+normal:sword:Tulwar
+normal:sword:Broad Sword
+normal:sword:Long Sword
+normal:sword:Scimitar
+normal:sword:Katana
+normal:sword:Bastard Sword
+normal:polearm:Spear
+normal:polearm:Awl-Pike
+normal:polearm:Trident
+normal:polearm:Pike
+normal:polearm:Beaked Axe
+normal:polearm:Broad Axe
+normal:polearm:Battle Axe
+normal:polearm:Lance
+normal:polearm:Lucerne Hammer
+normal:hafted:Whip
+normal:bow:Sling
+normal:bow:Short Bow
+normal:bow:Long Bow
+normal:bow:Light Crossbow
+buy:shot
+buy:bolt
+buy:arrow
+buy:bow
+buy:digger
+buy:sword
+buy:polearm
+buy:hafted
+
+
+# Bookseller
+store:STORE_BOOK
+art:bookseller
+owner:15000:Edran Quill
+owner-art:edran-quill
+owner:20000:Sabren Fieldward
+owner-art:sabren-fieldward
+owner:25000:Eilra Quietleaf
+owner-art:eilra-quietleaf
+owner:30000:Korrin Deepprint
+owner-art:korrin-deepprint
+welcome:Route journals, formulae and inherited manuals share the shelves.
+slots:0:2
+turnover:0
+always:prayer book
+always:magic book
+always:nature book
+always:shadow book
+buy:magic book
+buy:prayer book
+buy:nature book
+buy:shadow book
+
+# Alchemist
+store:STORE_ALCHEMY
+art:alchemy-shop
+owner:10000:Iven Silt the Assayer
+owner-art:iven-silt-the-assayer
+owner:10000:Nibbin Glass
+owner-art:nibbin-glass
+owner:15000:Vezra Pinch
+owner-art:vezra-pinch
+owner:15000:Merra Voss the Measured
+owner-art:merra-voss-the-measured
+welcome:Field mixtures are labelled by batch. Unknown reactions are bought at your risk.
+slots:6:10
+turnover:9
+always:scroll:Homeward Tension
+always:scroll:Seam Step
+always:scroll:Remove Curse
+always:potion:Cure Light Wounds
+normal:scroll:Monster Confusion
+normal:scroll:Magic Mapping
+normal:scroll:Detect Invisible
+normal:scroll:Recharging
+normal:scroll:Remove Hunger
+normal:scroll:Blessing
+normal:scroll:Holy Chant
+normal:potion:Boldness
+normal:potion:Berserk Strength
+normal:potion:Resist Heat
+normal:potion:Resist Cold
+normal:potion:Restore Life Levels
+normal:potion:Neutralize Poison
+normal:potion:Cure Serious Wounds
+normal:potion:Cure Critical Wounds
+buy:scroll
+buy:potion
+
+# Magic-user's
+store:STORE_MAGIC
+art:magic-shop
+owner:15000:Vaeth Coilreader
+owner-art:vaeth-coilreader
+owner:20000:Cobbin Spark
+owner-art:cobbin-spark
+owner:25000:Joren Gauge
+owner-art:joren-gauge
+owner:30000:Saevra Riftglass
+owner-art:saevra-riftglass
+welcome:Seam-touched instruments, charged devices and peculiar adornments.
+slots:4:14
+turnover:9
+normal:ring:Searching
+normal:ring:Feather Falling
+normal:ring:Protection
+normal:ring:Open Wounds
+normal:amulet:Slow Digestion
+normal:amulet:Resist Acid
+normal:wand:Light
+normal:wand:Slow Monster
+normal:wand:Confuse Monster
+normal:wand:Force Darts
+normal:wand:Spore Cloud
+normal:wand:Stone to Mud
+normal:staff:Teleportation
+normal:staff:Light
+normal:staff:Mapping
+normal:staff:Detect Invisible
+normal:staff:Detect Evil
+buy:magic book
+buy:amulet
+buy:ring
+buy:staff
+buy:wand
+buy:rod
+
+# Black Market - no stock given but we still need slot/turnover info
+store:STORE_BLACK
+art:black-market
+owner:15000:Rusk Underbridge
+owner-art:rusk-underbridge
+owner:20000:Kebb Salt-Eye
+owner-art:kebb-salt-eye
+owner:25000:Varran Side-Door
+owner-art:varran-side-door
+owner:30000:Orra Greyhand
+owner-art:orra-greyhand
+welcome:No questions about origin. No promises about destination.
+slots:6:18
+turnover:9
+
+store:HOME
+owner:0:Your home
+owner:0:Your home
+owner:0:Your home
+owner:0:Your home
+
+# Fishing and cave supplier.  Rig capabilities live in fishing.txt; this
+# ordinary store owns only inventory and economy.
+store:STORE_FISHING
+art:fishing-shop
+owner:5000:Mara Venn the Outfitter
+owner-art:mara-venn-the-outfitter
+welcome:My lost yew longline lies in the Deepwell; it reaches Glassfin water. Twenty larder portions unlock Meridian provisions.
+objective-briefing:Mara Venn points out ways to strengthen the fishing expedition.
+fishing-rig-hint:You need a fishing rod. The village Fishing Shop sells them.
+welcome-objective:lost-longline:You found the yew longline. Glassfin water is now within reach; fill the larder and sound the deepest Underflow.
+welcome-objective:underflow-sounding:The Underflow passage is charted. It reaches Meridian 5; what happens there is only the beginning of the descent.
+welcome-victory:The pressure is gone and the village water runs clear. You finished the first full sounding; anything below Meridian 100 is yours to discover.
+slots:0:0
+turnover:0
+always:tool:Reed Bank Rod
+always:tool:Ash Water Rod
+limited:1:tool:Yew Longline Rod
+limited:24:tool:Piton
+limited:200:tool:Rope Length (2 metres)
+limited:2:tool:Scuba Gear
+buy:tool
+buy:food
+
+# No normal inventory, buying or turnover. Catalogue rules live in relic_broker.txt.
+store:STORE_BROKER
+broker
+art:black-market
+owner:0:The Catalogue Keeper
+welcome:A finite catalogue for this lifetime only. Type and appraisal are known; identity and powers are sealed. No promise of a useful fit. Offers may become unavailable elsewhere; there are no replacements.
+slots:0:0
+turnover:0

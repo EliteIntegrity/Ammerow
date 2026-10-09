@@ -1,0 +1,22 @@
+# Continuous acceptance run for the first cave/fishing/larder/Meridian loop.
+# The policy receives no rod, catches, reward, coordinates, or forced fish.
+# It derives objectives from live game data and emits ordinary semantic commands.
+# The declared launch traversal profile requires this expedition kit; unlike
+# the rod, catches and reward, the tools are setup resources rather than goals.
+name:cave-larder-loop
+seed:260828
+race:Nearlander
+class:Warrior
+player:Loop Tester
+location:core.cave.east.001
+entry:shaft.spelunk
+enter-route:core.route.spelunk.east.in
+inventory:12:tool:Piton
+inventory:80:tool:Rope Length (2 metres)
+inventory:1:scroll:Homeward Tension
+bot:cave-larder-loop
+steps:5000
+capture:final
+expect:complete
+screen-width:1280
+screen-height:720

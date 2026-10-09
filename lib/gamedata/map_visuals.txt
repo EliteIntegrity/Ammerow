@@ -1,0 +1,24 @@
+# Map-only presentation bindings. No gameplay, colour or atlas coordinates.
+# tile:<consumer scope>:<semantic identity>:<runtime namespace>:<art identity>
+# Missing bindings/assets retain ordinary glyphs. Player/peek/exit markers win.
+tile:map:visible-pile:object:loot-pile
+tile:cave:rock:feature:cave-rock
+tile:cave-material:limestone:feature:cave-limestone
+tile:cave-material:shale:feature:cave-shale
+tile:cave-material:iron-stained:feature:cave-iron-stained
+tile:cave:water-surface:feature:cave-water-surface
+tile:cave:water-body:feature:cave-water-body
+tile:cave-decoration:calcite-seam:feature:cave-calcite-seam
+tile:cave-decoration:copper-seam:feature:cave-copper-seam
+tile:cave-decoration:stalactite:feature:cave-stalactite
+tile:cave-decoration:stalagmite:feature:cave-stalagmite
+tile:cave-decoration:shale-rubble:feature:cave-shale-rubble
+tile:cave-decoration:pool-algae:feature:cave-pool-algae
+tile:cave:rope-middle:feature:cave-rope-middle
+tile:cave:rope-end:feature:cave-rope-end
+tile:cave:piton-left:feature:cave-piton-left
+tile:cave:piton-right:feature:cave-piton-right
+tile:cave:exit:feature:cave-exit
+tile:cave:passage-up:feature:cave-passage-up
+tile:cave:passage-down:feature:cave-passage-down
+tile:cave-actor:core.spelunk.actor.chasm-skitter:actor:chasm-skitter

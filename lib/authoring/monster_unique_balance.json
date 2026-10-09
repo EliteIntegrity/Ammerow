@@ -1,0 +1,773 @@
+{
+  "aggregate_capabilities": {
+    "blow_effect_counts": {
+      "ACID": 1,
+      "DEADFIELD_SICKNESS": 9,
+      "BLIND": 2,
+      "COLD": 9,
+      "CONFUSE": 15,
+      "DISENCHANT": 12,
+      "DRAIN_CHARGES": 11,
+      "EAT_GOLD": 3,
+      "EAT_ITEM": 1,
+      "ELEC": 4,
+      "EXP_40": 5,
+      "EXP_80": 16,
+      "FIRE": 23,
+      "HURT": 202,
+      "LOSE_DEX": 4,
+      "LOSE_INT": 1,
+      "LOSE_STR": 4,
+      "PARALYZE": 5,
+      "POISON": 12,
+      "SHATTER": 3,
+      "TERRIFY": 4
+    },
+    "important_flag_counts": {
+      "INVISIBLE": 9,
+      "KILL_WALL": 2,
+      "PASS_WALL": 2,
+      "POWERFUL": 19,
+      "REGENERATE": 3,
+      "SMART": 34,
+      "SMASH_WALL": 0
+    },
+    "spell_token_counts": {
+      "ARROW": 1,
+      "BA_ACID": 6,
+      "BA_COLD": 8,
+      "BA_DARK": 4,
+      "BA_ELEC": 5,
+      "BA_FIRE": 12,
+      "BA_MANA": 3,
+      "BA_NETH": 13,
+      "BA_POIS": 1,
+      "BA_SHAR": 2,
+      "BA_WATE": 5,
+      "BE_NETH": 1,
+      "BLIND": 26,
+      "BLINK": 7,
+      "BOULDER": 7,
+      "BO_ACID": 3,
+      "BO_COLD": 5,
+      "BO_ELEC": 3,
+      "BO_FIRE": 7,
+      "BO_ICE": 5,
+      "BO_MANA": 11,
+      "BO_NETH": 4,
+      "BO_PLAS": 5,
+      "BO_WATE": 3,
+      "BRAIN_SMASH": 8,
+      "BR_ACID": 2,
+      "BR_CHAO": 1,
+      "BR_COLD": 6,
+      "BR_DARK": 3,
+      "BR_DISE": 2,
+      "BR_ELEC": 2,
+      "BR_FIRE": 11,
+      "BR_GRAV": 1,
+      "BR_LIGHT": 2,
+      "BR_NETH": 1,
+      "BR_NEXU": 1,
+      "BR_PLAS": 3,
+      "BR_POIS": 5,
+      "BR_SHAR": 2,
+      "BR_SOUN": 4,
+      "BR_WALL": 1,
+      "CONF": 17,
+      "DARKNESS": 3,
+      "DRAIN_MANA": 2,
+      "FORGET": 5,
+      "HASTE": 1,
+      "HEAL": 16,
+      "HOLD": 15,
+      "MIND_BLAST": 4,
+      "SCARE": 25,
+      "SHAPECHANGE": 1,
+      "SLOW": 9,
+      "STORM": 2,
+      "S_ANIMAL": 4,
+      "S_DEMON": 3,
+      "S_DRAGON": 1,
+      "S_HI_DEMON": 8,
+      "S_HI_DRAGON": 6,
+      "S_HI_UNDEAD": 10,
+      "S_HOUND": 4,
+      "S_HYDRA": 1,
+      "S_KIN": 18,
+      "S_MONSTER": 5,
+      "S_MONSTERS": 15,
+      "S_SPIDER": 1,
+      "S_UNDEAD": 8,
+      "S_UNIQUE": 2,
+      "S_WORLD_ECHO": 2,
+      "S_WRAITH": 9,
+      "TELE_AWAY": 4,
+      "TELE_LEVEL": 2,
+      "TELE_SELF_TO": 1,
+      "TELE_TO": 11,
+      "TPORT": 4,
+      "TRAPS": 6,
+      "WEAVE": 2,
+      "WHIP": 1,
+      "WOUND": 23
+    }
+  },
+  "bands": {
+    "0": {
+      "armor_class": {
+        "maximum": 12.0,
+        "median": 12.0,
+        "minimum": 12.0,
+        "p90": 12.0
+      },
+      "capability_counts": {
+        "companions": 0,
+        "control": 0,
+        "good_or_great_drop": 2,
+        "mobility": 1,
+        "spellcaster": 1,
+        "summoner": 0
+      },
+      "count": 2,
+      "depth": {
+        "maximum": 0.0,
+        "median": 0.0,
+        "minimum": 0.0,
+        "p90": 0.0
+      },
+      "experience": {
+        "maximum": 0.0,
+        "median": 0.0,
+        "minimum": 0.0,
+        "p90": 0.0
+      },
+      "hit_points": {
+        "maximum": 1000.0,
+        "median": 675.0,
+        "minimum": 350.0,
+        "p90": 935.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 0.0,
+        "median": 0.0,
+        "minimum": 0.0,
+        "p90": 0.0
+      },
+      "melee_maximum_per_round": {
+        "maximum": 0.0,
+        "median": 0.0,
+        "minimum": 0.0,
+        "p90": 0.0
+      },
+      "rarity": {
+        "maximum": 4.0,
+        "median": 2.5,
+        "minimum": 1.0,
+        "p90": 3.7
+      },
+      "speed": {
+        "maximum": 110.0,
+        "median": 105.0,
+        "minimum": 100.0,
+        "p90": 109.0
+      }
+    },
+    "1-9": {
+      "armor_class": {
+        "maximum": 48.0,
+        "median": 36.0,
+        "minimum": 12.0,
+        "p90": 45.9
+      },
+      "capability_counts": {
+        "companions": 3,
+        "control": 2,
+        "good_or_great_drop": 6,
+        "mobility": 0,
+        "spellcaster": 1,
+        "summoner": 0
+      },
+      "count": 8,
+      "depth": {
+        "maximum": 9.0,
+        "median": 6.0,
+        "minimum": 2.0,
+        "p90": 8.3
+      },
+      "experience": {
+        "maximum": 150.0,
+        "median": 85.0,
+        "minimum": 30.0,
+        "p90": 115.0
+      },
+      "hit_points": {
+        "maximum": 400.0,
+        "median": 170.0,
+        "minimum": 25.0,
+        "p90": 295.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 26.0,
+        "median": 7.5,
+        "minimum": 2.5,
+        "p90": 22.5
+      },
+      "melee_maximum_per_round": {
+        "maximum": 48.0,
+        "median": 13.0,
+        "minimum": 4.0,
+        "p90": 41.0
+      },
+      "rarity": {
+        "maximum": 3.0,
+        "median": 2.0,
+        "minimum": 1.0,
+        "p90": 3.0
+      },
+      "speed": {
+        "maximum": 130.0,
+        "median": 115.0,
+        "minimum": 110.0,
+        "p90": 123.0
+      }
+    },
+    "10-19": {
+      "armor_class": {
+        "maximum": 100.0,
+        "median": 72.0,
+        "minimum": 24.0,
+        "p90": 91.0
+      },
+      "capability_counts": {
+        "companions": 8,
+        "control": 4,
+        "good_or_great_drop": 10,
+        "mobility": 3,
+        "spellcaster": 4,
+        "summoner": 2
+      },
+      "count": 10,
+      "depth": {
+        "maximum": 19.0,
+        "median": 15.0,
+        "minimum": 10.0,
+        "p90": 19.0
+      },
+      "experience": {
+        "maximum": 3000.0,
+        "median": 240.0,
+        "minimum": 80.0,
+        "p90": 660.0
+      },
+      "hit_points": {
+        "maximum": 1000.0,
+        "median": 330.0,
+        "minimum": 120.0,
+        "p90": 505.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 45.0,
+        "median": 29.0,
+        "minimum": 9.5,
+        "p90": 45.0
+      },
+      "melee_maximum_per_round": {
+        "maximum": 78.0,
+        "median": 50.0,
+        "minimum": 17.0,
+        "p90": 78.0
+      },
+      "rarity": {
+        "maximum": 3.0,
+        "median": 3.0,
+        "minimum": 2.0,
+        "p90": 3.0
+      },
+      "speed": {
+        "maximum": 120.0,
+        "median": 110.0,
+        "minimum": 110.0,
+        "p90": 120.0
+      }
+    },
+    "20-29": {
+      "armor_class": {
+        "maximum": 114.0,
+        "median": 96.0,
+        "minimum": 48.0,
+        "p90": 104.4
+      },
+      "capability_counts": {
+        "companions": 10,
+        "control": 6,
+        "good_or_great_drop": 13,
+        "mobility": 1,
+        "spellcaster": 8,
+        "summoner": 2
+      },
+      "count": 14,
+      "depth": {
+        "maximum": 28.0,
+        "median": 24.0,
+        "minimum": 20.0,
+        "p90": 28.0
+      },
+      "experience": {
+        "maximum": 1111.0,
+        "median": 600.0,
+        "minimum": 300.0,
+        "p90": 1000.0
+      },
+      "hit_points": {
+        "maximum": 1400.0,
+        "median": 810.0,
+        "minimum": 0.0,
+        "p90": 1070.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 56.0,
+        "median": 42.0,
+        "minimum": 22.5,
+        "p90": 56.0
+      },
+      "melee_maximum_per_round": {
+        "maximum": 96.0,
+        "median": 72.0,
+        "minimum": 36.0,
+        "p90": 96.0
+      },
+      "rarity": {
+        "maximum": 5.0,
+        "median": 3.5,
+        "minimum": 0.0,
+        "p90": 4.7
+      },
+      "speed": {
+        "maximum": 120.0,
+        "median": 110.0,
+        "minimum": 110.0,
+        "p90": 120.0
+      }
+    },
+    "30-39": {
+      "armor_class": {
+        "maximum": 120.0,
+        "median": 108.0,
+        "minimum": 84.0,
+        "p90": 120.0
+      },
+      "capability_counts": {
+        "companions": 6,
+        "control": 2,
+        "good_or_great_drop": 7,
+        "mobility": 1,
+        "spellcaster": 6,
+        "summoner": 2
+      },
+      "count": 7,
+      "depth": {
+        "maximum": 38.0,
+        "median": 34.0,
+        "minimum": 30.0,
+        "p90": 36.8
+      },
+      "experience": {
+        "maximum": 2000.0,
+        "median": 1600.0,
+        "minimum": 1200.0,
+        "p90": 2000.0
+      },
+      "hit_points": {
+        "maximum": 1800.0,
+        "median": 1100.0,
+        "minimum": 880.0,
+        "p90": 1620.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 69.0,
+        "median": 60.0,
+        "minimum": 58.5,
+        "p90": 65.4
+      },
+      "melee_maximum_per_round": {
+        "maximum": 120.0,
+        "median": 102.0,
+        "minimum": 100.0,
+        "p90": 112.8
+      },
+      "rarity": {
+        "maximum": 7.0,
+        "median": 5.0,
+        "minimum": 2.0,
+        "p90": 7.0
+      },
+      "speed": {
+        "maximum": 120.0,
+        "median": 120.0,
+        "minimum": 120.0,
+        "p90": 120.0
+      }
+    },
+    "40-49": {
+      "armor_class": {
+        "maximum": 150.0,
+        "median": 120.0,
+        "minimum": 75.0,
+        "p90": 146.0
+      },
+      "capability_counts": {
+        "companions": 2,
+        "control": 3,
+        "good_or_great_drop": 5,
+        "mobility": 2,
+        "spellcaster": 9,
+        "summoner": 2
+      },
+      "count": 9,
+      "depth": {
+        "maximum": 49.0,
+        "median": 43.0,
+        "minimum": 41.0,
+        "p90": 44.2
+      },
+      "experience": {
+        "maximum": 25000.0,
+        "median": 4500.0,
+        "minimum": 2000.0,
+        "p90": 10600.0
+      },
+      "hit_points": {
+        "maximum": 2800.0,
+        "median": 2400.0,
+        "minimum": 1300.0,
+        "p90": 2720.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 118.0,
+        "median": 56.0,
+        "minimum": 40.5,
+        "p90": 111.6
+      },
+      "melee_maximum_per_round": {
+        "maximum": 208.0,
+        "median": 96.0,
+        "minimum": 72.0,
+        "p90": 195.2
+      },
+      "rarity": {
+        "maximum": 3.0,
+        "median": 3.0,
+        "minimum": 2.0,
+        "p90": 3.0
+      },
+      "speed": {
+        "maximum": 130.0,
+        "median": 120.0,
+        "minimum": 110.0,
+        "p90": 130.0
+      }
+    },
+    "50-59": {
+      "armor_class": {
+        "maximum": 234.0,
+        "median": 150.0,
+        "minimum": 54.0,
+        "p90": 190.8
+      },
+      "capability_counts": {
+        "companions": 2,
+        "control": 8,
+        "good_or_great_drop": 9,
+        "mobility": 2,
+        "spellcaster": 9,
+        "summoner": 5
+      },
+      "count": 9,
+      "depth": {
+        "maximum": 59.0,
+        "median": 54.0,
+        "minimum": 50.0,
+        "p90": 58.2
+      },
+      "experience": {
+        "maximum": 40000.0,
+        "median": 24000.0,
+        "minimum": 18000.0,
+        "p90": 34000.0
+      },
+      "hit_points": {
+        "maximum": 5000.0,
+        "median": 3500.0,
+        "minimum": 2200.0,
+        "p90": 4760.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 278.0,
+        "median": 112.0,
+        "minimum": 75.0,
+        "p90": 216.4
+      },
+      "melee_maximum_per_round": {
+        "maximum": 512.0,
+        "median": 208.0,
+        "minimum": 130.0,
+        "p90": 390.4
+      },
+      "rarity": {
+        "maximum": 4.0,
+        "median": 3.0,
+        "minimum": 1.0,
+        "p90": 3.2
+      },
+      "speed": {
+        "maximum": 140.0,
+        "median": 130.0,
+        "minimum": 120.0,
+        "p90": 132.0
+      }
+    },
+    "60-69": {
+      "armor_class": {
+        "maximum": 240.0,
+        "median": 162.0,
+        "minimum": 96.0,
+        "p90": 208.5
+      },
+      "capability_counts": {
+        "companions": 1,
+        "control": 8,
+        "good_or_great_drop": 8,
+        "mobility": 4,
+        "spellcaster": 8,
+        "summoner": 7
+      },
+      "count": 8,
+      "depth": {
+        "maximum": 69.0,
+        "median": 65.5,
+        "minimum": 60.0,
+        "p90": 68.3
+      },
+      "experience": {
+        "maximum": 38000.0,
+        "median": 30000.0,
+        "minimum": 6000.0,
+        "p90": 35900.0
+      },
+      "hit_points": {
+        "maximum": 7000.0,
+        "median": 4900.0,
+        "minimum": 3344.0,
+        "p90": 6650.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 312.0,
+        "median": 137.0,
+        "minimum": 84.0,
+        "p90": 232.9
+      },
+      "melee_maximum_per_round": {
+        "maximum": 576.0,
+        "median": 240.5,
+        "minimum": 144.0,
+        "p90": 424.8
+      },
+      "rarity": {
+        "maximum": 4.0,
+        "median": 3.0,
+        "minimum": 1.0,
+        "p90": 3.3
+      },
+      "speed": {
+        "maximum": 130.0,
+        "median": 125.0,
+        "minimum": 120.0,
+        "p90": 130.0
+      }
+    },
+    "70-79": {
+      "armor_class": {
+        "maximum": 240.0,
+        "median": 111.5,
+        "minimum": 1.0,
+        "p90": 213.0
+      },
+      "capability_counts": {
+        "companions": 1,
+        "control": 9,
+        "good_or_great_drop": 9,
+        "mobility": 3,
+        "spellcaster": 9,
+        "summoner": 9
+      },
+      "count": 10,
+      "depth": {
+        "maximum": 79.0,
+        "median": 76.5,
+        "minimum": 72.0,
+        "p90": 79.0
+      },
+      "experience": {
+        "maximum": 55000.0,
+        "median": 33500.0,
+        "minimum": 20000.0,
+        "p90": 38800.0
+      },
+      "hit_points": {
+        "maximum": 13000.0,
+        "median": 5500.0,
+        "minimum": 4200.0,
+        "p90": 8050.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 364.0,
+        "median": 116.0,
+        "minimum": 0.0,
+        "p90": 214.6
+      },
+      "melee_maximum_per_round": {
+        "maximum": 676.0,
+        "median": 203.0,
+        "minimum": 0.0,
+        "p90": 398.8
+      },
+      "rarity": {
+        "maximum": 5.0,
+        "median": 3.0,
+        "minimum": 1.0,
+        "p90": 3.2
+      },
+      "speed": {
+        "maximum": 130.0,
+        "median": 130.0,
+        "minimum": 120.0,
+        "p90": 130.0
+      }
+    },
+    "80-89": {
+      "armor_class": {
+        "maximum": 255.0,
+        "median": 144.0,
+        "minimum": 10.0,
+        "p90": 208.0
+      },
+      "capability_counts": {
+        "companions": 5,
+        "control": 12,
+        "good_or_great_drop": 14,
+        "mobility": 4,
+        "spellcaster": 15,
+        "summoner": 14
+      },
+      "count": 15,
+      "depth": {
+        "maximum": 88.0,
+        "median": 83.0,
+        "minimum": 80.0,
+        "p90": 86.6
+      },
+      "experience": {
+        "maximum": 60000.0,
+        "median": 38000.0,
+        "minimum": 18000.0,
+        "p90": 45000.0
+      },
+      "hit_points": {
+        "maximum": 10000.0,
+        "median": 5500.0,
+        "minimum": 3500.0,
+        "p90": 8100.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 312.0,
+        "median": 138.0,
+        "minimum": 31.5,
+        "p90": 288.8
+      },
+      "melee_maximum_per_round": {
+        "maximum": 576.0,
+        "median": 246.0,
+        "minimum": 54.0,
+        "p90": 534.4
+      },
+      "rarity": {
+        "maximum": 3.0,
+        "median": 3.0,
+        "minimum": 2.0,
+        "p90": 3.0
+      },
+      "speed": {
+        "maximum": 140.0,
+        "median": 130.0,
+        "minimum": 120.0,
+        "p90": 140.0
+      }
+    },
+    "90-99": {
+      "armor_class": {
+        "maximum": 192.0,
+        "median": 180.0,
+        "minimum": 120.0,
+        "p90": 192.0
+      },
+      "capability_counts": {
+        "companions": 2,
+        "control": 2,
+        "good_or_great_drop": 4,
+        "mobility": 1,
+        "spellcaster": 4,
+        "summoner": 3
+      },
+      "count": 4,
+      "depth": {
+        "maximum": 95.0,
+        "median": 91.0,
+        "minimum": 90.0,
+        "p90": 94.1
+      },
+      "experience": {
+        "maximum": 45000.0,
+        "median": 41500.0,
+        "minimum": 40000.0,
+        "p90": 44400.0
+      },
+      "hit_points": {
+        "maximum": 8000.0,
+        "median": 8000.0,
+        "minimum": 6000.0,
+        "p90": 8000.0
+      },
+      "melee_expected_per_round": {
+        "maximum": 234.0,
+        "median": 208.0,
+        "minimum": 169.0,
+        "p90": 234.0
+      },
+      "melee_maximum_per_round": {
+        "maximum": 432.0,
+        "median": 384.0,
+        "minimum": 312.0,
+        "p90": 432.0
+      },
+      "rarity": {
+        "maximum": 3.0,
+        "median": 1.0,
+        "minimum": 1.0,
+        "p90": 2.4
+      },
+      "speed": {
+        "maximum": 130.0,
+        "median": 130.0,
+        "minimum": 130.0,
+        "p90": 130.0
+      }
+    }
+  },
+  "generated_slots": 96,
+  "origin": "anonymous-aggregate",
+  "review": "release",
+  "schema_version": 1,
+  "source_sha256": "2176e842538681a8d4b0748048e0c7c35460dca40c2ec469ac02928366e56b65",
+  "stable_slots": 5
+}

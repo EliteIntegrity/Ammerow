@@ -1,0 +1,581 @@
+# Original Ammerow champion identities.
+# Mechanics are assigned independently by broad band at generation time.
+
+origin:ammerow-original
+review:release
+
+name:Merren Pike, the Rain Assessor
+art:merren-pike-the-rain-assessor
+band:0
+family:road
+premise:Merren has measured the village floodmarks for so long that every rising puddle now looks like deliberate fraud.
+
+name:The Sleepless Lamplighter
+art:the-sleepless-lamplighter
+band:0
+family:machine
+premise:An unattended maintenance frame walks the night roads trimming wicks that were removed years ago.
+
+name:Dregs, the Boot Thief
+art:dregs-the-boot-thief
+band:1-9
+family:beast
+premise:A mud-bellied scavenger collects left boots and becomes furious when offered a matching pair.
+
+name:The Argument Beneath the Bridge
+art:the-argument-beneath-the-bridge
+band:1-9
+family:echo
+premise:A quarrel survived worldfall without its speakers and now follows anything that tries to cross running water.
+
+name:Nalla Three-Shoes
+art:nalla-three-shoes
+band:1-9
+family:road
+premise:Nalla wears one good shoe and carries two ruined ones as proof that every road charges more than advertised.
+
+name:The Copper-Midge Census
+art:the-copper-midge-census
+band:1-9
+family:colony
+premise:A cloud of metallic insects arranges itself into changing totals and counts warm bodies twice.
+
+name:Crumbhook
+art:crumbhook
+band:1-9
+family:beast
+premise:This pale nook predator has a hooked lower jaw perfectly suited to extracting food from closed packs.
+
+name:The Mislaid Tollgate
+art:the-mislaid-tollgate
+band:1-9
+family:machine
+premise:A walking gate mechanism demands payment from whichever passage it currently blocks.
+
+name:Silt-Leg Venn
+art:silt-leg-venn
+band:1-9
+family:survivor
+premise:Venn escaped an embedded marsh with both legs locked inside articulated columns of dried silt.
+
+name:The Candle-Eating Newt
+art:the-candle-eating-newt
+band:1-9
+family:beast
+premise:A glossy cave newt follows explorers by the smell of warm tallow and bites through the flame first.
+
+name:Harrowpin, the Seam Dentist
+art:harrowpin-the-seam-dentist
+band:10-19
+family:machine
+premise:A many-armed boring instrument extracts loose stones from fault seams and mistakes teeth for samples.
+
+name:The Damp Appointment
+art:the-damp-appointment
+band:10-19
+family:echo
+premise:A punctual patch of rain waits in dry tunnels for someone who has been late for centuries.
+
+name:Pell of Too Many Pockets
+art:pell-of-too-many-pockets
+band:10-19
+family:road
+premise:Pell stitched pockets over pockets until the coat began stealing on its own behalf.
+
+name:The Bellglass Brood
+art:the-bellglass-brood
+band:10-19
+family:colony
+premise:Clear burrow insects share a resonant shell and strike it whenever the surrounding rock moves.
+
+name:The Backward Survey Wheel
+art:the-backward-survey-wheel
+band:10-19
+family:machine
+premise:A brass measuring wheel faithfully records distance while rolling toward the place it started.
+
+name:Oller Sinkmouth
+art:oller-sinkmouth
+band:10-19
+family:beast
+premise:Oller's flexible jaw opens into a flooded pocket much larger than the animal carrying it.
+
+name:The Moss That Learned Footsteps
+art:the-moss-that-learned-footsteps
+band:10-19
+family:colony
+premise:A mobile green carpet copies the gait of its last visitor and has collected several incompatible walks.
+
+name:Red Gauge Errant
+art:red-gauge-errant
+band:10-19
+family:machine
+premise:A warning gauge tore free of its boiler and now searches the caves for pressure high enough to justify itself.
+
+name:Vessa Quill, Floodmark Forger
+art:vessa-quill-floodmark-forger
+band:10-19
+family:road
+premise:Vessa redraws old high-water marks above doors and sells frightened occupants routes to higher ground.
+
+name:The Hungry Culvert
+art:the-hungry-culvert
+band:10-19
+family:current
+premise:A section of stone drain crawls against the gradient swallowing runoff, gravel and careless ankles.
+
+name:The Scree Assembly
+art:the-scree-assembly
+band:20-29
+family:colony
+premise:Thousands of sharp fragments vote by falling, and the winning direction is usually toward a warm body.
+
+name:Sella Vane, the Lost Cartographer
+art:sella-vane-the-lost-cartographer
+band:20-29
+family:survivor
+premise:Sella draws excellent maps of a buried district that rearranges itself whenever the paper is folded.
+
+name:The Bell Without a Tower
+art:the-bell-without-a-tower
+band:20-29
+family:echo
+premise:A bronze note drags an invisible mass through the passages and dents stone where the missing bell should swing.
+
+name:Crookjaw of the Brine Pocket
+art:crookjaw-of-the-brine-pocket
+band:20-29
+family:beast
+premise:A salt-armoured sump hunter preserves each captured object in a separate fold of its throat.
+
+name:The Walking Plumbline
+art:the-walking-plumbline
+band:20-29
+family:machine
+premise:A survey weight grew jointed legs but still insists that every surface should hang directly beneath it.
+
+name:The Resin Moldwork
+art:the-resin-moldwork
+band:20-29
+family:colony
+premise:A fungal colony seals insects in warm resin and uses their last movements as instructions.
+
+name:Hesp Coil, the Rope-Cutter
+art:hesp-coil-the-rope-cutter
+band:20-29
+family:road
+premise:Hesp believes every rope is a dishonest shortcut and carries shears ground from fallen pitons.
+
+name:The Flooded Locksmith
+art:the-flooded-locksmith
+band:20-29
+family:survivor
+premise:A locksmith from a drowned street opens stone with keys made from trapped bubbles.
+
+name:Needleback Sump-Eel
+art:needleback-sump-eel
+band:20-29
+family:beast
+premise:Mineral needles grow along this eel's spine wherever cave water carries dissolved metal.
+
+name:The Quarry's Second Opinion
+art:the-quarry-s-second-opinion
+band:20-29
+family:echo
+premise:Every struck wall produces a delayed objection that has learned to strike the mason in return.
+
+name:Verrin Ashboot
+art:verrin-ashboot
+band:20-29
+family:survivor
+premise:Verrin walks inside a personal fall of warm ash and leaves bootprints on ceilings as often as floors.
+
+name:The Listening Stalactite
+art:the-listening-stalactite
+band:20-29
+family:stone
+premise:A hanging stone organ lowers itself toward repeated sounds and grows a fresh ring for every voice collected.
+
+name:The Unfinished Stair
+art:the-unfinished-stair
+band:20-29
+family:machine
+premise:Three mobile steps pursue travellers in the hope that someone will finally build the rest of them.
+
+name:Cask, the Mineral Drinker
+art:cask-the-mineral-drinker
+band:20-29
+family:beast
+premise:Cask strains metals from cave water until its translucent belly rings when struck.
+
+name:The Slate Menagerie
+art:the-slate-menagerie
+band:30-39
+family:colony
+premise:Flat stone animals peel from a shared wall and reassemble into whichever outline corners prey most efficiently.
+
+name:Brel Voss, Keeper of Broken Levels
+art:brel-voss-keeper-of-broken-levels
+band:30-39
+family:survivor
+premise:Brel carries the bubbles from shattered spirit levels and releases them to decide which way is up.
+
+name:The Limestone Weather
+art:the-limestone-weather
+band:30-39
+family:current
+premise:A local climate of chalk dust, hard rain and sudden calcification travels through otherwise still passages.
+
+name:Knurl, the Iron Grazer
+art:knurl-the-iron-grazer
+band:30-39
+family:stone
+premise:Knurl crops rust from buried machinery with a rotating mouth and leaves polished arcs in solid ore.
+
+name:The Lantern Leech
+art:the-lantern-leech
+band:30-39
+family:beast
+premise:A bladdered cave animal drinks illumination and stores the stolen colours beneath its skin.
+
+name:The Surveyor's Bad Memory
+art:the-surveyor-s-bad-memory
+band:30-39
+family:echo
+premise:A discarded route recollection insists that safe ground lies one pace beyond every actual ledge.
+
+name:The Basin That Climbed
+art:the-basin-that-climbed
+band:30-39
+family:current
+premise:A bowl of dark water carries its stone rim upward in search of the rain that once filled it.
+
+name:Thimbledeep
+art:thimbledeep
+band:40-49
+family:beast
+premise:A compact tunneller unfolds to impossible length when threatened and retreats into a thimble-sized hole.
+
+name:The Walking Fault Map
+art:the-walking-fault-map
+band:40-49
+family:machine
+premise:A layered survey plate flexes along every recorded fracture and makes new cracks match the drawing.
+
+name:Nera Voss, the Unmoored
+art:nera-voss-the-unmoored
+band:40-49
+family:survivor
+premise:Nera carries a coil of anchor chain whose far end still falls toward another world's gravity.
+
+name:The Salt Orchard
+art:the-salt-orchard
+band:40-49
+family:colony
+premise:White mineral branches fruit with brine bladders that burst when shadows pass over them.
+
+name:The Pressure Bell
+art:the-pressure-bell
+band:40-49
+family:current
+premise:A bell-shaped front of compressed air rings only after it has crossed through bone.
+
+name:Latch, the Door Collector
+art:latch-the-door-collector
+band:40-49
+family:road
+premise:Latch wears doors from vanished rooms as overlapping armour and remembers what waited behind each one.
+
+name:The Glass Lung
+art:the-glass-lung
+band:40-49
+family:machine
+premise:A transparent breathing engine filters cave air and exhales everything it decides does not belong.
+
+name:Old Measure Wrong
+art:old-measure-wrong
+band:40-49
+family:echo
+premise:An obsolete unit of length took offence at recalibration and now makes nearby distances disagree.
+
+name:The Scaffold Animal
+art:the-scaffold-animal
+band:40-49
+family:stone
+premise:A jointed mineral organism grows temporary limbs from timber, rope and anything else left supporting weight.
+
+name:The Reservoir's Teeth
+art:the-reservoir-s-teeth
+band:50-59
+family:current
+premise:A moving crescent of submerged stone closes whenever the water above it becomes still.
+
+name:Calder Wry, the Route Defector
+art:calder-wry-the-route-defector
+band:50-59
+family:survivor
+premise:Calder deserted an expedition by stepping onto a route that existed for him alone and brought part of it back.
+
+name:The Violet Load-Bearer
+art:the-violet-load-bearer
+band:50-59
+family:stone
+premise:A purple mineral frame carries a mountain's missing weight and transfers it through each deliberate step.
+
+name:The Under-Rain
+art:the-under-rain
+band:50-59
+family:current
+premise:A storm falling upward from the floor fills lungs before it wets clothing.
+
+name:Chalk Widow
+art:chalk-widow
+band:50-59
+family:beast
+premise:A pale many-legged hunter draws temporary mates on cave walls and eats them when they begin to move.
+
+name:The Brass Thirst
+art:the-brass-thirst
+band:50-59
+family:machine
+premise:A pumping assembly drinks clean water to cool a boiler that no longer exists.
+
+name:Purl, the Knot-Eater
+art:purl-the-knot-eater
+band:50-59
+family:beast
+premise:Purl extracts knots from rope without cutting the fibres and stores the tension behind its teeth.
+
+name:The Choir of Loose Screws
+art:the-choir-of-loose-screws
+band:50-59
+family:colony
+premise:A rolling congregation of fasteners sings in several machine pitches while dismantling anything resonant.
+
+name:The Fathomless Puddle
+art:the-fathomless-puddle
+band:50-59
+family:echo
+premise:A handspan of black water contains a descending weather system and resents attempts to step over it.
+
+name:The Gravel Comet
+art:the-gravel-comet
+band:60-69
+family:stone
+premise:A hot nucleus drags loose cave floor behind it and orbits any source of sudden movement.
+
+name:Avel Tarn, the Pressure Smuggler
+art:avel-tarn-the-pressure-smuggler
+band:60-69
+family:survivor
+premise:Avel carries sealed atmospheres beneath a patched coat and sells none at the pressure where they were packed.
+
+name:The Walking Reservoir
+art:the-walking-reservoir
+band:60-69
+family:current
+premise:A load-bearing skin of water stands upright around fish, silt and an intact drowned doorway.
+
+name:The Unpaid Bell
+art:the-unpaid-bell
+band:60-69
+family:echo
+premise:A warning note repeats with compounding interest because the settlement it served never acknowledged the alarm.
+
+name:Gristleglass
+art:gristleglass
+band:60-69
+family:beast
+premise:This transparent ambush animal replaces injured tissue with whatever sharp mineral caused the wound.
+
+name:The Heatless Furnace
+art:the-heatless-furnace
+band:60-69
+family:machine
+premise:A vast kiln removes heat from fuel, flame and flesh to fire bricks colder than the surrounding dark.
+
+name:The Compass Animal
+art:the-compass-animal
+band:60-69
+family:beast
+premise:Every limb of this plated organism points toward a different embedded world's north.
+
+name:The Masonry Fever
+art:the-masonry-fever
+band:60-69
+family:colony
+premise:A red crystalline infection makes fitted stone shiver, sweat grit and reject its neighbours.
+
+name:The Air Below Water
+art:the-air-below-water
+band:70-79
+family:current
+premise:A breathable pocket rolls along flooded ceilings and violently excludes anyone already carrying air.
+
+name:The Patient Collapse
+art:the-patient-collapse
+band:70-79
+family:stone
+premise:A cave-in has held itself one instant before impact for centuries and advances whenever watched.
+
+name:Senn Vail, Weather Thief
+art:senn-vail-weather-thief
+band:70-79
+family:survivor
+premise:Senn traps small climates in waxed parcels and unwraps the dangerous ones when cornered.
+
+name:The Long-Winded Machine
+art:the-long-winded-machine
+band:70-79
+family:machine
+premise:A survey automaton explains every fault in exhaustive whistles while its spare bellows keep inflating.
+
+name:The Salt Memory
+art:the-salt-memory
+band:70-79
+family:echo
+premise:A preserved recollection of an ocean crystallizes around creatures that have never seen a shore.
+
+name:The Load-Bearing Ghost
+art:the-load-bearing-ghost
+band:70-79
+family:echo
+premise:An absent worker continues holding a vanished roof and attacks anything that changes the carefully balanced strain.
+
+name:Mireclock
+art:mireclock
+band:70-79
+family:machine
+premise:A mud-filled timing device loses an hour whenever struck and deposits that delay in the attacker.
+
+name:The Quarry That Answers
+art:the-quarry-that-answers
+band:70-79
+family:stone
+premise:Questions shouted into this moving rock face return as precisely shaped projectiles.
+
+name:The Unfinished Evacuation
+art:the-unfinished-evacuation
+band:70-79
+family:colony
+premise:Abandoned footprints, dropped tools and urgent instructions move together toward an exit that did not arrive.
+
+name:The Blind Pressure Organ
+art:the-blind-pressure-organ
+band:70-79
+family:current
+premise:A bank of fleshy pipes maps the cave by squeezing air through cracks too narrow for light.
+
+name:The Counterfeit Horizon
+art:the-counterfeit-horizon
+band:80-89
+family:echo
+premise:A false line of distant light cuts across nearby stone and brings whatever approaches it no closer.
+
+name:The Rain Made Solid
+art:the-rain-made-solid
+band:80-89
+family:current
+premise:A vertical field of glass-hard drops advances without falling and fractures into fresh weather when struck.
+
+name:The Stone's Pulse
+art:the-stone-s-pulse
+band:80-89
+family:stone
+premise:A slow contraction moves through bedrock around a mineral heart that should require a continent to circulate.
+
+name:Jorra Penn, the Embedded Witness
+art:jorra-penn-the-embedded-witness
+band:80-89
+family:survivor
+premise:Jorra remembers the impact from inside a city fragment and has mistaken every explorer for the rescue party.
+
+name:The Compass with Teeth
+art:the-compass-with-teeth
+band:80-89
+family:machine
+premise:A room-sized compass bites through obstacles until all of its needles can point somewhere different.
+
+name:The Ash Reservoir
+art:the-ash-reservoir
+band:80-89
+family:current
+premise:A suspended volume of hot ash behaves like deep water and drowns flame before it drowns breath.
+
+name:The Unmeasured Weight
+art:the-unmeasured-weight
+band:80-89
+family:stone
+premise:An invisible load presses a walking outline into the floor while every instrument insists nothing is there.
+
+name:The Static Orchard
+art:the-static-orchard
+band:80-89
+family:colony
+premise:Wire-rooted trees grow globes of stored lightning and shed them when living charge passes nearby.
+
+name:The Fault's Spare Body
+art:the-fault-s-spare-body
+band:80-89
+family:stone
+premise:A humanoid arrangement of fracture lines steps out of rock whenever the main fault needs leverage.
+
+name:The Storm in a Bottleworks
+art:the-storm-in-a-bottleworks
+band:80-89
+family:machine
+premise:A manufacturing line traps one thunderhead across thousands of moving glass vessels and keeps producing more.
+
+name:The Red Silence
+art:the-red-silence
+band:80-89
+family:echo
+premise:A crimson absence removes impact noise first, warnings second and remembered names last.
+
+name:The Buried Noon
+art:the-buried-noon
+band:80-89
+family:echo
+premise:A disk of harsh daylight rolls through the deep rock searching for the sky from which it was cut.
+
+name:The Crooked Gravity
+art:the-crooked-gravity
+band:80-89
+family:current
+premise:A bent downward force moves like an animal and drags loose bodies around corners before following them.
+
+name:The Last Dry Room
+art:the-last-dry-room
+band:80-89
+family:survivor
+premise:Four walls from a drowned world walk together protecting the final volume of air sealed between them.
+
+name:The Machine for Remembering Falls
+art:the-machine-for-remembering-falls
+band:80-89
+family:machine
+premise:A tall instrument records every descent as stored momentum and can replay them all in a single instant.
+
+name:The Depth That Refuses a Number
+art:the-depth-that-refuses-a-number
+band:90-99
+family:echo
+premise:A section of passage erases every survey mark applied to it and moves upward when assigned a lower sounding.
+
+name:Orren Dask, the Impossible Geologist
+art:orren-dask-the-impossible-geologist
+band:90-99
+family:survivor
+premise:Orren carries samples from mutually exclusive strata and can prove each one lay directly beneath the last.
+
+name:The Upward Ocean
+art:the-upward-ocean
+band:90-99
+family:current
+premise:An ocean fragment climbs through its own seabed carrying pressure, darkness and deep-water life toward the surface.
+
+name:The Instrument Made of Exits
+art:the-instrument-made-of-exits
+band:90-99
+family:machine
+premise:A jointed survey frame assembled itself from abandoned escape routes and opens them in the wrong places.

@@ -1,0 +1,433 @@
+# world.txt - list of dungeon levels and depths
+
+# records are
+# level:level name:level up:level down
+
+level:0:Town:None:Meridian 1
+level:1:Meridian 1:Town:Meridian 2
+level:2:Meridian 2:Meridian 1:Meridian 3
+level:3:Meridian 3:Meridian 2:Meridian 4
+level:4:Meridian 4:Meridian 3:Meridian 5
+level:5:Meridian 5:Meridian 4:Meridian 6
+level:6:Meridian 6:Meridian 5:Meridian 7
+level:7:Meridian 7:Meridian 6:Meridian 8
+level:8:Meridian 8:Meridian 7:Meridian 9
+level:9:Meridian 9:Meridian 8:Meridian 10
+level:10:Meridian 10:Meridian 9:Meridian 11
+level:11:Meridian 11:Meridian 10:Meridian 12
+level:12:Meridian 12:Meridian 11:Meridian 13
+level:13:Meridian 13:Meridian 12:Meridian 14
+level:14:Meridian 14:Meridian 13:Meridian 15
+level:15:Meridian 15:Meridian 14:Meridian 16
+level:16:Meridian 16:Meridian 15:Meridian 17
+level:17:Meridian 17:Meridian 16:Meridian 18
+level:18:Meridian 18:Meridian 17:Meridian 19
+level:19:Meridian 19:Meridian 18:Meridian 20
+level:20:Meridian 20:Meridian 19:Meridian 21
+level:21:Meridian 21:Meridian 20:Meridian 22
+level:22:Meridian 22:Meridian 21:Meridian 23
+level:23:Meridian 23:Meridian 22:Meridian 24
+level:24:Meridian 24:Meridian 23:Meridian 25
+level:25:Meridian 25:Meridian 24:Meridian 26
+level:26:Meridian 26:Meridian 25:Meridian 27
+level:27:Meridian 27:Meridian 26:Meridian 28
+level:28:Meridian 28:Meridian 27:Meridian 29
+level:29:Meridian 29:Meridian 28:Meridian 30
+level:30:Meridian 30:Meridian 29:Meridian 31
+level:31:Meridian 31:Meridian 30:Meridian 32
+level:32:Meridian 32:Meridian 31:Meridian 33
+level:33:Meridian 33:Meridian 32:Meridian 34
+level:34:Meridian 34:Meridian 33:Meridian 35
+level:35:Meridian 35:Meridian 34:Meridian 36
+level:36:Meridian 36:Meridian 35:Meridian 37
+level:37:Meridian 37:Meridian 36:Meridian 38
+level:38:Meridian 38:Meridian 37:Meridian 39
+level:39:Meridian 39:Meridian 38:Meridian 40
+level:40:Meridian 40:Meridian 39:Meridian 41
+level:41:Meridian 41:Meridian 40:Meridian 42
+level:42:Meridian 42:Meridian 41:Meridian 43
+level:43:Meridian 43:Meridian 42:Meridian 44
+level:44:Meridian 44:Meridian 43:Meridian 45
+level:45:Meridian 45:Meridian 44:Meridian 46
+level:46:Meridian 46:Meridian 45:Meridian 47
+level:47:Meridian 47:Meridian 46:Meridian 48
+level:48:Meridian 48:Meridian 47:Meridian 49
+level:49:Meridian 49:Meridian 48:Meridian 50
+level:50:Meridian 50:Meridian 49:Meridian 51
+level:51:Meridian 51:Meridian 50:Meridian 52
+level:52:Meridian 52:Meridian 51:Meridian 53
+level:53:Meridian 53:Meridian 52:Meridian 54
+level:54:Meridian 54:Meridian 53:Meridian 55
+level:55:Meridian 55:Meridian 54:Meridian 56
+level:56:Meridian 56:Meridian 55:Meridian 57
+level:57:Meridian 57:Meridian 56:Meridian 58
+level:58:Meridian 58:Meridian 57:Meridian 59
+level:59:Meridian 59:Meridian 58:Meridian 60
+level:60:Meridian 60:Meridian 59:Meridian 61
+level:61:Meridian 61:Meridian 60:Meridian 62
+level:62:Meridian 62:Meridian 61:Meridian 63
+level:63:Meridian 63:Meridian 62:Meridian 64
+level:64:Meridian 64:Meridian 63:Meridian 65
+level:65:Meridian 65:Meridian 64:Meridian 66
+level:66:Meridian 66:Meridian 65:Meridian 67
+level:67:Meridian 67:Meridian 66:Meridian 68
+level:68:Meridian 68:Meridian 67:Meridian 69
+level:69:Meridian 69:Meridian 68:Meridian 70
+level:70:Meridian 70:Meridian 69:Meridian 71
+level:71:Meridian 71:Meridian 70:Meridian 72
+level:72:Meridian 72:Meridian 71:Meridian 73
+level:73:Meridian 73:Meridian 72:Meridian 74
+level:74:Meridian 74:Meridian 73:Meridian 75
+level:75:Meridian 75:Meridian 74:Meridian 76
+level:76:Meridian 76:Meridian 75:Meridian 77
+level:77:Meridian 77:Meridian 76:Meridian 78
+level:78:Meridian 78:Meridian 77:Meridian 79
+level:79:Meridian 79:Meridian 78:Meridian 80
+level:80:Meridian 80:Meridian 79:Meridian 81
+level:81:Meridian 81:Meridian 80:Meridian 82
+level:82:Meridian 82:Meridian 81:Meridian 83
+level:83:Meridian 83:Meridian 82:Meridian 84
+level:84:Meridian 84:Meridian 83:Meridian 85
+level:85:Meridian 85:Meridian 84:Meridian 86
+level:86:Meridian 86:Meridian 85:Meridian 87
+level:87:Meridian 87:Meridian 86:Meridian 88
+level:88:Meridian 88:Meridian 87:Meridian 89
+level:89:Meridian 89:Meridian 88:Meridian 90
+level:90:Meridian 90:Meridian 89:Meridian 91
+level:91:Meridian 91:Meridian 90:Meridian 92
+level:92:Meridian 92:Meridian 91:Meridian 93
+level:93:Meridian 93:Meridian 92:Meridian 94
+level:94:Meridian 94:Meridian 93:Meridian 95
+level:95:Meridian 95:Meridian 94:Meridian 96
+level:96:Meridian 96:Meridian 95:Meridian 97
+level:97:Meridian 97:Meridian 96:Meridian 98
+level:98:Meridian 98:Meridian 97:Meridian 99
+level:99:Meridian 99:Meridian 98:Meridian 100
+level:100:Meridian 100:Meridian 99:Meridian 101
+level:101:Meridian 101:Meridian 100:Meridian 102
+level:102:Meridian 102:Meridian 101:Meridian 103
+level:103:Meridian 103:Meridian 102:Meridian 104
+level:104:Meridian 104:Meridian 103:Meridian 105
+level:105:Meridian 105:Meridian 104:Meridian 106
+level:106:Meridian 106:Meridian 105:Meridian 107
+level:107:Meridian 107:Meridian 106:Meridian 108
+level:108:Meridian 108:Meridian 107:Meridian 109
+level:109:Meridian 109:Meridian 108:Meridian 110
+level:110:Meridian 110:Meridian 109:Meridian 111
+level:111:Meridian 111:Meridian 110:Meridian 112
+level:112:Meridian 112:Meridian 111:Meridian 113
+level:113:Meridian 113:Meridian 112:Meridian 114
+level:114:Meridian 114:Meridian 113:Meridian 115
+level:115:Meridian 115:Meridian 114:Meridian 116
+level:116:Meridian 116:Meridian 115:Meridian 117
+level:117:Meridian 117:Meridian 116:Meridian 118
+level:118:Meridian 118:Meridian 117:Meridian 119
+level:119:Meridian 119:Meridian 118:Meridian 120
+level:120:Meridian 120:Meridian 119:Meridian 121
+level:121:Meridian 121:Meridian 120:Meridian 122
+level:122:Meridian 122:Meridian 121:Meridian 123
+level:123:Meridian 123:Meridian 122:Meridian 124
+level:124:Meridian 124:Meridian 123:Meridian 125
+level:125:Meridian 125:Meridian 124:Meridian 126
+level:126:Meridian 126:Meridian 125:Meridian 127
+level:127:Meridian 127:Meridian 126:None
+
+# Stable sites group many local floors into one world-map destination.
+site:core.hub:Town
+site:core.main:The Meridian
+site:core.approach.east:Cavewood
+site:core.cave.east:Cavewood Cavern
+site:core.spelunk.east:The Deepwell
+site:core.wild.lake:Mirror Lake
+site:core.wild.pines:Blackpine Wood
+site:core.wild.marsh:Reedwater Marsh
+site:core.wild.heath:Windworn Heath
+site:core.wild.meadow:Long Meadow
+site:core.wild.ruins:Fallen Ward
+site:core.wild.scrub:Thorn Scrub
+
+# Numbered-floor terminology belongs to the site rather than death/UI code.
+site-floor-term:core.main:Meridian floor
+
+# Environment recipes belong to stable sites.  Renderers consume the authored
+# profile ID and never infer colour from a location name or depth.
+site-visual:core.hub:village
+site-visual:core.main:meridian
+site-visual:core.approach.east:cavewood
+site-visual:core.cave.east:eastern-cave
+site-visual:core.spelunk.east:deepwell
+site-visual:core.wild.lake:lake
+site-visual:core.wild.pines:pine-wood
+site-visual:core.wild.marsh:marsh
+site-visual:core.wild.heath:heath
+site-visual:core.wild.meadow:meadow
+site-visual:core.wild.ruins:ruins
+site-visual:core.wild.scrub:scrub
+
+# Story and post-victory presentation attach to stable sites.  Rendering and
+# progression consume these records without owning their prose or colours.
+site-opening:core.hub:first-sounding
+site-victory:core.hub:village-restored:The village channels run clear now; the old iron taste and upward pressure are gone.
+
+# Five-by-three ASCII biome stamps are map identities, not mini screenshots.
+# They deliberately omit completion percentages and monster lists: those will
+# appear only when real persisted exploration and regional knowledge exist.
+site-map:core.hub:Green:..+..:.H.H.:..+..:Warm lamps, wet grass and packed village roads.
+site-map:core.approach.east:Slate:^^#^^:^###^:^^#^^:A shaded wood broken by cold stone and a cave mouth.
+site-map:core.wild.lake:Blue:~~~~~:~~.~~:~~~~~:Open lake margins around deep, bright water.
+site-map:core.wild.pines:Green:^^^^^:^^.^^:^^^^^:Close pine cover under a dark evergreen canopy.
+site-map:core.wild.marsh:Teal:,;~;,:;~~~;:,;~;,:Reeds, soft ground and slow channels of marsh water.
+site-map:core.wild.heath:Umber:.'^'.:'...':.'^'.:Bare heath exposed to wind and weather.
+site-map:core.wild.meadow:Green:.,.,.:,.,.,:.,.,.:Long grass and open ground with little shelter.
+site-map:core.wild.ruins:Umber:#.#.#:#.###:..#..:Weathered masonry reclaimed by lichen and weeds.
+site-map:core.wild.scrub:Mustard:;^;^;:^;;;^:;^;^;:Dry thorn and tangled scrub crowd the paths.
+
+# Delves follow their shuffled surface hosts on the discovered-world diagram.
+site-anchor:core.main:core.hub:1:1
+site-anchor:core.cave.east:core.approach.east:1:1
+site-anchor:core.spelunk.east:core.approach.east:2:2
+
+# Stable places outside the inherited vertical depth chain.
+place:Cavewood:core.approach.east:core.approach.east:outdoors:top_down:0:7:66:132
+place:Cavewood Cavern:core.cave.east.001:core.cave.east:dungeon:top_down:1:3:44:99
+place:The Deepwell:core.spelunk.east.001:core.spelunk.east:special:spelunking:1:4:30:48
+place:Mirror Lake:core.wild.lake:core.wild.lake:outdoors:top_down:0:6:66:132
+place:Blackpine Wood:core.wild.pines:core.wild.pines:outdoors:top_down:0:8:66:132
+place:Reedwater Marsh:core.wild.marsh:core.wild.marsh:outdoors:top_down:0:7:66:132
+place:Windworn Heath:core.wild.heath:core.wild.heath:outdoors:top_down:0:6:66:132
+place:Long Meadow:core.wild.meadow:core.wild.meadow:outdoors:top_down:0:5:66:132
+place:Fallen Ward:core.wild.ruins:core.wild.ruins:outdoors:top_down:0:9:66:132
+place:Thorn Scrub:core.wild.scrub:core.wild.scrub:outdoors:top_down:0:7:66:132
+
+# Stable location metadata.  Display names above may change; IDs may not.
+# Optional final height and width select a location-specific generated size.
+location:Town:core.hub:core.hub:hub:top_down:0:0:66:198
+# Shop presence and deferred restocking are location roles, not depth rules.
+store-services:core.hub
+location:Meridian 1:core.main.001:core.main:dungeon:top_down:1:1
+location:Meridian 2:core.main.002:core.main:dungeon:top_down:2:2
+location:Meridian 3:core.main.003:core.main:dungeon:top_down:3:3
+location:Meridian 4:core.main.004:core.main:dungeon:top_down:4:4
+location:Meridian 5:core.main.005:core.main:dungeon:top_down:5:5
+location:Meridian 6:core.main.006:core.main:dungeon:top_down:6:6
+location:Meridian 7:core.main.007:core.main:dungeon:top_down:7:7
+location:Meridian 8:core.main.008:core.main:dungeon:top_down:8:8
+location:Meridian 9:core.main.009:core.main:dungeon:top_down:9:9
+location:Meridian 10:core.main.010:core.main:dungeon:top_down:10:10
+location:Meridian 11:core.main.011:core.main:dungeon:top_down:11:11
+location:Meridian 12:core.main.012:core.main:dungeon:top_down:12:12
+location:Meridian 13:core.main.013:core.main:dungeon:top_down:13:13
+location:Meridian 14:core.main.014:core.main:dungeon:top_down:14:14
+location:Meridian 15:core.main.015:core.main:dungeon:top_down:15:15
+location:Meridian 16:core.main.016:core.main:dungeon:top_down:16:16
+location:Meridian 17:core.main.017:core.main:dungeon:top_down:17:17
+location:Meridian 18:core.main.018:core.main:dungeon:top_down:18:18
+location:Meridian 19:core.main.019:core.main:dungeon:top_down:19:19
+location:Meridian 20:core.main.020:core.main:dungeon:top_down:20:20
+location:Meridian 21:core.main.021:core.main:dungeon:top_down:21:21
+location:Meridian 22:core.main.022:core.main:dungeon:top_down:22:22
+location:Meridian 23:core.main.023:core.main:dungeon:top_down:23:23
+location:Meridian 24:core.main.024:core.main:dungeon:top_down:24:24
+location:Meridian 25:core.main.025:core.main:dungeon:top_down:25:25
+location:Meridian 26:core.main.026:core.main:dungeon:top_down:26:26
+location:Meridian 27:core.main.027:core.main:dungeon:top_down:27:27
+location:Meridian 28:core.main.028:core.main:dungeon:top_down:28:28
+location:Meridian 29:core.main.029:core.main:dungeon:top_down:29:29
+location:Meridian 30:core.main.030:core.main:dungeon:top_down:30:30
+location:Meridian 31:core.main.031:core.main:dungeon:top_down:31:31
+location:Meridian 32:core.main.032:core.main:dungeon:top_down:32:32
+location:Meridian 33:core.main.033:core.main:dungeon:top_down:33:33
+location:Meridian 34:core.main.034:core.main:dungeon:top_down:34:34
+location:Meridian 35:core.main.035:core.main:dungeon:top_down:35:35
+location:Meridian 36:core.main.036:core.main:dungeon:top_down:36:36
+location:Meridian 37:core.main.037:core.main:dungeon:top_down:37:37
+location:Meridian 38:core.main.038:core.main:dungeon:top_down:38:38
+location:Meridian 39:core.main.039:core.main:dungeon:top_down:39:39
+location:Meridian 40:core.main.040:core.main:dungeon:top_down:40:40
+location:Meridian 41:core.main.041:core.main:dungeon:top_down:41:41
+location:Meridian 42:core.main.042:core.main:dungeon:top_down:42:42
+location:Meridian 43:core.main.043:core.main:dungeon:top_down:43:43
+location:Meridian 44:core.main.044:core.main:dungeon:top_down:44:44
+location:Meridian 45:core.main.045:core.main:dungeon:top_down:45:45
+location:Meridian 46:core.main.046:core.main:dungeon:top_down:46:46
+location:Meridian 47:core.main.047:core.main:dungeon:top_down:47:47
+location:Meridian 48:core.main.048:core.main:dungeon:top_down:48:48
+location:Meridian 49:core.main.049:core.main:dungeon:top_down:49:49
+location:Meridian 50:core.main.050:core.main:dungeon:top_down:50:50
+location:Meridian 51:core.main.051:core.main:dungeon:top_down:51:51
+location:Meridian 52:core.main.052:core.main:dungeon:top_down:52:52
+location:Meridian 53:core.main.053:core.main:dungeon:top_down:53:53
+location:Meridian 54:core.main.054:core.main:dungeon:top_down:54:54
+location:Meridian 55:core.main.055:core.main:dungeon:top_down:55:55
+location:Meridian 56:core.main.056:core.main:dungeon:top_down:56:56
+location:Meridian 57:core.main.057:core.main:dungeon:top_down:57:57
+location:Meridian 58:core.main.058:core.main:dungeon:top_down:58:58
+location:Meridian 59:core.main.059:core.main:dungeon:top_down:59:59
+location:Meridian 60:core.main.060:core.main:dungeon:top_down:60:60
+location:Meridian 61:core.main.061:core.main:dungeon:top_down:61:61
+location:Meridian 62:core.main.062:core.main:dungeon:top_down:62:62
+location:Meridian 63:core.main.063:core.main:dungeon:top_down:63:63
+location:Meridian 64:core.main.064:core.main:dungeon:top_down:64:64
+location:Meridian 65:core.main.065:core.main:dungeon:top_down:65:65
+location:Meridian 66:core.main.066:core.main:dungeon:top_down:66:66
+location:Meridian 67:core.main.067:core.main:dungeon:top_down:67:67
+location:Meridian 68:core.main.068:core.main:dungeon:top_down:68:68
+location:Meridian 69:core.main.069:core.main:dungeon:top_down:69:69
+location:Meridian 70:core.main.070:core.main:dungeon:top_down:70:70
+location:Meridian 71:core.main.071:core.main:dungeon:top_down:71:71
+location:Meridian 72:core.main.072:core.main:dungeon:top_down:72:72
+location:Meridian 73:core.main.073:core.main:dungeon:top_down:73:73
+location:Meridian 74:core.main.074:core.main:dungeon:top_down:74:74
+location:Meridian 75:core.main.075:core.main:dungeon:top_down:75:75
+location:Meridian 76:core.main.076:core.main:dungeon:top_down:76:76
+location:Meridian 77:core.main.077:core.main:dungeon:top_down:77:77
+location:Meridian 78:core.main.078:core.main:dungeon:top_down:78:78
+location:Meridian 79:core.main.079:core.main:dungeon:top_down:79:79
+location:Meridian 80:core.main.080:core.main:dungeon:top_down:80:80
+location:Meridian 81:core.main.081:core.main:dungeon:top_down:81:81
+location:Meridian 82:core.main.082:core.main:dungeon:top_down:82:82
+location:Meridian 83:core.main.083:core.main:dungeon:top_down:83:83
+location:Meridian 84:core.main.084:core.main:dungeon:top_down:84:84
+location:Meridian 85:core.main.085:core.main:dungeon:top_down:85:85
+location:Meridian 86:core.main.086:core.main:dungeon:top_down:86:86
+location:Meridian 87:core.main.087:core.main:dungeon:top_down:87:87
+location:Meridian 88:core.main.088:core.main:dungeon:top_down:88:88
+location:Meridian 89:core.main.089:core.main:dungeon:top_down:89:89
+location:Meridian 90:core.main.090:core.main:dungeon:top_down:90:90
+location:Meridian 91:core.main.091:core.main:dungeon:top_down:91:91
+location:Meridian 92:core.main.092:core.main:dungeon:top_down:92:92
+location:Meridian 93:core.main.093:core.main:dungeon:top_down:93:93
+location:Meridian 94:core.main.094:core.main:dungeon:top_down:94:94
+location:Meridian 95:core.main.095:core.main:dungeon:top_down:95:95
+location:Meridian 96:core.main.096:core.main:dungeon:top_down:96:96
+location:Meridian 97:core.main.097:core.main:dungeon:top_down:97:97
+location:Meridian 98:core.main.098:core.main:dungeon:top_down:98:98
+location:Meridian 99:core.main.099:core.main:dungeon:top_down:99:99
+location:Meridian 100:core.main.100:core.main:dungeon:top_down:100:100
+location:Meridian 101:core.main.101:core.main:dungeon:top_down:101:101
+location:Meridian 102:core.main.102:core.main:dungeon:top_down:102:102
+location:Meridian 103:core.main.103:core.main:dungeon:top_down:103:103
+location:Meridian 104:core.main.104:core.main:dungeon:top_down:104:104
+location:Meridian 105:core.main.105:core.main:dungeon:top_down:105:105
+location:Meridian 106:core.main.106:core.main:dungeon:top_down:106:106
+location:Meridian 107:core.main.107:core.main:dungeon:top_down:107:107
+location:Meridian 108:core.main.108:core.main:dungeon:top_down:108:108
+location:Meridian 109:core.main.109:core.main:dungeon:top_down:109:109
+location:Meridian 110:core.main.110:core.main:dungeon:top_down:110:110
+location:Meridian 111:core.main.111:core.main:dungeon:top_down:111:111
+location:Meridian 112:core.main.112:core.main:dungeon:top_down:112:112
+location:Meridian 113:core.main.113:core.main:dungeon:top_down:113:113
+location:Meridian 114:core.main.114:core.main:dungeon:top_down:114:114
+location:Meridian 115:core.main.115:core.main:dungeon:top_down:115:115
+location:Meridian 116:core.main.116:core.main:dungeon:top_down:116:116
+location:Meridian 117:core.main.117:core.main:dungeon:top_down:117:117
+location:Meridian 118:core.main.118:core.main:dungeon:top_down:118:118
+location:Meridian 119:core.main.119:core.main:dungeon:top_down:119:119
+location:Meridian 120:core.main.120:core.main:dungeon:top_down:120:120
+location:Meridian 121:core.main.121:core.main:dungeon:top_down:121:121
+location:Meridian 122:core.main.122:core.main:dungeon:top_down:122:122
+location:Meridian 123:core.main.123:core.main:dungeon:top_down:123:123
+location:Meridian 124:core.main.124:core.main:dungeon:top_down:124:124
+location:Meridian 125:core.main.125:core.main:dungeon:top_down:125:125
+location:Meridian 126:core.main.126:core.main:dungeon:top_down:126:126
+location:Meridian 127:core.main.127:core.main:dungeon:top_down:127:127
+
+# Restrained clues appear only on the first descent to each authored floor.
+# The threshold and victory scenes remain data-authored modal events.
+arrival-message:core.main.025:Survey scratches record water pressure increasing while every natural seam points the other way.
+arrival-message:core.main.060:Rusting gauges tremble in dry stone; their needles all strain toward the deeper Meridian.
+arrival-message:core.main.090:Here the walls carry fragments of unlike rock fused edge to edge, as though distant places were forced together.
+arrival-scene:core.main.099:last-survey-threshold
+
+# Stable roles are shuffled over one save-stable 3 by 3 surface layout.
+# Final fields author gate width and initial monster population.  Both are
+# balance data: changing either must not require traversal or generator code.
+overworld-cell:0:core.hub:village:5:0
+overworld-cell:1:core.approach.east:cavewood:5:18
+overworld-cell:2:core.wild.lake:lake:5:14
+overworld-cell:3:core.wild.pines:pine-wood:5:20
+overworld-cell:4:core.wild.marsh:marsh:5:18
+overworld-cell:5:core.wild.heath:heath:5:14
+overworld-cell:6:core.wild.meadow:meadow:5:12
+overworld-cell:7:core.wild.ruins:ruins:5:22
+overworld-cell:8:core.wild.scrub:scrub:5:18
+
+# Fishing water is explicit gameplay data.  Rendering never infers an
+# encounter from a water glyph or biome colour.
+fishing-habitat:core.hub:rainwater
+fishing-habitat:core.approach.east:forest-pool
+fishing-habitat:core.wild.lake:open-lake
+fishing-habitat:core.wild.pines:forest-pool
+fishing-habitat:core.wild.marsh:marsh-pool
+fishing-habitat:core.wild.heath:rainwater
+fishing-habitat:core.wild.meadow:rainwater
+fishing-habitat:core.wild.ruins:ruin-cistern
+fishing-habitat:core.wild.scrub:rainwater
+fishing-habitat:core.cave.east.001:cave-pool
+fishing-habitat:core.spelunk.east.001:cave-pool
+
+# Named entries used by the first ordinary learnable route.  Stair selectors
+# accept any matching stair for departure and physical discovery; deterministic
+# fast-travel arrival uses the first match in stable row-major order.
+entry:core.hub:stair.main:down_stair
+# Violet-stone horseshoe. The three-cell southern approach stays open.
+# entry-rock:<location>:<entry>:<relative y>:<relative x>:<terrain code>
+entry-rock:core.hub:stair.main:-1:-2:MERIDIAN_STONE
+entry-rock:core.hub:stair.main:-1:-1:MERIDIAN_STONE
+entry-rock:core.hub:stair.main:-1:0:MERIDIAN_STONE
+entry-rock:core.hub:stair.main:-1:1:MERIDIAN_STONE
+entry-rock:core.hub:stair.main:-1:2:MERIDIAN_STONE
+entry-rock:core.hub:stair.main:0:-2:MERIDIAN_STONE
+entry-rock:core.hub:stair.main:0:2:MERIDIAN_STONE
+entry-rock:core.hub:stair.main:1:-2:MERIDIAN_STONE
+entry-rock:core.hub:stair.main:1:2:MERIDIAN_STONE
+entry:core.hub:shaft.practice:grid:3:99
+entry:core.main.001:stair.up:up_stair
+entry:core.hub:road.east:grid:22:196
+entry:core.approach.east:road.west:grid:22:1
+entry:core.approach.east:cave.east:down_stair
+entry:core.cave.east.001:stair.out:up_stair
+entry:core.cave.east.001:shaft.spelunk:grid:22:49
+entry:core.spelunk.east.001:shaft.surface:grid:4:4
+entry:core.spelunk.east.001:shaft.practice:grid:4:8
+entry:core.spelunk.east.001:shaft.underflow:grid:4:4
+entry:core.main.005:shaft.underflow:grid:3:3
+
+# Stable fast-travel endpoints.  Reaching an endpoint can activate its node;
+# routes remain separate so several directed routes may share one node.
+travel-node:core.node.hub.main:core.hub:stair.main
+travel-node:core.node.main.001.up:core.main.001:stair.up
+travel-node:core.node.hub.east:core.hub:road.east
+travel-node:core.node.approach.east.west:core.approach.east:road.west
+travel-node:core.node.approach.east.cave:core.approach.east:cave.east
+travel-node:core.node.cave.east.out:core.cave.east.001:stair.out
+
+# The two directions are learned independently by physically traversing them.
+route:core.route.main.down:core.hub:stair.main:core.main.001:stair.up:stairs:0
+route:core.route.main.up:core.main.001:stair.up:core.hub:stair.main:stairs:0
+route:core.route.approach.east.out:core.hub:road.east:core.approach.east:road.west:retired:0
+route:core.route.approach.east.return:core.approach.east:road.west:core.hub:road.east:retired:0
+route:core.route.cave.east.in:core.approach.east:cave.east:core.cave.east.001:stair.out:stairs:0
+route:core.route.cave.east.out:core.cave.east.001:stair.out:core.approach.east:cave.east:stairs:0
+route:core.route.spelunk.east.in:core.cave.east.001:shaft.spelunk:core.spelunk.east.001:shaft.surface:shaft:0
+route:core.route.spelunk.east.out:core.spelunk.east.001:shaft.surface:core.cave.east.001:shaft.spelunk:shaft:0
+# Retain development-save identities, but neither direction is a physical exit.
+route:core.route.spelunk.practice.in:core.hub:shaft.practice:core.spelunk.east.001:shaft.practice:retired:0
+route:core.route.spelunk.practice.out:core.spelunk.east.001:shaft.practice:core.hub:shaft.practice:retired:0
+# Recall is magic, not an undisclosed second physical cave entrance.
+route:core.route.spelunk.recall:core.spelunk.east.001:shaft.surface:core.hub:stair.main:recall:0
+route:core.route.underflow.out:core.spelunk.east.001:shaft.underflow:core.main.005:shaft.underflow:shaft:0
+route-gate:core.route.underflow.out
+route-message:core.route.underflow.out:You sound the marked seam and pass through the Underflow into Meridian 5.
+route:core.route.underflow.in:core.main.005:shaft.underflow:core.spelunk.east.001:shaft.underflow:shaft:0
+route-gate:core.route.underflow.in
+route-message:core.route.underflow.in:You follow the opened Underflow back into the Deepwell.
+
+# Compatibility tombstones for development saves which learned the fixed-line
+# or underground travel experiments.  Retired routes load but never display.
+route:core.route.travel.approach.east:core.hub:road.east:core.approach.east:road.west:retired:375
+route:core.route.travel.approach.east.return:core.approach.east:road.west:core.hub:road.east:retired:375
+route:core.route.travel.approach.cave.east:core.approach.east:cave.east:core.cave.east.001:stair.out:retired:375
+route:core.route.travel.approach.cave.east.return:core.cave.east.001:stair.out:core.approach.east:cave.east:retired:375
+route:core.route.travel.cave.east:core.hub:road.east:core.cave.east.001:stair.out:retired:750
+route:core.route.travel.cave.east.return:core.cave.east.001:stair.out:core.hub:road.east:retired:750

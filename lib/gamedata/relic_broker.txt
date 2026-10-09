@@ -1,0 +1,7 @@
+# Stable save index, ID, inclusive power minimum, exclusive maximum,
+# price in gold, lifetime quantity, displayed appraisal.
+# Power is the existing object_power appraisal, not dungeon depth or cost.
+band:1:modest:1:100:50000:3:Modest
+band:2:exceptional:100:200:150000:3:Exceptional
+band:3:great:200:350:500000:3:Great
+band:4:extraordinary:350:2147483647:1500000:3:Extraordinary

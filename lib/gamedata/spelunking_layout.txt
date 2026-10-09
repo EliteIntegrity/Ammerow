@@ -1,0 +1,55 @@
+# Authored side-view terrain and rules.
+#
+# Stable layout IDs are save identities.  Revision zero builds the original
+# template; later revisions are append-only migrations applied in explicit
+# priority order to retained saves.
+
+layout:core.spelunk.east.001:48:30:100:2
+# One measured tile is safe.  Longer rock landings inflict 15 damage, then
+# double for every additional tile: 15, 30, 60, 120, and so on.
+rules:1:15:10:23:15:20:1:6:10:2
+stamina-costs:30:23:16:3:2:1
+# Ordinary sight is broad sideways, shorter upward, and only two cells down.
+# Peek supplies a close bubble plus a directional cone; a downward lean gets
+# the longer reach.  Remembered terrain is presented at 24% brightness.
+perception:10:6:2:16:28:5:2:24:.:Slate:.:Light Dark
+fill:rock
+
+# Revision 0: the original galleries, branching shaft, and grip lips.
+rectangle:0:10:any:air:2:2:14:4
+rectangle:0:20:any:air:11:2:18:27
+rectangle:0:30:any:air:18:7:34:9
+rectangle:0:40:any:air:3:13:11:15
+rectangle:0:50:any:air:18:19:45:21
+rectangle:0:60:any:air:5:25:15:27
+rectangle:0:70:any:rock:14:10:18:10
+rectangle:0:80:any:rock:11:16:15:16
+rectangle:0:90:any:rock:14:22:18:22
+
+# Revision 1: append-only chamber expansion and shallow water.  Rock-to-air
+# and air-to-water matching preserve later player terrain edits on migration.
+ellipse:1:10:rock:air:25:4:6:2
+rectangle:1:20:rock:air:17:3:20:5
+rectangle:1:30:rock:air:24:5:26:12
+ellipse:1:40:rock:air:27:14:7:4
+ellipse:1:50:rock:air:6:20:4:4
+rectangle:1:60:rock:air:6:15:8:18
+rectangle:1:70:rock:air:8:20:12:21
+ellipse:1:80:rock:air:25:25:8:3
+rectangle:1:90:rock:air:24:17:26:24
+rectangle:1:100:rock:air:14:24:18:26
+ellipse:1:110:rock:air:40:14:5:3
+rectangle:1:120:rock:air:39:9:41:19
+rectangle:1:130:rock:air:33:13:36:15
+ellipse:1:140:rock:air:4:9:2:2
+rectangle:1:150:rock:air:5:9:11:10
+ellipse:1:160:rock:air:18:15:2:2
+rectangle:1:170:rock:air:16:11:17:19
+ellipse:1:180:rock:air:38:25:4:2
+rectangle:1:190:rock:air:33:21:35:24
+rectangle:1:200:air:water:31:20:43:21
+
+# Revision 2: a one-time authored discovery.  The saved layout revision is the
+# identity ledger: loading revision 1 adds it once; picking it up and saving at
+# revision 2 can never respawn it.
+object:2:10:core.spelunk.object.east.yew-longline:25:28:tool:Yew Longline Rod

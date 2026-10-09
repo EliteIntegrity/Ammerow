@@ -1,0 +1,57 @@
+# Concise modal scenes for the first-release story arc.  Code and world data
+# refer to stable scene IDs; all player-facing prose lives here.
+
+scene:first-sounding:THE FIRST SOUNDING
+subtitle:The Meridian watershed is failing.
+history:Began the first full sounding of the Meridian.
+body:The old supply road has washed out, and water drawn across the Nine Near Lands carries an iron taste. Each week the pressure beneath the village grows stronger.
+body:Follow the Meridian survey downward. Find what is driving the Upwelling and end it before the watershed is lost.
+body:The Fishing Shop records optional preparations and cave work. They can strengthen the expedition, but the descent itself is your charge.
+footer:Your main and optional work is recorded under Shift+C > Quests.
+
+scene:last-survey-threshold:THE LAST SURVEY
+subtitle:Meridian 99 — the final recorded threshold
+body:Survey nails hammered into the walls begin to ring without being struck. Broken gauges all point down, though several have no downward mark left on their scales.
+body:A damaged field recorder repeats Iscarn's last conclusion: "The water is not rising from a spring. Something below is forcing incompatible places together."
+body:The abandoned instruments move. Iscarn, the Last Surveyor, still guards the way to the hundredth sounding.
+footer:One threshold remains between you and the source of the Upwelling.
+
+scene:upwelling-broken:THE UPWELLING IS BROKEN
+subtitle:Meridian 100 — the watershed is secure
+victory-summary:Secured the Meridian watershed; the village water runs clean.
+body:The World-Knot comes apart. Crushing pressure leaves the stone, upward-falling water breaks into ordinary rain, and the Meridian's impossible joins fall silent one by one.
+body:The first full sounding is complete. The village now has clean water and a future. This run is VICTORIOUS.
+body:A staircase continues below the surveyed hundred. You may return home and retire, or keep exploring the Meridian's twenty-seven unmeasured depths.
+footer:Return to the village to see what your victory changed, or descend for optional postgame exploration.
+# Optional Home introduction. Ordered tabs are not triggered gameplay scenes.
+scene:intro.today:Ammerow Today
+intro:1:prose
+subtitle:A small place in a much larger world.
+body:In Ammerow, people still mend boots, argue over prices and complain about the rain. They live beside buried places that do not belong together. A worked doorway opens beneath natural rock. Water rises from passages no survey has finished. Ordinary life continues because somebody has to keep the roof on.
+body:Your journey begins in the Meridian watershed: a village and its neighbouring lands, not the whole world. The supply road has washed out. The water tastes of iron. Something below is pushing upward, and the people who went to measure it have not put matters right.
+body:You need not understand every old story to help. Start with good equipment, a manageable expedition and a way home.
+
+scene:intro.roads:The Lost Roads
+intro:2:prose
+subtitle:Beyond once meant somewhere you could go.
+body:The old roads were built for journeys: goods to market, visits to relatives, work in another settlement. People kept names for places farther away than anyone here can now reach. Those names survived the journeys.
+body:Contact with distant lands was lost before the village's present trouble. What happened beyond the broken connections is not settled knowledge. A missing traveller is not proof that a country has vanished; a road on an old map is not proof that it can still be walked.
+body:Here, the immediate obstacles are rain, flooded crossings, damaged roads and dangerous ground. Finding a route through this watershed is a beginning, not the recovery of the whole world. These are the Lands Beyond: inhabited places on the other side of someone else's unanswered journey.
+
+scene:intro.people:The People
+intro:3:origins
+subtitle:An origin is a beginning, not a destiny.
+body:People here are shaped by households, work and the places their families survived. Some differences are learned; others run deeper than habit. Your origin gives you strengths and weaknesses. Your class is a separate choice. These are the communities available to your expedition, not every people in Ammerow.
+
+scene:intro.classes:Classes & Ranks
+intro:4:classes
+subtitle:Your training, and the titles earned through experience.
+body:Your origin is your background; your class is your training. Your title is a rank within that class, changing automatically as your character gains levels. It is not another character-creation choice, and the title itself grants no extra bonuses.
+body:These ranges are character levels, not dungeon depths. Any origin can follow any class. Victory or a changed shape can replace the usual title on the character display.
+
+scene:intro.expedition:Your Expedition
+intro:5:prose
+subtitle:Bring back something useful. Come back yourself.
+body:The Meridian is the great descent beneath the watershed. Surveyors count its known depths as a hundred soundings. They are working measurements through an impossible place, not a promise that everything below follows the same rules.
+body:You can seek equipment and answers there, or explore the surrounding land and its caves. In the caves, ropes, stamina, air and the distance to the next safe ledge matter. Dark pools offer fish; a catch brought home can help fill the village larder. Mara Venn at the Fishing Shop can explain what is needed.
+body:There is no single proper expedition. Prepare, learn when to retreat and choose which risks are worth taking. The optional village work can help your descent, but you do not have to finish every task to confront the trouble below.

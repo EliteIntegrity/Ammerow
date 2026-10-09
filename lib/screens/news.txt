@@ -1,0 +1,20 @@
+
+{blue slate}             |       |             |       |             |      {/}
+{blue slate}       |             |       |            |       |             {/}
+{slate}       .          .              .        .             .           {/}
+{slate}             .          .              .          .                 {/}
+
+{light slate}                 A  M  M  E  R  O  W                             {/}
+{umber}                    L A N D S   B E Y O N D                         {/}
+{slate}                              $VERSION                              {/}
+
+{mud}        ________             ___________             ________          {/}
+{mud}    ___/        \___________/           \___________/        \___      {/}
+{slate}  ................. rain-worn ground ............................    {/}
+{light slate}          #       #                    #       #                {/}
+{slate}              ###     ###                  ###     ###               {/}
+{blue slate}     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     {/}
+{slate}             worlds lie where no worlds should                      {/}
+{light slate}             THE WORLD IS DEEPER THAN IT REMEMBERS             {/}
+
+{light slate}                  For help press '?' in game                    {/}

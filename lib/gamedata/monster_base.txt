@@ -1,0 +1,646 @@
+# This file provides information for monster "templates".
+# 
+# name : template name
+# glyph : default display character
+# pain : pain message index
+# flags : flag | flag | ...
+# desc : description
+#
+# 'name' indicates the beginning of an entry. The template name is used in 
+# monster.txt.
+#
+# 'glyph' indicates the default display character. This is used for displaying
+# the monster in ASCII mode, and also for determining which monsters are
+# of the same "type" for things like the ESCORT flag or the S_KIN summon.
+#
+# 'pain' indicates which set of "pain messages" (from pain.txt) is used.
+#
+# 'flags' indicates the flags that every monster inherits from this template.
+#
+# 'desc' indicates the textual description of this template that is used by
+# the '/' command in-game.
+#
+# Note that these templates have references in other data files. Changing
+# characteristics of monster bases is fine, but the names are referenced in
+# several other data files (notably monster.txt), so any name changes will
+# have to take this into account.
+
+##### Normal monster templates #####
+
+# Ancient dragons are the most durable breathers; their elemental anatomy and
+# breath are the centre of each record.
+name:ancient dragon
+art:ancient-dragon
+glyph:D
+pain:1
+flags:DRAGON | EVIL | POWERFUL | SMART | SPIRIT
+flags:DROP_4
+flags:MOVE_BODY | CLEAR_WEB
+flags:NO_CONF | NO_SLEEP | NO_HOLD
+flags:FORCE_SLEEP
+desc:Ancient Dragon/Wyrm
+
+# World-echoes are displaced intelligences or self-maintaining patterns which
+# can borrow several bodies.  The category records shared instability, not a
+# rank, ancestry, or allegiance.
+name:world-echo
+art:world-echo
+glyph:A
+pain:1
+flags:POWERFUL | SPIRIT | SMART
+flags:ONLY_ITEM
+flags:OPEN_DOOR | BASH_DOOR | TAKE_ITEM | CLEAR_WEB
+flags:IM_COLD | IM_FIRE | IM_POIS | NO_CONF | NO_SLEEP | NO_HOLD
+flags:FORCE_SLEEP
+desc:World-Echo
+
+# Ants trade low endurance for rigid armour and unusually dangerous mandibles.
+name:ant
+art:ant
+glyph:a
+pain:7
+flags:ANIMAL | WEIRD_MIND
+flags:BASH_DOOR
+desc:Ant
+
+# Bats are fast, fragile aerial nuisances.
+name:bat
+art:bat
+glyph:b
+pain:4
+flags:ANIMAL
+desc:Bat
+
+# Birds are quick aerial creatures, often carrying an effect beyond melee.
+name:bird
+art:bird
+glyph:B
+pain:8
+flags:ANIMAL | CLEAR_WEB
+desc:Bird
+
+# Canines are pack animals frequently trained or gathered by hostile groups.
+name:canine
+art:canine
+glyph:C
+pain:3
+flags:ANIMAL | CLEAR_WEB
+desc:Canine (Dog)
+
+# Centipedes are mostly weak, sometimes quick, and introduce varied contact
+# effects early in the descent.
+name:centipede
+art:centipede
+glyph:c
+pain:5
+flags:ANIMAL | WEIRD_MIND
+desc:Centipede
+
+# Creeping coins lie among loose currency until disturbed, poison intruders and
+# leave the metal their colony imitated.
+name:creeping coins
+art:creeping-coins
+glyph:$
+pain:1
+flags:COLD_BLOOD | METAL | UNAWARE | EMPTY_MIND
+flags:ONLY_GOLD
+flags:BASH_DOOR | CLEAR_WEB
+flags:IM_ELEC | IM_POIS | NO_CONF | NO_SLEEP
+flags:MIMIC_INV
+desc:Creeping Coins
+
+# Dragons are spirit-bearing elemental breathers whose breath defines the
+# danger of each species.
+name:dragon
+art:dragon
+glyph:d
+pain:1
+flags:DRAGON | EVIL | SPIRIT
+flags:FORCE_SLEEP | CLEAR_WEB
+desc:Dragon
+
+# Dragon flies are weak early breathers with quick, irregular movement.
+name:dragon fly
+art:dragon-fly
+glyph:F
+pain:7
+flags:ANIMAL | WEIRD_MIND
+flags:RAND_50 | BASH_DOOR
+flags:FORCE_SLEEP
+desc:Dragon Fly
+
+# These come in two stages:
+# 1. Motionless creatures which cause bad effects if you stand next to them
+# 2. Moving spellcasters with many facet-controlled effects and projections
+#    anti-magic melee
+name:eye
+art:eye
+glyph:e
+pain:1
+flags:CLEAR_WEB
+desc:Ocular Field Organism
+
+# Elementals are usually fragile bodies organized around one physical force.
+name:elemental
+art:elemental
+glyph:E
+pain:1
+flags:EMPTY_MIND | CLEAR_WEB
+flags:IM_POIS | NO_FEAR | NO_CONF | NO_SLEEP
+flags:NONLIVING
+desc:Elemental
+
+# Felines are fast predators able to break doors and strike hard in melee.
+name:feline
+art:feline
+glyph:f
+pain:6
+flags:ANIMAL | CLEAR_WEB
+desc:Feline (Cat)
+
+# Ghosts are unseen wall-crossing dead that often drain history or attributes;
+# their bodies are comparatively fragile because escape is difficult.
+name:ghost
+art:ghost
+glyph:G
+pain:1
+flags:UNDEAD | EVIL | INVISIBLE | COLD_BLOOD | SPIRIT
+flags:PASS_WALL
+flags:IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
+desc:Ghost
+
+# Giants are massive humanoids built around crushing melee and thrown stone.
+# Some carry an elemental adaptation or a small working repertoire.
+name:giant
+art:giant
+glyph:P
+pain:1
+flags:GIANT | EVIL | SPIRIT
+flags:BASH_DOOR | CLEAR_WEB
+desc:Giant Humanoid
+
+# Golems are slow, durable artificial bodies with heavy armour.
+name:golem
+art:golem
+glyph:g
+pain:1
+flags:EMPTY_MIND | CLEAR_WEB
+flags:IM_ELEC | NO_FEAR | NO_CONF | NO_SLEEP
+flags:NONLIVING
+desc:Golem
+
+name:humanoid
+art:humanoid
+glyph:h
+pain:1
+flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
+desc:Humanoid person
+
+# Hybrids collect creatures assembled from otherwise incompatible anatomies;
+# most rely on their bodies, though some can breathe a stored force.
+name:hybrid
+art:hybrid
+glyph:H
+pain:1
+flags:CLEAR_WEB
+desc:Hybrid
+
+# Hydras are quick many-headed predators; deeper species add flame or venom to
+# their powerful melee.
+name:hydra
+art:hydra
+glyph:M
+pain:4
+flags:ANIMAL
+flags:ONLY_GOLD
+flags:BASH_DOOR | CLEAR_WEB
+flags:FORCE_SLEEP | HURT_COLD
+desc:Hydra
+
+# Icky things are simple early organisms used to introduce unusual movement or
+# contact effects.
+name:icky thing
+art:icky-thing
+glyph:i
+pain:2
+flags:RAND_50
+desc:Icky Thing
+
+# Insects are small, quick, fragile breeders whose bites carry varied effects.
+name:insect
+art:insect
+glyph:I
+pain:7
+flags:ANIMAL | WEIRD_MIND | MULTIPLY
+flags:RAND_50 | RAND_25
+desc:Insect
+
+# Jellies are usually stationary colonies with effect-bearing contact attacks.
+name:jelly
+art:jelly
+glyph:j
+pain:2
+flags:EMPTY_MIND | STUPID | CLEAR_WEB
+flags:NO_FEAR
+desc:Jelly
+
+# Killer beetles are heavily armoured insects with strong bites and occasional
+# spit attacks, but no workings or breath.
+name:killer beetle
+art:killer-beetle
+glyph:K
+pain:7
+flags:ANIMAL | WEIRD_MIND
+flags:BASH_DOOR
+desc:Killer Beetle
+
+# Kobolds are early hostile humanoids with poison tolerance and simple tools.
+name:kobold
+art:kobold
+glyph:k
+pain:1
+flags:EVIL
+flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
+flags:IM_POIS
+desc:Kobold
+
+# Liches are powerful dead-field workers that drain coordination and stored
+# charge in melee.
+name:lich
+art:lich
+glyph:L
+pain:1
+flags:UNDEAD | EVIL | COLD_BLOOD | SMART | SPIRIT
+flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+flags:IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
+flags:FORCE_SLEEP
+desc:Lich
+
+# Major demons are usually furnace-adapted spirits with dangerous melee plus
+# strong workings, breath or the ability to call reinforcements.
+name:major demon
+art:major-demon
+glyph:U
+pain:1
+flags:DEMON | EVIL | SPIRIT
+flags:ONLY_ITEM
+flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+flags:NO_CONF | NO_SLEEP | NO_HOLD
+flags:FORCE_SLEEP
+desc:Major Demon
+
+# Mimics are stationary ambush organisms that resemble objects, use workings at
+# range and attack anything that approaches.
+name:mimic
+art:mimic
+glyph:?
+pain:1
+flags:COLD_BLOOD | EMPTY_MIND | UNAWARE
+flags:NEVER_MOVE
+flags:NO_FEAR | NO_CONF | NO_SLEEP
+flags:FORCE_SLEEP | ATTR_CLEAR
+desc:Mimic
+
+# Minor demons are usually furnace-adapted spirits built to disrupt rather than
+# overpower an intruder.
+name:minor demon
+art:minor-demon
+glyph:u
+pain:1
+flags:DEMON | EVIL | SPIRIT
+flags:CLEAR_WEB
+flags:IM_FIRE
+desc:Minor Demon
+
+# Molds are stationary growths that release spores when approached.
+name:mold
+art:mold
+glyph:m
+pain:2
+flags:NEVER_MOVE
+flags:IM_POIS | HURT_FIRE | NO_FEAR | NO_CONF | NO_SLEEP
+desc:Mold
+
+# Mushrooms are small growths, usually stationary, whose spores carry effects.
+name:mushroom
+art:mushroom
+glyph:,
+pain:2
+flags:EMPTY_MIND | STUPID
+flags:HURT_FIRE | NO_FEAR | NO_CONF | NO_SLEEP
+desc:Mushroom
+
+# Nagas are serpent-bodied female spirits vulnerable to cold.
+name:naga
+art:naga
+glyph:n
+pain:1
+flags:FEMALE | EVIL | HURT_COLD | SPIRIT
+flags:BASH_DOOR | CLEAR_WEB
+desc:Naga
+
+# Ogres are heavy pack fighters between ordinary humanoids and giants, with a
+# few solitary workers among them.
+name:ogre
+art:ogre
+glyph:O
+pain:1
+flags:GIANT | EVIL | SPIRIT
+flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+desc:Ogre
+
+# Orcs commonly fight in groups, relying on melee and archery rather than
+# workings.
+name:orc
+art:orc
+glyph:o
+pain:1
+flags:MALE | ORC | EVIL | SPIRIT
+flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+desc:Orc
+
+name:person
+art:person
+glyph:p
+pain:1
+flags:BASH_DOOR | SPIRIT | CLEAR_WEB
+desc:Person/Human
+
+# Quadrupeds collect four-legged creatures without a narrower shared ecology.
+name:quadruped
+art:quadruped
+glyph:q
+pain:4
+flags:BASH_DOOR | CLEAR_WEB
+desc:Quadruped
+
+# Quylthulgs are rooted relay-organs: motionless and harmless at contact, but
+# able to call other creatures through the Meridian.
+name:quylthulg
+art:quylthulg
+glyph:Q
+pain:2
+flags:EMPTY_MIND | INVISIBLE
+flags:NEVER_BLOW | NEVER_MOVE
+flags:NO_FEAR | NO_CONF | NO_SLEEP | NO_HOLD
+flags:FORCE_SLEEP
+desc:Quylthulg
+
+# Reptiles and amphibians occur throughout the descent and are rarely quick for
+# their depth.
+name:reptile
+art:reptile
+glyph:R
+pain:5
+flags:ANIMAL | HURT_COLD | CLEAR_WEB
+desc:Reptile/Amphibian
+
+# Rodents are mostly small early breeders, with one deliberate exception.
+name:rodent
+art:rodent
+glyph:r
+pain:4
+flags:ANIMAL | CLEAR_WEB
+desc:Rodent
+
+# Skeletons divide into mobile, mindless frames and fast-working dead-field
+# idols which remain fixed in place.
+name:skeleton
+art:skeleton
+glyph:s
+pain:9
+flags:UNDEAD | EVIL | COLD_BLOOD | CLEAR_WEB
+flags:IM_COLD | IM_POIS | NO_FEAR | NO_CONF | NO_SLEEP | NO_STUN
+desc:Skeleton
+
+# Snakes are usually slow but difficult to strike cleanly.
+name:snake
+art:snake
+glyph:J
+pain:5
+flags:ANIMAL | HURT_COLD
+flags:BASH_DOOR | CLEAR_WEB
+desc:Snake
+
+# Spiders and related arachnids often use venom, webs and darkness.  Their
+# workings usually restrain prey for melee, though some species breathe.
+name:spider
+art:spider
+glyph:S
+pain:7
+flags:BASH_DOOR | PASS_WEB
+desc:Spider/Scorpion/Tick
+
+# Townsfolk are normally harmless surface residents, with rare surprises; they
+# belong at depth zero and award no experience.
+name:townsfolk
+art:townsfolk
+glyph:t
+pain:4
+flags:SPIRIT | CLEAR_WEB
+desc:Townsfolk
+
+# Rooted growths are durable rooted or walking organisms with rigid armour.
+name:tree
+art:tree
+glyph:l
+pain:9
+flags:CLEAR_WEB | COLD_BLOOD | REGENERATE
+flags:NO_FEAR | NO_CONF | HURT_FIRE | IM_WATER
+desc:Tree/Rooted Growth
+
+# Trolls are large hostile humanoids with strong melee; many are
+# light-sensitive.  They stand between ogres and giants in size and force.
+name:troll
+art:troll
+glyph:T
+pain:1
+flags:TROLL | EVIL | SPIRIT
+flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+desc:Troll
+
+# Vampires are regenerating dead that drain lived history.
+name:vampire
+art:vampire
+glyph:V
+pain:1
+flags:UNDEAD | EVIL | COLD_BLOOD | REGENERATE | SPIRIT
+flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+flags:HURT_LIGHT | HURT_FIRE | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN
+flags:FORCE_SLEEP
+desc:Vampire
+
+# Vortices are wakeful nonliving forces that engulf prey and breathe their
+# constituent energies.
+name:vortex
+art:vortex
+glyph:v
+pain:11
+flags:EMPTY_MIND | POWERFUL
+flags:RAND_50 | BASH_DOOR | CLEAR_WEB
+flags:NO_FEAR | NO_CONF | NO_SLEEP | NO_HOLD | IM_POIS
+flags:FORCE_SLEEP
+flags:NONLIVING
+desc:Vortex
+
+# Worms are mostly shallow, slow breeders whose crawling contact carries an
+# effect.
+name:worm
+art:worm
+glyph:w
+pain:1
+flags:ANIMAL
+desc:Worm/Worm Mass
+
+# Wraiths range from mound dead to incorporeal predators.  They drain lived
+# history, use dead-field workings and may call one another.
+name:wraith
+art:wraith
+glyph:W
+pain:1
+flags:UNDEAD | EVIL | COLD_BLOOD | SPIRIT | CLEAR_WEB
+flags:HURT_LIGHT | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
+desc:Wight/Wraith
+
+# World remnants share a dead-field interaction but no common world, lineage,
+# order, or allegiance.  Matching the wraith resistance profile preserves the
+# late-game mechanical boundary while separating the fiction and summon pool.
+name:world remnant
+art:wraith
+glyph:W
+pain:1
+flags:UNDEAD | EVIL | COLD_BLOOD | SPIRIT | CLEAR_WEB
+flags:HURT_LIGHT | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
+desc:World Remnant
+
+# Iscarn's interchangeable bodies are purpose-built survey structures.  Their
+# specific records carry the distinct attacks and resistances; the base only
+# establishes their common body instability.
+name:survey body
+art:golem
+glyph:X
+pain:1
+flags:POWERFUL | SPIRIT | SMART | CLEAR_WEB
+flags:OPEN_DOOR | BASH_DOOR | NO_CONF | NO_SLEEP | NO_HOLD
+flags:FORCE_SLEEP
+desc:Survey Body
+
+# Stone feeders consume, destroy or pass through mineral barriers.
+name:stone feeder
+art:stone-feeder
+glyph:X
+pain:4
+flags:COLD_BLOOD | EMPTY_MIND | CLEAR_WEB
+flags:HURT_ROCK | IM_POIS | NO_CONF | NO_SLEEP
+desc:Stone feeder
+
+# Original Ammerow champion ecologies.  These broad observational categories
+# carry glyph and physiological defaults only; individual identity and
+# mechanics are generated from reviewed authoring data.
+name:road stranger
+glyph:p
+pain:1
+flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
+desc:Road stranger
+
+name:survey machine
+glyph:g
+pain:4
+flags:EMPTY_MIND | CLEAR_WEB | NONLIVING
+flags:IM_POIS | NO_FEAR | NO_CONF | NO_SLEEP
+desc:Survey machine
+
+name:sump beast
+glyph:C
+pain:1
+flags:ANIMAL | COLD_BLOOD | CLEAR_WEB
+desc:Sump beast
+
+name:pressure echo
+glyph:A
+pain:12
+flags:POWERFUL | SPIRIT | SMART | CLEAR_WEB
+flags:IM_POIS | NO_SLEEP
+desc:Pressure echo
+
+name:seam colony
+glyph:S
+pain:6
+flags:EMPTY_MIND | WEIRD_MIND | PASS_WEB
+flags:NO_FEAR | NO_SLEEP
+desc:Seam colony
+
+name:embedded survivor
+glyph:P
+pain:1
+flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
+desc:Embedded survivor
+
+name:walking current
+glyph:v
+pain:12
+flags:EMPTY_MIND | POWERFUL | RAND_50 | BASH_DOOR | CLEAR_WEB
+flags:NO_FEAR | NO_CONF | NO_SLEEP | NO_HOLD | IM_POIS | NONLIVING
+desc:Walking current
+
+name:fault organism
+glyph:X
+pain:4
+flags:COLD_BLOOD | EMPTY_MIND | CLEAR_WEB
+flags:HURT_ROCK | IM_POIS | NO_CONF | NO_SLEEP
+desc:Fault organism
+
+# Yeeks are small, fragile acid-tolerant humanoids.
+name:yeek
+art:yeek
+glyph:y
+pain:1
+flags:ANIMAL | SPIRIT
+flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+flags:IM_ACID
+desc:Yeek
+
+# Yetis are rare, large, furred cold-adapted creatures.
+name:yeti
+art:yeti
+glyph:Y
+pain:1
+flags:ANIMAL
+flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+flags:IM_COLD
+desc:Yeti
+
+# Zephyr hounds are pack breathers, normally organized around one force with
+# matching contact attacks.
+name:zephyr hound
+art:zephyr-hound
+glyph:Z
+pain:3
+flags:ANIMAL | GROUP_AI | CLEAR_WEB
+desc:Zephyr Hound
+
+# Zombies and mummies are often mindless animated bodies, generally weak for
+# their depth.
+name:zombie
+art:zombie
+glyph:z
+pain:10
+flags:UNDEAD | EVIL | COLD_BLOOD
+flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+flags:IM_COLD | IM_POIS | HURT_FIRE | NO_CONF | NO_SLEEP | NO_STUN
+desc:Zombie/Mummy
+
+##### Special templates #####
+
+name:player
+art:player
+glyph:@
+pain:1
+desc:You
+
+name:Ormeq
+art:ormeq
+glyph:P
+flags:SYMBOL_HIDDEN
+pain:12
+desc:World-Knot

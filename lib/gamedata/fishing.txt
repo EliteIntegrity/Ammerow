@@ -1,0 +1,72 @@
+# Fishing activity rules and bounded launch roster.
+# experience:catch XP:donation XP, per fish (not per larder portion).
+# These are deliberately small repeatable rewards; future species can author
+# larger rewards for more dangerous expeditions without changing command code.
+
+population:10:15
+motion:65:25
+evasion:55:3
+patience:40
+# Once patience expires, the nearest fish whose depth band includes the hook
+# advances visibly by at most these horizontal and vertical cells per wait.
+attraction:3:1
+
+# Carried rig progression.  Priority chooses between several carried rods;
+# reach is the horizontal shaft limit and depth is the vertical line limit.
+rig:reed-bank-rod:Reed Bank Rod
+rig-item:tool:Reed Bank Rod
+rig-capabilities:1:24:6
+
+rig:ash-water-rod:Ash Water Rod
+rig-item:tool:Ash Water Rod
+rig-capabilities:2:42:11
+
+rig:yew-longline-rod:Yew Longline Rod
+rig-item:tool:Yew Longline Rod
+rig-capabilities:3:71:16
+
+species:rain-minnow:Rain Minnow
+graphics:.:Blue
+depth-band:1:8
+behavior:10:2:3
+danger-bonus:0
+larder-value:1
+experience:1:1
+habitat:rainwater:70
+habitat:open-lake:50
+habitat:forest-pool:55
+habitat:marsh-pool:25
+habitat:ruin-cistern:20
+habitat:cave-pool:10
+
+species:mudbelly:Mudbelly
+graphics:=:Light Umber
+depth-band:5:16
+behavior:25:4:3
+danger-bonus:2
+larder-value:3
+experience:1:1
+habitat:rainwater:25
+habitat:open-lake:30
+habitat:forest-pool:35
+habitat:marsh-pool:65
+habitat:ruin-cistern:40
+habitat:cave-pool:35
+
+species:glassfin:Glassfin
+graphics:0:Light Blue
+depth-band:9:16
+behavior:40:6:3
+danger-bonus:3
+larder-value:6
+experience:2:2
+habitat:rainwater:5
+habitat:open-lake:20
+habitat:forest-pool:10
+habitat:marsh-pool:10
+habitat:ruin-cistern:40
+habitat:cave-pool:55
+
+# Optional discoveries bind a precise catch to persistent world topology.
+# They never gate the larder or main launch progression.
+discovery:underflow-sounding:glassfin:yew-longline-rod:core.spelunk.east.001:cave-pool:16:deepwell:deepwell.underflow:core.route.underflow.out:core.route.underflow.in:The Glassfin's transparent fins answer with a thin mineral chime. The current below runs toward the Meridian. Your survey marks the Underflow in the deepest cave section.

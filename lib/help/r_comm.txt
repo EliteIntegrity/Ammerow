@@ -1,0 +1,93 @@
+
+Ammerow Roguelike Keyset Command Summary
+========================================
+
+Escape cancels a prompt or clears a selected target before opening the in-game
+menu.  Ctrl+C casts a fishing line while you stand
+beside eligible water.  On the surface, '<' opens the known-world map; below
+ground it uses an up staircase.  Enter also opens action and information menus,
+including the same known-world screen.  See 'world.txt', 'fishing.txt', and
+'spelunking.txt' for the context-specific controls.
+
+In top-down play, apostrophe (') immediately selects the nearest target;
+it does not open a targeting cursor.  '*' opens interactive targeting.
+Escape clears a retained target; press Escape again for the in-game menu.
+While a shot is asking for a direction, '5' uses the retained target and
+apostrophe selects and aims at the closest enemy.  Escape cancels that prompt.
+
+In the roguelike keyset, ',' asks for a direction and runs until something
+interesting or unsafe is encountered; '.' waits in place and picks up.  The
+original keyset uses '.' to run and ',' to wait.  Side-view caves do not use
+automatic running: '.' waits there, and holding a direction requests repeated
+physical steps.
+
+^ followed by a letter is an abbreviation for pressing and releasing
+the letter key with the control key also depressed.  You may also press
+and release ^ and then press and release the letter key to activate the
+same command in case your system intercepts the control plus key
+combination and does not pass it on.  The autoexplore_commands option
+modifies the '<', '>', and 'p' commands.  When that option is off (that
+is the default), the commands act as described below.  When that option
+is on, '<' or '>' will use the staircase at the player's location if it
+is the appropriate kind of staircase or will move to the nearest known
+staircase of the appropriate kind if the player is not already at that
+kind of staircase.  'p' will move to the nearest unexplored location
+when the autoexplore_commands option is on.
+
+  a    Zap a rod (Activate)            A    Activate an object
+  b    (walk - south west)             B    (run - south west)
+  c    Close a door                    C    Character description
+  d    Drop an item                    D    Disarm a trap or lock a door
+  e    List equipped items             E    Eat some food
+  f    -                               F    Fuel your lantern/torch
+  g    Get objects on floor            G    Learn book magic
+  h    (walk - west)                   H    (run - west)
+  i    List contents of pack           I    Inspect an item
+  j    (walk - south)                  J    (run - south)
+  k    (walk - north)                  K    (run - north)
+  l    (walk - east)                   L    (run - east)
+  m    Use learned magic               M    Display map of entire level
+  n    (walk - south east)             N    (run - south east)
+  o    Open a door or chest            O    Toggle ignore
+  p    - (see above)                   P    Browse a book
+  q    Quaff a potion                  Q    Retire character & quit
+  r    Read a scroll                   R    Rest for a period
+  s    Steal from a monster (rogues)    S    View origin/class abilities
+  t    Fire an item                    T    Take off equipment
+  u    (walk - north east)             U    (run - north east)
+  v    Throw an item                   V    Display version info
+  w    Wear/wield equipment            W    Locate player on map (Where)
+  x    Look around                     X    Use an item
+  y    (walk - north west)             Y    (run - north west)
+  z    Aim a wand (Zap)                Z    Use a staff (Zap)
+  !    -                               ^a   (special - debug command)
+  @    Center map                      ^b   (alter - south west)
+  #    -                               ^c   Cast a fishing line
+  $    -                               ^d   Ignore an item
+  %    -                               ^e   Toggle inven/equip window
+  ^    (special - control key)         ^f   Repeat level feeling
+  &    -                               ^g   Do autopickup
+  *    Target monster or location      ^h   (alter - west)
+  (    -                               ^i   (special - tab)
+  )    Dump screen to a file           ^j   (alter - south)
+  {    Inscribe an object              ^k   (alter - north)
+  }    Uninscribe an object            ^l   (alter - east)
+  [    Display visible monster list    ^m   (special - return)
+  ]    Display visible object list     ^n   (alter - south east)
+  -    Walk into a trap                ^o   Show previous message
+  _    -                               ^p   Show previous messages
+  +    Alter grid (steal for rogues)   ^q   -
+  =    Set options                     ^r   Redraw the screen
+  ;    Walk (with pickup)              ^s   Save and don't quit
+  :    Take notes                      ^t   Dig a tunnel
+  '    Target closest monster          ^u   (alter - north east)
+  "    Enter a user pref command       ^v   Repeat previous command
+  ,    Run                             ^w   (special - wizard mode)
+  <    Go up / known world (surface)   ^x   Save and quit
+  .    Stay still (with pickup)        ^y   (alter - north west)
+  >    Go down staircase (see above)   ^z   -
+  \    (special - bypass keymap)       ~    Check knowledge
+  `    (special - escape)              ?    Display field guide
+  /    Identify symbol
+  TAB  Fire default ammo at target
+  |    List contents of quiver

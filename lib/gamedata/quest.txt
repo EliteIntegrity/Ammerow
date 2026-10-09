@@ -1,0 +1,23 @@
+# quest.txt
+
+# This file contains the fixed (and only) quests.  The current system is that
+# a copy of these is made into the player data at birth, and the level field
+# in that copy is zeroed when the quest is completed.  This system could be
+# improved; it could also be easily adapted to add more fixed quests (by adding
+# to this file).  It would also only require fairly small game code changes to
+# allow other quests to be added as a result of game events.
+
+name:The Last Survey
+description:Reach Meridian 99, recover the final survey record, and pass the surveyor who guards the last measured threshold.
+reward:The hundredth sounding becomes reachable.
+level:99
+race:Iscarn, the Last Surveyor
+number:1
+
+name:The Upwelling
+description:Descend to Meridian 100 and break the World-Knot forcing incompatible places and poisoned water into the watershed.
+reward:A secure watershed, a surviving village, and victory.
+completion-scene:upwelling-broken
+level:100
+race:Ormeq, the World-Knot
+number:1

@@ -1,0 +1,50 @@
+#!/bin/sh
+# Test runner
+# Assumption is that this is run in the top-level directory
+# If an executable is not specified via the -x option, it defaults to be
+# ./ammerow in the current build directory.
+
+usage() {
+	echo "Usage: $0 [-x executable] <test>"
+}
+
+run() {
+	test="$1"
+        exe="$2"
+	printf "Running: $test... "
+	"$exe" -mtest < "$test/input" > "$test/run.out"
+	if [ -x "$test/matcher" ]; then
+		"$test/matcher" "$test"
+	else
+		diff "$test/run.out" "$test/output" >/dev/null 2>/dev/null
+	fi
+	result=$?
+	if [ $result -eq 0 ]; then
+		printf "\033[01;32mPassed\033[00m\n"
+	else
+		printf "\033[01;31mFailed\033[00m\n"
+	fi
+	return $result
+}
+
+argexe=./ammerow
+if test $# -gt 0 ; then
+	if test x"$1" = x-x ; then
+		shift
+		if test $# -ge 1 ; then
+			argexe="$1"
+			shift
+		else
+			usage
+			exit 1
+		fi
+	fi
+fi
+if test $# -eq 1 ; then
+	argtest="$1"
+else
+	usage
+	exit 1
+fi
+
+run "$argtest" "$argexe"
