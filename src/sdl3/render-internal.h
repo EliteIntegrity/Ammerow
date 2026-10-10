@@ -20,6 +20,10 @@ struct sdl3_visual {
 	struct sdl3_font font;
 	struct sdl3_font map_font;
 	struct sdl3_font card_font;
+	struct sdl3_font sidebar_font;
+	int sidebar_font_width;
+	int sidebar_font_height;
+	int sidebar_font_rows;
 	char map_font_path[SDL3_FONT_PATH_CAPACITY];
 	struct sdl3_monster_art_cache monster_art;
 	struct sdl3_monster_art_cache shopkeeper_art;
@@ -49,6 +53,7 @@ struct sdl3_visual {
 	bool font_loaded;
 	bool map_font_loaded;
 	bool card_font_loaded;
+	bool sidebar_font_loaded;
 	bool font_fits;
 	bool grid_cache_unavailable;
 	bool scene_cache_unavailable;

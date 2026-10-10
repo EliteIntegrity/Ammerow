@@ -9,7 +9,9 @@
 #include "unit-test.h"
 
 #include "player-history.h"
+#include "game-event.h"
 #include "sdl3/screen-model.h"
+#include "ui-display.h"
 #include "ui-history-screen.h"
 #include "ui-term.h"
 
@@ -102,8 +104,73 @@ static int test_character_history_snapshot(void *state)
 	ok;
 }
 
+static bool message_row_is(term *t, int row, const wchar_t *expected)
+{
+	size_t length = wcslen(expected);
+	if (wcsncmp(t->scr->c[row], expected, length) != 0) return false;
+	for (size_t col = length; col < (size_t)t->wid; col++) {
+		if (t->scr->c[row][col] != L' ') return false;
+	}
+	return true;
+}
+
+static int test_message_overlay_wrap_and_resize(void *state)
+{
+	term terminal = { 0 };
+	term *previous = Term;
+	uint32_t flags[ANGBAND_TERM_MAX] = { 0 };
+	(void)state;
+	messages_free();
+	messages_init();
+	term_init(&terminal, 20, 5, 32);
+	angband_term[1] = &terminal;
+	Term_activate(&terminal);
+	flags[1] = PW_MESSAGE;
+	subwindows_set_flags(flags, ANGBAND_TERM_MAX);
+	message_add("Earlier.", MSG_GENERIC);
+	message_add("Alpha beta gamma delta epsilon.", MSG_HIT);
+	event_signal(EVENT_STATE);
+	require(message_row_is(&terminal, 0, L""));
+	require(message_row_is(&terminal, 1, L""));
+	require(message_row_is(&terminal, 2, L"Earlier."));
+	require(message_row_is(&terminal, 3, L"Alpha beta gamma"));
+	require(message_row_is(&terminal, 4, L"delta epsilon."));
+	eq(terminal.scr->a[3][0], COLOUR_RED);
+	message_add("Alpha beta gamma delta epsilon.", MSG_HIT);
+	event_signal(EVENT_STATE);
+	require(message_row_is(&terminal, 4, L"delta epsilon. <2x>"));
+	/* Widening reconstructs the message, and clears the obsolete wrapped row. */
+	Term_resize(60, 5);
+	event_signal(EVENT_STATE);
+	require(message_row_is(&terminal, 2, L""));
+	require(message_row_is(&terminal, 3, L"Earlier."));
+	require(message_row_is(&terminal, 4, L"Alpha beta gamma delta epsilon. <2x>"));
+	eq(terminal.scr->a[4][0], message_color(0));
+	/* A long unbroken word and an older partial message stay within bounds. */
+	Term_resize(8, 3);
+	message_add("ABCDEFGHIJKLMNOPQ", MSG_GENERIC);
+	event_signal(EVENT_STATE);
+	require(message_row_is(&terminal, 0, L"ABCDEFGH"));
+	require(message_row_is(&terminal, 1, L"IJKLMNOP"));
+	require(message_row_is(&terminal, 2, L"Q"));
+	message_add("Done.", MSG_GENERIC);
+	event_signal(EVENT_STATE);
+	require(message_row_is(&terminal, 0, L"IJKLMNOP"));
+	require(message_row_is(&terminal, 1, L"Q"));
+	require(message_row_is(&terminal, 2, L"Done."));
+	flags[1] = 0;
+	subwindows_set_flags(flags, ANGBAND_TERM_MAX);
+	angband_term[1] = NULL;
+	Term_activate(previous);
+	term_nuke(&terminal);
+	messages_free();
+	messages_init();
+	ok;
+}
+
 const char *suite_name = "sdl3/history-screen";
 struct test tests[] = {
+	{ "message overlay wraps and reflows after resizing", test_message_overlay_wrap_and_resize },
 	{ "message history snapshot", test_message_history_snapshot },
 	{ "character history snapshot", test_character_history_snapshot },
 	{ NULL, NULL }

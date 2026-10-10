@@ -9,6 +9,9 @@ ground it uses an up staircase.  Enter also opens action and information menus,
 including the same known-world screen.  See 'world.txt', 'fishing.txt', and
 'spelunking.txt' for the context-specific controls.
 
+The map camera follows you automatically, keeping nearby terrain clear of the
+statistics and message panels even at map edges. No centring key is needed.
+
 In top-down play, apostrophe (') immediately selects the nearest target;
 it does not open a targeting cursor.  '*' opens interactive targeting.
 Escape clears a retained target; press Escape again for the in-game menu.
@@ -71,7 +74,7 @@ when the autoexplore_commands option is on.
   (    -                               ^i   (special - tab)
   )    Dump screen to a file           ^j   (special - linefeed)
   {    Inscribe an object              ^k   -
-  }    Uninscribe an object            ^l   Center map
+  }    Uninscribe an object            ^l   -
   [    Display visible monster list    ^m   (special - return)
   ]    Display visible object list     ^n   -
   -    -                               ^o   Show previous message

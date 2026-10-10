@@ -994,9 +994,23 @@ static void update_topbar(game_event_type type, game_event_data *data,
 }
 
 
-/**
- * Struct of sidebar handlers.
- */
+static bool sidebar_focus_visible(void)
+{
+	return player->class->magic.total_spells &&
+		player->lev >= player->class->magic.spell_first;
+}
+
+static bool sidebar_health_visible(void)
+{
+	return player->upkeep->health_who != NULL;
+}
+
+static bool sidebar_speed_visible(void)
+{
+	return player->state.speed != 110;
+}
+
+/** Struct of sidebar handlers. Empty optional meters consume no row. */
 static const struct side_handler_t
 {
 	void (*hook)(int, int);	 /* int row, int col */
@@ -1022,10 +1036,10 @@ static const struct side_handler_t
 	{ prt_sidebar_poison, 1, EVENT_STATUS, sidebar_poison_visible },
 	{ prt_stamina, 8, EVENT_STATUS },
 	{ prt_air, 9, EVENT_STATUS },
-	{ prt_sp,       10, EVENT_MANA },
-	{ prt_health,  12, EVENT_MONSTERHEALTH },
-	{ prt_sidebar_food, 22, EVENT_STATUS },
-	{ prt_speed,   13, EVENT_PLAYERSPEED }, /* Slow (-NN) / Fast (+NN) */
+	{ prt_sp,       10, EVENT_MANA, sidebar_focus_visible },
+	{ prt_health,  12, EVENT_MONSTERHEALTH, sidebar_health_visible },
+	{ prt_sidebar_food, 14, EVENT_STATUS },
+	{ prt_speed,   13, EVENT_PLAYERSPEED, sidebar_speed_visible },
 	{ prt_location, 14, EVENT_DUNGEONLEVEL }, /* Stable site name */
 	{ prt_depth,   15, EVENT_DUNGEONLEVEL }, /* Floor or surface danger */
 };
@@ -1078,9 +1092,12 @@ static void draw_sidebar(game_event_type type, bool force)
 		shown[worst] = false;
 		count--;
 	}
-	/* A status appearing/disappearing moves subsequent rows. Clear and redraw
-	 * the whole sidebar so neither its old label nor displaced values linger. */
-	force = force || type == EVENT_STATUS;
+	/* Events which change optional-row visibility must repaint displaced
+	 * labels as well as their own value. Other events can update in place. */
+	force = force || type == EVENT_STATUS || type == EVENT_MANA ||
+		type == EVENT_PLAYERLEVEL || type == EVENT_MONSTERHEALTH ||
+		type == EVENT_PLAYERSPEED || type == EVENT_RACE_CLASS ||
+		type == EVENT_PLAYERTITLE;
 	if (force) {
 		for (row = 1; row < y - 1; row++) Term_erase(0, row, MIN(x, COL_MAP));
 	}
@@ -2153,44 +2170,48 @@ static void update_messages_subwindow(game_event_type type,
 
 	int i;
 	int w, h;
-	int x, y;
+	int remaining;
 	bool is_fresh = true;
 	static const char* prev_last_msg = NULL;
-
-	const char *msg;
 
 	/* Activate */
 	Term_activate(inv_term);
 
 	/* Get size */
 	Term_get_size(&w, &h);
+	for (i = 0; i < h; i++) Term_erase(0, i, w);
+	remaining = h;
 
 	/* Dump messages */
 	const char* last_msg = NULL;
-	for (i = 0; i < h; i++) {
+	for (i = 0; i < messages_num() && remaining > 0; i++) {
 		uint16_t count = message_count(i);
 		const char *str = message_str(i);
+		textblock *tb = textblock_new();
+		size_t *starts = NULL, *lengths = NULL;
+		size_t lines, visible, first;
 		if (is_fresh && prev_last_msg == str) {
 			is_fresh = false;
 		}
 		uint8_t color = is_fresh? COLOUR_RED: message_color(i);
 
-		if (count == 1)
-			msg = str;
-		else if (count == 0)
-			msg = " ";
-		else {
-			msg = format("%s <%dx>", str, count);
+		textblock_append(tb, "%s", str);
+		if (count > 1) textblock_append(tb, " <%dx>", count);
+		lines = textblock_calculate_lines(tb, &starts, &lengths, w);
+		visible = MIN(lines, (size_t)remaining);
+		first = lines - visible;
+		remaining -= (int)visible;
+		/* Newest messages remain at the bottom, with normal reading order
+		 * inside each wrapped message. A clipped older message shows its tail. */
+		for (size_t line = 0; line < visible; line++) {
+			for (size_t col = 0; col < lengths[first + line]; col++) {
+				Term_putch((int)col, remaining + (int)line, color,
+					textblock_text(tb)[starts[first + line] + col]);
+			}
 		}
-
-		Term_putstr(0, (h - 1) - i, -1, color, msg);
-
-
-		/* Cursor */
-		Term_locate(&x, &y);
-
-		/* Clear to end of line */
-		Term_erase(x, y, 255);
+		mem_free(starts);
+		mem_free(lengths);
+		textblock_free(tb);
 		if (i == 0){
 			last_msg = str;
 		}

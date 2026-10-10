@@ -215,7 +215,10 @@ static void configure_map_monsters(struct sdl3_map_view *view,
 		int row;
 		const struct sdl3_cell *cell;
 
-		if (!mon || !mon->race || mon->hp < 0 ||
+		/* Lethal-hit messages can render before the core removes the monster.
+		 * Keep the same art for as long as its map occupant still exists; HP is
+		 * not a presentation-lifetime boundary (map_info also keeps its glyph). */
+		if (!mon || !mon->race ||
 				!monster_is_obvious(mon) || monster_is_mimicking(mon) ||
 				rf_has(mon->race->flags, RF_ATTR_CLEAR) ||
 				rf_has(mon->race->flags, RF_CHAR_CLEAR)) {
@@ -661,9 +664,10 @@ void sdl3_map_presenter_configure(struct sdl3_map_presenter *presenter,
 	if (!view->active) goto finish;
 	cursor_available = cursor_dungeon_location(options, view, main_term,
 		&cursor_dungeon_col, &cursor_dungeon_row);
-	cursor_focus = cursor_available && (options->cursor_visible ||
-		sdl3_inspect_card_cursor_tracks(view, main_term, options->cursor_col,
-			options->cursor_row));
+	/* Only the modal Look/aim controller may move focus away from the player.
+	 * A retained combat target may keep its cursor and tracking information,
+	 * but neither the visible marker nor a tracked subject owns the camera. */
+	cursor_focus = cursor_available && options->inspection_visible;
 	if (cursor_focus) {
 		view->focus_col = options->cursor_col;
 		view->focus_row = options->cursor_row;
@@ -727,7 +731,10 @@ void sdl3_map_presenter_configure(struct sdl3_map_presenter *presenter,
 	}
 
 finish:
-	view->hud_stats_visible = options->hud_stats_visible;
+	view->hud_insets = sdl3_layout_hud_insets(view->sidebar_mode,
+		view->term_col, view->term_row, options->hud_stats_visible,
+		options->messages_visible, options->message_placement,
+		options->message_rows);
 	if (side_view) {
 		/* Side-view subjects resolve through their semantic visibility owner,
 		 * never through the inert compatibility cave envelope. */

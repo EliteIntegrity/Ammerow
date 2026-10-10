@@ -2,6 +2,7 @@
 # New files require explicit review and an entry here.
 ASSET-LICENSE.md
 AUTHORS.md
+CHANGELOG.md
 CMakeLists.txt
 CONTRIBUTING.md
 COPYING
@@ -646,6 +647,7 @@ src/tests/sdl3/input.c
 src/tests/sdl3/inspect-card.c
 src/tests/sdl3/item-screen.c
 src/tests/sdl3/layout.c
+src/tests/sdl3/map-presenter.c
 src/tests/sdl3/monster-art.c
 src/tests/sdl3/monster-card-data.c
 src/tests/sdl3/monster-card-layout.c
@@ -983,9 +985,14 @@ tests/birth/new-game-0/output
 tests/birth/new-game-1/input
 tests/birth/new-game-1/output
 tests/content_firewall/__init__.py
+tests/content_firewall/test_cmake_test_manifest.py
 tests/content_firewall/test_public_source.py
+tests/headless/scenarios/camera-south-edge.scn
+tests/headless/scenarios/camera-west-edge.scn
 tests/headless/scenarios/cave-fatal-fall.scn
 tests/headless/scenarios/cave-larder-loop.scn
+tests/headless/scenarios/settings-large.scn
+tests/headless/scenarios/hud-bottom-large.scn
 tests/headless/scenarios/smoke.scn
 tests/run-test
 tests/trivial/matcher/input

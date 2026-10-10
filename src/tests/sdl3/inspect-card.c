@@ -10,6 +10,7 @@
 #include "init.h"
 #include "player.h"
 #include "player-birth.h"
+#include "player-calcs.h"
 #include "player-timed.h"
 #include "trap.h"
 #include "ui-prefs.h"
@@ -93,12 +94,13 @@ static int test_known_trap_precedes_floor(void *state)
 const char *suite_name = "sdl3/inspect-card";
 
 static bool saw_inspection;
+static uint32_t target_key = 't';
 static errr target_input(int action, int value)
 {
 	(void)value;
 	if (action == TERM_XTRA_EVENT) {
 		saw_inspection |= textui_target_is_inspecting();
-		Term_keypress('t', 0);
+		Term_keypress(target_key, 0);
 	}
 	return 0;
 }
@@ -158,6 +160,12 @@ static int test_target_marker_is_not_inspection(void *unused)
 	sdl3_inspect_card_configure(&card, &view, &test_term, 1, 1, true, false, false);
 	require(card.active);
 	require(streq(card.name, mon->race->name));
+	/* Esc must release the same modal ownership as confirming a target. */
+	target_key = ESCAPE;
+	saw_inspection = false;
+	require(!target_set_interactive(TARGET_KILL, grid.x, grid.y, false));
+	require(saw_inspection);
+	require(!textui_target_is_inspecting());
 	term_nuke(&test_term);
 	term_screen = angband_term[0] = NULL;
 	ok;

@@ -192,14 +192,6 @@ static void configure_terrain(struct sdl3_inspect_card *card,
 		sizeof(card->flavor));
 }
 
-bool sdl3_inspect_card_cursor_tracks(const struct sdl3_map_view *view,
-		struct term *main_term, int cursor_col, int cursor_row)
-{
-	return sdl3_monster_card_cursor_tracks(view, main_term, cursor_col,
-		cursor_row) || tracked_object_at_cursor(view, main_term, cursor_col,
-		cursor_row) != NULL;
-}
-
 void sdl3_inspect_card_configure(struct sdl3_inspect_card *card,
 		const struct sdl3_map_view *view, struct term *main_term,
 		int cursor_col, int cursor_row, bool cursor_visible,

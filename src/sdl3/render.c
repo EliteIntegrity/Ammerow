@@ -291,6 +291,7 @@ void sdl3_visual_free(struct sdl3_visual *visual)
 	sdl3_monster_art_pool_free(&visual->map_art);
 	sdl3_tiles_free(&visual->tiles);
 	if (visual->card_font_loaded) sdl3_font_free(&visual->card_font);
+	if (visual->sidebar_font_loaded) sdl3_font_free(&visual->sidebar_font);
 	if (visual->map_font_loaded) sdl3_font_free(&visual->map_font);
 	if (visual->font_loaded) sdl3_font_free(&visual->font);
 	SDL_memset(visual, 0, sizeof(*visual));
@@ -744,22 +745,22 @@ static struct sdl3_map_camera map_camera(const struct sdl3_visual *visual,
 	result.center_row = sdl3_zoom_camera_center(map_view->source_row,
 		map_view->source_rows, map_view->focus_row, result.viewport.h,
 		result.cell_height);
-	if (map_view->hud_stats_visible) {
-		/* Use the shared camera so drawing, effects and mouse hit-testing
-		 * agree. The world can extend behind the HUD; its focus cannot. */
-		if (map_view->sidebar_mode == SIDEBAR_LEFT) {
-			float inset = visual->origin_x +
-				(map_view->term_col + 1) * visual->cell_width - result.viewport.x;
-			result.center_col = sdl3_zoom_safe_center(result.center_col,
-				map_view->focus_col, result.viewport.w, result.cell_width,
-				inset, 0.0f);
-		} else if (map_view->sidebar_mode == SIDEBAR_TOP) {
-			float inset = visual->origin_y +
-				(map_view->term_row + 1) * visual->cell_height - result.viewport.y;
-			result.center_row = sdl3_zoom_safe_center(result.center_row,
-				map_view->focus_row, result.viewport.h, result.cell_height,
-				inset, 0.0f);
-		}
+	/* One geometry authority for world drawing, animated effects and mouse
+	 * input. Insets reserve stable HUD bands, not today's message text width.
+	 * The cave viewport already excludes its separate bottom status strip. */
+	{
+		const struct sdl3_hud_insets *hud = &map_view->hud_insets;
+		float left = hud->left ? visual->origin_x +
+			hud->left * visual->cell_width - result.viewport.x : 0.0f;
+		float top = hud->top ? visual->origin_y +
+			hud->top * visual->cell_height - result.viewport.y : 0.0f;
+		float bottom = hud->bottom ? result.viewport.y + result.viewport.h -
+			(visual->origin_y + (visual->rows - map_view->status_rows -
+				hud->bottom) * visual->cell_height) : 0.0f;
+		result.center_col = sdl3_zoom_safe_focus_center(result.center_col,
+			map_view->focus_col, result.viewport.w, result.cell_width, left, 0.0f);
+		result.center_row = sdl3_zoom_safe_focus_center(result.center_row,
+			map_view->focus_row, result.viewport.h, result.cell_height, top, bottom);
 	}
 	return result;
 }
@@ -1611,31 +1612,21 @@ static int draw_scaled_map(struct sdl3_visual *visual,
 	return updates;
 }
 
-static void draw_transparent_cell(struct sdl3_visual *visual,
+static void draw_transparent_cell_rect(struct sdl3_visual *visual,
 		SDL_Renderer *renderer, const struct sdl3_theme *theme,
-		const struct sdl3_cell *cell, int target_col, int target_row)
+		const struct sdl3_cell *cell, struct sdl3_font *font, SDL_FRect rect)
 {
-	SDL_FRect rect;
 	SDL_Color foreground;
 	SDL_Color shadow = { 0, 0, 0, 224 };
 
-	if (!visual || !renderer || !theme || !cell || cell->codepoint == L' ' ||
-			target_col < 0 || target_col >= visual->cols || target_row < 0 ||
-			target_row >= visual->rows) {
-		return;
-	}
-	rect = (SDL_FRect) {
-		(float)(visual->origin_x + target_col * visual->cell_width),
-		(float)(visual->origin_y + target_row * visual->cell_height),
-		(float)visual->cell_width, (float)visual->cell_height
-	};
+	if (!cell || cell->codepoint == L' ') return;
 	foreground = sdl3_theme_color(theme, cell->foreground);
-	if (visual->font_fits) {
+	if (font) {
 		/* A one-pixel ink shadow preserves legibility without introducing a
 		 * panel, border, blur, or opaque block over the world. */
-		sdl3_font_draw(&visual->font, (uint32_t)cell->codepoint, shadow,
+		sdl3_font_draw(font, (uint32_t)cell->codepoint, shadow,
 			rect.x + 1.0f, rect.y + 1.0f, rect.w, rect.h);
-		sdl3_font_draw(&visual->font, (uint32_t)cell->codepoint, foreground,
+		sdl3_font_draw(font, (uint32_t)cell->codepoint, foreground,
 			rect.x, rect.y, rect.w, rect.h);
 	} else {
 		draw_debug_glyph(visual, renderer, cell, rect.x, rect.y, foreground);
@@ -1643,13 +1634,31 @@ static void draw_transparent_cell(struct sdl3_visual *visual,
 	visual->last_cell_updates++;
 }
 
+static void draw_transparent_cell(struct sdl3_visual *visual,
+		SDL_Renderer *renderer, const struct sdl3_theme *theme,
+		const struct sdl3_cell *cell, int target_col, int target_row)
+{
+	SDL_FRect rect;
+	if (!visual || !renderer || !theme || target_col < 0 ||
+			target_col >= visual->cols || target_row < 0 ||
+			target_row >= visual->rows) return;
+	rect = (SDL_FRect) {
+		(float)(visual->origin_x + target_col * visual->cell_width),
+		(float)(visual->origin_y + target_row * visual->cell_height),
+		(float)visual->cell_width, (float)visual->cell_height
+	};
+	draw_transparent_cell_rect(visual, renderer, theme, cell,
+		visual->font_fits ? &visual->font : NULL, rect);
+}
+
 static void draw_message_overlay(struct sdl3_visual *visual,
 		SDL_Renderer *renderer, const struct sdl3_theme *theme,
 		const struct sdl3_grid *grid, enum sdl3_dock_placement placement,
-		int reserved_bottom_rows)
+		int reserved_bottom_rows, int sidebar, bool stats_visible)
 {
 	SDL_Rect clip;
 	struct sdl3_cell_bounds bounds;
+	struct sdl3_cell_bounds area;
 	int first_col;
 	int first_row;
 	int col;
@@ -1661,9 +1670,12 @@ static void draw_message_overlay(struct sdl3_visual *visual,
 	}
 	if (!sdl3_grid_content_bounds(grid, 0, 0, grid->cols, grid->rows,
 			&bounds)) return;
-	sdl3_layout_message_offset(placement, visual->cols,
-		MAX(1, visual->rows - reserved_bottom_rows),
+	area = sdl3_layout_message_area(visual->cols, visual->rows, sidebar,
+		stats_visible, reserved_bottom_rows, placement);
+	sdl3_layout_message_offset(placement, area.cols, area.rows,
 		bounds.col + bounds.cols, grid->rows, &first_col, &first_row);
+	first_col += area.col;
+	first_row += area.row;
 	clip = (SDL_Rect) { 0, 0, visual->output_width,
 		visual->origin_y + (visual->rows - reserved_bottom_rows) * visual->cell_height };
 	SDL_SetRenderClipRect(renderer, &clip);
@@ -1677,13 +1689,97 @@ static void draw_message_overlay(struct sdl3_visual *visual,
 	SDL_SetRenderClipRect(renderer, NULL);
 }
 
+/* Keep the selected interface size unless stats really cannot fit. Only the
+ * sidebar uses this lazily cached smaller font; messages and menus do not.
+ * Fit occupied rows, not unused terminal rows: budgeting for the latter would
+ * make long message histories needlessly tiny. */
+static struct sdl3_font *sidebar_font(struct sdl3_visual *visual,
+		SDL_Renderer *renderer, int cols, int rows, int available_rows)
+{
+	int width = cols * visual->cell_width;
+	int height = available_rows * visual->cell_height;
+	int capacity = rows;
+	if (!visual->font_fits) return NULL;
+	if (rows <= available_rows) return &visual->font;
+	if (visual->sidebar_font_loaded &&
+			(visual->sidebar_font_width != width ||
+			visual->sidebar_font_height != height ||
+			visual->sidebar_font_rows != capacity ||
+			!streq(visual->sidebar_font.path, visual->font.path))) {
+		sdl3_font_free(&visual->sidebar_font);
+		visual->sidebar_font_loaded = false;
+	}
+	if (!visual->sidebar_font_loaded) {
+		/* At very short window heights the smallest supported font may still
+		 * be too tall. Keep a valid font and scale only this sidebar as a last
+		 * resort; never fall back to clipping away HP, food or location. */
+		visual->sidebar_font_loaded = sdl3_font_init_lazy_fallback(&visual->sidebar_font,
+			renderer, visual->font.path, width, height, width,
+			MAX(height, capacity * 16), cols, capacity, 100, NULL);
+		visual->sidebar_font_width = width;
+		visual->sidebar_font_height = height;
+		visual->sidebar_font_rows = capacity;
+	}
+	return visual->sidebar_font_loaded ? &visual->sidebar_font : &visual->font;
+}
+
+static void draw_left_stats(struct sdl3_visual *visual,
+		SDL_Renderer *renderer, const struct sdl3_theme *theme,
+		const struct sdl3_grid *grid, int cols, int end_row)
+{
+	struct sdl3_cell_bounds bounds;
+	struct sdl3_font *font;
+	SDL_Rect clip;
+	int count = 0, width = 0, target_row = 0, cell_width, cell_height;
+	float scale, old_scale_x, old_scale_y;
+	for (int row = 1; row < grid->rows - 1; row++) {
+		if (sdl3_grid_content_bounds(grid, 0, row, cols, 1, &bounds)) {
+			count++;
+			width = MAX(width, bounds.col + bounds.cols);
+		}
+	}
+	if (!count) return;
+	font = sidebar_font(visual, renderer, cols, count, end_row - 1);
+	cell_width = font && font != &visual->font ? font->cell_width : visual->cell_width;
+	cell_height = font && font != &visual->font ? font->cell_height : visual->cell_height;
+	scale = SDL_min(1.0f, (float)((end_row - 1) * visual->cell_height) /
+		(count * cell_height));
+	clip = (SDL_Rect) { visual->origin_x, visual->origin_y,
+		cols * visual->cell_width, end_row * visual->cell_height };
+	SDL_SetRenderClipRect(renderer, &clip);
+	bounds = (struct sdl3_cell_bounds) { 0, 1,
+		(int)SDL_ceilf(width * cell_width * scale / visual->cell_width),
+		(int)SDL_ceilf(count * cell_height * scale / visual->cell_height) };
+	sdl3_ui_draw_backplate(renderer, visual, theme, &bounds, 0, 0);
+	SDL_GetRenderScale(renderer, &old_scale_x, &old_scale_y);
+	SDL_SetRenderScale(renderer, old_scale_x * scale, old_scale_y * scale);
+	clip.x = (int)SDL_floorf(clip.x / scale);
+	clip.y = (int)SDL_floorf(clip.y / scale);
+	clip.w = (int)SDL_ceilf(clip.w / scale);
+	clip.h = (int)SDL_ceilf(clip.h / scale);
+	SDL_SetRenderClipRect(renderer, &clip);
+	for (int row = 1; row < grid->rows - 1; row++) {
+		if (!sdl3_grid_content_bounds(grid, 0, row, cols, 1, &bounds)) continue;
+		for (int col = 0; col < cols; col++) {
+			SDL_FRect rect = { visual->origin_x / scale + col * cell_width,
+				(visual->origin_y + visual->cell_height) / scale + target_row * cell_height,
+				(float)cell_width, (float)cell_height };
+			draw_transparent_cell_rect(visual, renderer, theme,
+				sdl3_grid_cell(grid, col, row), font, rect);
+		}
+		target_row++;
+	}
+	SDL_SetRenderClipRect(renderer, NULL);
+	SDL_SetRenderScale(renderer, old_scale_x, old_scale_y);
+}
+
 static void draw_world_stats(struct sdl3_visual *visual,
 		SDL_Renderer *renderer, const struct sdl3_theme *theme,
 		const struct sdl3_grid *grid, const struct sdl3_map_view *map_view,
-		bool visible, bool temporarily_closed)
+		bool visible, bool temporarily_closed, bool messages_visible,
+		enum sdl3_dock_placement placement, int message_rows)
 {
 	struct sdl3_cell_bounds bounds;
-	bool bounds_found;
 	int col;
 	int row;
 
@@ -1702,17 +1798,10 @@ static void draw_world_stats(struct sdl3_visual *visual,
 	}
 	if (!visible) return;
 	if (map_view->sidebar_mode == SIDEBAR_LEFT) {
-		bounds_found = sdl3_grid_content_bounds(grid, 0, 1,
-			MIN(map_view->term_col, grid->cols), grid->rows - 1, &bounds);
-		if (bounds_found) {
-			sdl3_ui_draw_backplate(renderer, visual, theme, &bounds, 0, 0);
-		}
-		for (row = 1; row < grid->rows; row++) {
-			for (col = 0; col < map_view->term_col && col < grid->cols; col++) {
-				draw_transparent_cell(visual, renderer, theme,
-					sdl3_grid_cell(grid, col, row), col, row);
-			}
-		}
+		int end = sdl3_layout_sidebar_end(visual->rows, map_view->status_rows,
+			messages_visible, placement, message_rows);
+		draw_left_stats(visual, renderer, theme, grid,
+			MIN(map_view->term_col, grid->cols), end);
 	} else if (map_view->sidebar_mode == SIDEBAR_TOP) {
 		/* Row 3 is the native cave fallback, replaced by the semantic strip. */
 		int rows = map_view->cave_status.active ? 3 : map_view->term_row;
@@ -1982,10 +2071,13 @@ void sdl3_visual_render(struct sdl3_visual *visual, SDL_Renderer *renderer,
 		draw_store_art(visual, renderer, theme, frame->store_art);
 	}
 	draw_world_stats(visual, renderer, theme, grid, map_view,
-		frame->hud_stats_visible, fishing_active);
+		frame->hud_stats_visible, fishing_active, frame->dock_active,
+		frame->dock_placement, frame->dock_grid ? frame->dock_grid->rows : 0);
 	if (frame->dock_active) {
 		draw_message_overlay(visual, renderer, theme, frame->dock_grid,
-			frame->dock_placement, map_view && map_view->active ? map_view->status_rows : 0);
+			frame->dock_placement, map_view && map_view->active ? map_view->status_rows : 0,
+			map_view ? map_view->sidebar_mode : SIDEBAR_NONE,
+			frame->hud_stats_visible && !fishing_active);
 	}
 	draw_prompt_overlay(visual, renderer, theme, grid, map_view,
 		frame->cursor_visible);
@@ -2052,10 +2144,13 @@ bool sdl3_visual_render_overlay_frame(struct sdl3_visual *visual,
 	draw_combat_effects(visual, renderer, frame->theme, frame->map_view,
 		frame->combat_effects);
 	draw_world_stats(visual, renderer, frame->theme, frame->grid,
-		frame->map_view, frame->hud_stats_visible, fishing_active);
+		frame->map_view, frame->hud_stats_visible, fishing_active,
+		frame->dock_active, frame->dock_placement,
+		frame->dock_grid ? frame->dock_grid->rows : 0);
 	if (frame->dock_active) {
 		draw_message_overlay(visual, renderer, frame->theme, frame->dock_grid,
-			frame->dock_placement, frame->map_view->status_rows);
+			frame->dock_placement, frame->map_view->status_rows,
+			frame->map_view->sidebar_mode, frame->hud_stats_visible && !fishing_active);
 	}
 	draw_prompt_overlay(visual, renderer, frame->theme, frame->grid,
 		frame->map_view, frame->cursor_visible);

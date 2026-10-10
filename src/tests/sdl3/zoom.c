@@ -255,7 +255,70 @@ static int test_hud_safe_camera(void *state)
 	ok;
 }
 
+static int test_focus_neighbourhood_at_edges(void *unused)
+{
+	(void)unused;
+	/* The reported 1280x720 west/south edges, at 200% ASCII zoom. */
+	float west = sdl3_zoom_safe_focus_center(30.0f, 2, 1280.0f,
+		20.0f, 180.0f, 0.0f);
+	float left = 640.0f + (2 - west) * 20.0f;
+	require(left >= 240.0f - 0.001f); /* Stats + three neighbouring tiles. */
+	float south = sdl3_zoom_safe_focus_center(9.0f, 15, 720.0f,
+		40.0f, 0.0f, 140.0f);
+	float bottom = 360.0f + (16 - south) * 40.0f;
+	require(bottom <= 460.0f + 0.001f); /* Messages + three tiles below. */
+	/* An interior focus needs no camera movement when already safe. */
+	require(fabsf(sdl3_zoom_safe_focus_center(30.5f, 30, 1280.0f,
+		20.0f, 180.0f, 0.0f) - 30.5f) < 0.001f);
+	ok;
+}
+
+static int test_focus_neighbourhood_geometry(void *unused)
+{
+	const float viewports[] = { 320.0f, 720.0f, 1080.0f, 1440.0f, 3840.0f };
+	(void)unused;
+	for (int size = 0; size < (int)N_ELEMENTS(viewports); size++) {
+		float viewport = viewports[size];
+		for (int zoom = 50; zoom <= 800; zoom += 25) {
+			/* Includes rectangular ASCII axes and native-multiple Hybrid cells. */
+			float cells[] = { (float)((10 * zoom + 50) / 100),
+				(float)((20 * zoom + 50) / 100),
+				(float)sdl3_zoom_pixel_art_size(20, zoom, 32) };
+			for (int axis = 0; axis < (int)N_ELEMENTS(cells); axis++) {
+				float cell = cells[axis];
+				for (int placement = 0; placement < 4; placement++) {
+					float leading = placement & 1 ? viewport * 0.25f : 0.0f;
+					float trailing = placement & 2 ? viewport * 0.5f : 0.0f;
+					float available = fmaxf(0, viewport - leading - trailing - cell);
+					float margin = fminf(3 * cell, available * 0.25f);
+					for (int focus = 0; focus < 200; focus++) {
+						float ordinary = sdl3_zoom_camera_center(0, 200, focus,
+							viewport, cell);
+						float center = sdl3_zoom_safe_focus_center(ordinary, focus,
+							viewport, cell, leading, trailing);
+						float pixel = viewport * 0.5f + (focus + 0.5f - center) * cell;
+						require(isfinite(center));
+						if (viewport - leading - trailing >= cell) {
+							require(pixel - cell * 0.5f >= leading + margin - 0.01f);
+							require(pixel + cell * 0.5f <= viewport - trailing - margin + 0.01f);
+						} else {
+							require(fabsf(pixel - (leading + viewport - trailing) * 0.5f) < 0.01f);
+						}
+						/* Mouse input and repeated frames must use exactly the same geometry. */
+						eq(sdl3_zoom_cell_from_pixel(pixel, 0, viewport, cell, center), focus);
+						require(fabsf(center - sdl3_zoom_safe_focus_center(center,
+							focus, viewport, cell, leading, trailing)) < 0.001f);
+					}
+				}
+			}
+		}
+	}
+	ok;
+}
+
 struct test tests[] = {
+	{ "edge focus includes nearby terrain", test_focus_neighbourhood_at_edges },
+	{ "HUD neighbourhood geometry and mouse round trip", test_focus_neighbourhood_geometry },
 	{ "HUD safe camera and mouse round trip", test_hud_safe_camera },
 	{ "camera geometry torture", test_camera_geometry_torture },
 	{ "panel shift torture", test_panel_shift_torture },

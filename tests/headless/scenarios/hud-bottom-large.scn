@@ -1,0 +1,39 @@
+# Copyright (c) 2026 John Horton
+# SPDX-License-Identifier: GPL-2.0-only
+# Large interface, left-anchored history, font/device recreation and reflow.
+name:hud-bottom-large
+seed:20260828
+race:Nearlander
+class:Warrior
+player:Layout Tester
+location:core.main.001
+entry:default
+start-anchor:open-floor
+inventory:potion:Heroism
+bot:scripted
+capture:both
+expect:complete
+map-style:natural
+map-presentation:ascii
+map-zoom:200
+screen-width:1280
+screen-height:720
+action:quaff:Heroism
+action:inspect:settings:interface
+action:inspect:settings:font
+action:inspect:settings:density
+action:inspect:settings:density
+action:inspect:settings:history
+action:inspect:settings:history
+action:inspect:settings:history
+action:inspect:settings:history
+action:inspect:settings:history
+action:inspect:settings:history
+action:inspect:settings:close
+action:inspect:messages:Top
+action:inspect:messages:Top right
+action:inspect:messages:Bottom
+action:inspect:settings:reset
+action:inspect:settings:stats
+action:inspect:settings:stats
+action:inspect:refresh

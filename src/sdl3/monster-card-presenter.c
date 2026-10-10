@@ -48,13 +48,6 @@ static struct monster *tracked_monster_at_cursor(
 	return mon_col == cursor_col && mon_row == cursor_row ? mon : NULL;
 }
 
-bool sdl3_monster_card_cursor_tracks(const struct sdl3_map_view *view,
-		struct term *main_term, int cursor_col, int cursor_row)
-{
-	return tracked_monster_at_cursor(view, main_term, cursor_col,
-		cursor_row) != NULL;
-}
-
 static void list_add(struct sdl3_monster_card_list *list, const char *item)
 {
 	if (!list || !item || !item[0]) return;

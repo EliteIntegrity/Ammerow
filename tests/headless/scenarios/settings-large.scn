@@ -1,0 +1,26 @@
+# Copyright (c) 2026 John Horton
+# SPDX-License-Identifier: GPL-2.0-only
+# Exercise the real font/size handlers, then every Settings page at 80 x 24.
+name:settings-large
+seed:20260828
+race:Nearlander
+class:Warrior
+player:Layout Tester
+location:core.main.001
+entry:default
+start-anchor:open-floor
+bot:scripted
+capture:both
+expect:complete
+map-presentation:ascii
+screen-width:1280
+screen-height:720
+action:inspect:settings:interface
+action:inspect:settings:font
+action:inspect:settings:density
+action:inspect:settings:density
+action:inspect:settings:sound
+action:inspect:settings:display
+action:inspect:settings:open
+action:inspect:settings:hub
+action:inspect:settings:interface

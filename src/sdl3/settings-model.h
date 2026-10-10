@@ -12,6 +12,7 @@
 #define INCLUDED_SDL3_SETTINGS_MODEL_H
 
 #include <stdbool.h>
+#include "sdl3/menu-layout.h"
 
 enum sdl3_settings_row {
 	SDL3_SETTINGS_THEME = 0,
@@ -65,6 +66,19 @@ struct sdl3_settings_overlay {
 	int selected_hub_row;
 	int selected_row;
 };
+
+/* Drawing and pointer input share the same height-aware geometry. */
+struct sdl3_settings_layout {
+	struct sdl3_menu_layout menu;
+	int note_row;
+	int note_rows;
+	int footer_row;
+};
+
+struct sdl3_settings_layout sdl3_settings_layout(
+		enum sdl3_settings_page page, int cols, int rows);
+bool sdl3_settings_select_at(struct sdl3_settings_overlay *overlay, int cols,
+		int rows, int col, int row);
 
 void sdl3_settings_init(struct sdl3_settings_overlay *overlay);
 void sdl3_settings_open(struct sdl3_settings_overlay *overlay);

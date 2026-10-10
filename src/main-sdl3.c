@@ -401,6 +401,9 @@ void sdl3_frontend_render(struct sdl3_app *app)
 	map_options.settings_visible = app->settings.visible;
 	map_options.hud_stats_visible = app->config.hud_stats_visible &&
 		!(player && player->fishing && player->fishing->active);
+	map_options.messages_visible = app->dock_active;
+	map_options.message_placement = app->config.dock_placement;
+	map_options.message_rows = app->dock_grid.rows;
 	map_options.big_stat_cards = app->config.big_stat_cards;
 	map_options.animated_combat = app->config.animated_combat;
 	map_options.tile_mode = app->config.tile_mode;
@@ -1587,15 +1590,28 @@ bool sdl3_capture_message_position(const char *position)
 bool sdl3_capture_settings(const char *action)
 {
 	if (!g_app.offscreen || !action) return false;
-	if (streq(action, "open")) {
+	if (streq(action, "open") || streq(action, "interface") ||
+			streq(action, "sound") || streq(action, "display") ||
+			streq(action, "hub")) {
 		sdl3_settings_open(&g_app.settings);
-		g_app.settings.selected_hub_row = SDL3_SETTINGS_HUB_APPEARANCE;
-		(void)sdl3_settings_activate(&g_app.settings);
+		g_app.settings.selected_hub_row = streq(action, "interface") ?
+			SDL3_SETTINGS_HUB_INTERFACE : streq(action, "sound") ?
+			SDL3_SETTINGS_HUB_SOUND : streq(action, "display") ?
+			SDL3_SETTINGS_HUB_DISPLAY : SDL3_SETTINGS_HUB_APPEARANCE;
+		if (!streq(action, "hub"))
+			(void)sdl3_settings_activate(&g_app.settings);
 	} else if (streq(action, "close")) {
 		g_app.settings.visible = false;
 	} else if (streq(action, "map") || streq(action, "detail")) {
 		g_app.settings.selected_row = streq(action, "map") ?
 			SDL3_SETTINGS_TILE_MODE : SDL3_SETTINGS_HYBRID_DETAIL;
+		sdl3_frontend_change_selected_setting(&g_app, 1);
+	} else if (streq(action, "density") || streq(action, "font") ||
+			streq(action, "stats") || streq(action, "history")) {
+		g_app.settings.selected_row = streq(action, "density") ?
+			SDL3_SETTINGS_INTERFACE_DENSITY : streq(action, "font") ?
+			SDL3_SETTINGS_INTERFACE_FONT : streq(action, "history") ?
+			SDL3_SETTINGS_DOCK_SIZE : SDL3_SETTINGS_HUD_STATS;
 		sdl3_frontend_change_selected_setting(&g_app, 1);
 	} else if (streq(action, "reset")) {
 		SDL_Event event;

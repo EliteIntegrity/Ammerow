@@ -14,6 +14,7 @@
 #define INCLUDED_SDL3_MAP_VIEW_H
 
 #include "sdl3/ascii-art.h"
+#include "sdl3/layout.h"
 #include "sdl3/terrain.h"
 #include "sdl3/term.h"
 #include "ui-spelunking.h"
@@ -70,7 +71,7 @@ struct sdl3_map_view {
 	int term_cols;
 	int term_rows;
 	int sidebar_mode;
-	bool hud_stats_visible;
+	struct sdl3_hud_insets hud_insets;
 	/* Mapping back to Angband's dungeon panel for safe mouse input. */
 	int dungeon_col;
 	int dungeon_row;

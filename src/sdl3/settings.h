@@ -35,7 +35,5 @@ void sdl3_settings_draw(const struct sdl3_settings_overlay *overlay,
 		bool animated_combat, bool tile_mode, int hybrid_tile_size,
 		enum sdl3_dock_placement dock_placement, int dock_rows, int dock_cols,
 		const struct sdl3_audio_settings *audio);
-bool sdl3_settings_select_at(struct sdl3_settings_overlay *overlay, int cols,
-		int rows, int col, int row);
 
 #endif /* INCLUDED_SDL3_SETTINGS_H */

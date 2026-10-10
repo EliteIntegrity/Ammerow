@@ -1,3 +1,6 @@
+/* Ammerow modifications Copyright (c) 2026 John Horton
+ * SPDX-License-Identifier: GPL-2.0-only */
+
 /**
  * \file option.c
  * \brief Options table and definitions.
@@ -339,6 +342,13 @@ void options_restore_maintainer(struct player_options *opts, int page)
 		}
 }
 
+/* Keep legacy terminal centring loadable/saveable, but do not offer it as a
+ * camera control: SDL3's map camera follows the player independently. */
+static bool option_on_menu_page(int opt, int page)
+{
+	return options[opt].type == page && opt != OPT_center_player;
+}
+
 /**
  * Initialise options package
  */
@@ -350,12 +360,12 @@ void init_options(void)
 	for (page = 0; page < OPT_PAGE_MAX; page++) {
 		int count = 0, i;
 		for (opt = 0; opt < OPT_MAX; opt++) {
-			if (options[opt].type == page) ++count;
+			if (option_on_menu_page(opt, page)) ++count;
 		}
 		option_page[page] = mem_alloc((count + 1)
 				* sizeof(*option_page[page]));
 		for (opt = 0, i = 0; opt < OPT_MAX; opt++) {
-			if (options[opt].type == page) {
+			if (option_on_menu_page(opt, page)) {
 				assert(i < count);
 				option_page[page][i] = opt;
 				++i;

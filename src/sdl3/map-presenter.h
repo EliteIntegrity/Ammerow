@@ -20,10 +20,14 @@ struct sdl3_map_presenter_options {
 	int cursor_col;
 	int cursor_row;
 	bool cursor_visible;
-	/* A persistent combat-target marker is not an examination request. */
+	/* Only modal Look/aiming owns camera focus and examination cards.
+	 * A persistent combat-target marker is not an examination request. */
 	bool inspection_visible;
 	bool settings_visible;
 	bool hud_stats_visible;
+	bool messages_visible;
+	enum sdl3_dock_placement message_placement;
+	int message_rows;
 	bool big_stat_cards;
 	bool animated_combat;
 	bool tile_mode;

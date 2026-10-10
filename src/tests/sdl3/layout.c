@@ -198,11 +198,28 @@ static int test_interface_density_presets(void *state)
 			(enum sdl3_interface_density)i)[0] != '\0');
 	}
 	eq(sdl3_interface_density_change(SDL3_INTERFACE_LARGE, -1),
-		SDL3_INTERFACE_LARGE);
+		SDL3_INTERFACE_COMPACT);
 	eq(sdl3_interface_density_change(SDL3_INTERFACE_LARGE, 1),
 		SDL3_INTERFACE_COMFORTABLE);
 	eq(sdl3_interface_density_change(SDL3_INTERFACE_COMPACT, 1),
-		SDL3_INTERFACE_COMPACT);
+		SDL3_INTERFACE_LARGE);
+	/* Repeated activation can always reach every preset, including after
+	 * either endpoint. Zero leaves the choice alone; invalid input recovers. */
+	for (i = 0; i < SDL3_INTERFACE_DENSITY_COUNT; i++) {
+		enum sdl3_interface_density forward = i, backward = i;
+		for (int step = 1; step <= SDL3_INTERFACE_DENSITY_COUNT * 2; step++) {
+			forward = sdl3_interface_density_change(forward, 1);
+			backward = sdl3_interface_density_change(backward, -1);
+			eq(forward, (i + step) % SDL3_INTERFACE_DENSITY_COUNT);
+			eq(backward, (i + SDL3_INTERFACE_DENSITY_COUNT * 2 - step) %
+				SDL3_INTERFACE_DENSITY_COUNT);
+		}
+		eq(sdl3_interface_density_change(i, 0), i);
+	}
+	eq(sdl3_interface_density_change(SDL3_INTERFACE_DENSITY_COUNT, 0),
+		SDL3_INTERFACE_DENSITY_DEFAULT);
+	eq(sdl3_interface_density_change(-1, 1),
+		sdl3_interface_density_change(SDL3_INTERFACE_DENSITY_DEFAULT, 1));
 
 	sdl3_layout_configure_sized(&layout, true, SDL3_DOCK_BOTTOM, 4, 32,
 		120, 36);
@@ -518,8 +535,95 @@ static int test_cave_messages_clear_status(void *unused)
 	ok;
 }
 
+static int test_camera_hud_insets(void *unused)
+{
+	struct sdl3_hud_insets inset;
+	(void)unused;
+	for (int history = SDL3_LAYOUT_MIN_DOCK_ROWS;
+			history <= SDL3_LAYOUT_MAX_DOCK_ROWS; history++) {
+		for (int placement = 0; placement < SDL3_DOCK_PLACEMENT_COUNT; placement++) {
+			inset = sdl3_layout_hud_insets(SIDEBAR_LEFT, 13, 1,
+				true, true, placement, history);
+			eq(inset.left, 14);
+			if (placement == SDL3_DOCK_TOP || placement == SDL3_DOCK_TOP_RIGHT) {
+				eq(inset.top, history + 1);
+				eq(inset.bottom, 0);
+			} else {
+				eq(inset.top, 0);
+				eq(inset.bottom, history + 1);
+			}
+		}
+	}
+	/* Hidden statistics (including fishing) must not retain their clearance. */
+	inset = sdl3_layout_hud_insets(SIDEBAR_LEFT, 13, 1,
+		false, true, SDL3_DOCK_BOTTOM, 6);
+	eq(inset.left, 0);
+	eq(inset.bottom, 7);
+	inset = sdl3_layout_hud_insets(SIDEBAR_LEFT, 13, 1,
+		false, false, SDL3_DOCK_BOTTOM, 6);
+	eq(inset.left, 0);
+	eq(inset.top, 0);
+	eq(inset.bottom, 0);
+	/* Top messages sit below top statistics, with no overlapping text. */
+	inset = sdl3_layout_hud_insets(SIDEBAR_TOP, 0, 4,
+		true, true, SDL3_DOCK_TOP_RIGHT, 6);
+	eq(inset.left, 0);
+	eq(inset.top, 12);
+	inset = sdl3_layout_hud_insets(SIDEBAR_TOP, 0, 4,
+		true, false, SDL3_DOCK_TOP, 6);
+	eq(inset.top, 5);
+	/* Cave status is already outside the map viewport; never counted here. */
+	inset = sdl3_layout_hud_insets(SIDEBAR_LEFT, 13, 1,
+		true, true, SDL3_DOCK_BOTTOM, 6);
+	eq(inset.bottom, 7);
+	ok;
+}
+
+static int test_messages_do_not_overlap_stats(void *state)
+{
+	(void)state;
+	for (int density = 0; density < SDL3_INTERFACE_DENSITY_COUNT; density++) {
+		int cols, rows;
+		sdl3_interface_density_dimensions(density, &cols, &rows);
+		for (int sidebar = SIDEBAR_LEFT; sidebar <= SIDEBAR_NONE; sidebar++) {
+			for (int visible = 0; visible < 2; visible++) {
+				for (int cave = 0; cave < 2; cave++) {
+					int reserved = cave ? SDL3_LAYOUT_CAVE_STATUS_ROWS : 0;
+					for (int history = 3; history <= 12; history++) {
+						for (int placement = 0; placement < SDL3_DOCK_PLACEMENT_COUNT; placement++) {
+							int col, row;
+							bool top = placement == SDL3_DOCK_TOP || placement == SDL3_DOCK_TOP_RIGHT;
+							struct sdl3_cell_bounds area = sdl3_layout_message_area(
+								cols, rows, sidebar, visible != 0, reserved, placement);
+							int end = sdl3_layout_sidebar_end(rows, reserved, true, placement, history);
+							eq(area.col, top && visible && sidebar == SIDEBAR_LEFT ? col_map[sidebar] + 1 : 0);
+							eq(area.row, visible && sidebar == SIDEBAR_TOP ? row_top_map[sidebar] + 1 : 0);
+							eq(area.col + area.cols, cols);
+							eq(area.row + area.rows, rows - reserved);
+							require(end > 1);
+							eq(end, rows - reserved - 1 - (top ? 0 : history));
+							eq(sdl3_layout_sidebar_end(rows, reserved, false, placement, history), rows - reserved - 1);
+							sdl3_layout_message_offset(placement, area.cols, area.rows,
+								area.cols, history, &col, &row);
+							require(col >= 0 && col + area.cols <= area.cols);
+							require(row >= 0 && row + history <= area.rows);
+							if (!top) {
+								eq(col + area.col, 0);
+								eq(end + 1, row + area.row);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	ok;
+}
+
 const char *suite_name = "sdl3/layout";
 struct test tests[] = {
+	{ "messages clear statistics at every size and placement", test_messages_do_not_overlap_stats },
+	{ "camera clears all HUD placements", test_camera_hud_insets },
 	{ "cave messages clear status", test_cave_messages_clear_status },
 	{ "default layout", test_default_layout },
 	{ "main cell mapping", test_main_cell_mapping },

@@ -27,6 +27,7 @@
 
 static void handle_dock_lifecycle(game_event_type type,
 		game_event_data *data, void *user);
+static void refresh_dock_view(uint32_t flag);
 static void handle_modal_screen(game_event_type type,
 		game_event_data *data, void *user);
 static void handle_item_selector(game_event_type type,
@@ -59,6 +60,9 @@ bool sdl3_frontend_apply_dock_layout(struct sdl3_app *app, bool visible,
 	struct sdl3_pane *main;
 	struct sdl3_pane *dock;
 	bool active;
+	bool dock_size_changed;
+	bool was_active;
+	struct sdl3_cell_bounds message_area;
 	term *old = Term;
 	int main_cols;
 	int main_rows;
@@ -68,6 +72,7 @@ bool sdl3_frontend_apply_dock_layout(struct sdl3_app *app, bool visible,
 	main = &app->panes[SDL3_LAYOUT_MAIN_TERM];
 	dock = &app->panes[SDL3_LAYOUT_MESSAGE_TERM];
 	active = sdl3_presentation_dock_active(&app->presentation, visible);
+	was_active = app->dock_active;
 	/* The left side is the transparent player HUD, not the Angband subwindow.
 	 * Old version-14 settings are migrated on load; this is a defensive guard
 	 * for any in-memory caller. */
@@ -76,6 +81,12 @@ bool sdl3_frontend_apply_dock_layout(struct sdl3_app *app, bool visible,
 		&main_cols, &main_rows);
 	sdl3_layout_configure_sized(&candidate, active, placement, rows, cols,
 		main_cols, main_rows);
+	message_area = sdl3_layout_message_area(main_cols, main_rows,
+		main->term.sidebar_mode, app->config.hud_stats_visible, 0, placement);
+	candidate.panes[SDL3_LAYOUT_MESSAGE_TERM].col = message_area.col;
+	candidate.panes[SDL3_LAYOUT_MESSAGE_TERM].cols = message_area.cols;
+	dock_size_changed = app->dock_grid.cols != message_area.cols ||
+		app->dock_grid.rows != candidate.panes[SDL3_LAYOUT_MESSAGE_TERM].rows;
 	if (!sdl3_grid_resize(&app->grid,
 			candidate.panes[SDL3_LAYOUT_MAIN_TERM].cols,
 			candidate.panes[SDL3_LAYOUT_MAIN_TERM].rows)) {
@@ -127,6 +138,10 @@ bool sdl3_frontend_apply_dock_layout(struct sdl3_app *app, bool visible,
 	if (old) Term_activate(old);
 	sdl3_grid_mark_all_dirty(&app->grid);
 	sdl3_grid_mark_all_dirty(&app->dock_grid);
+	/* Rewrap history after a size/stats change; Term_redraw alone replays the
+	 * old line breaks and can truncate the right-hand end of a message. */
+	if (active && (dock_size_changed || !was_active))
+		refresh_dock_view(window_flag[SDL3_LAYOUT_MESSAGE_TERM]);
 	return true;
 }
 

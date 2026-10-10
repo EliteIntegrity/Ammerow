@@ -15,6 +15,7 @@
 
 #include "angband.h"
 #include "ui-term.h"
+#include "sdl3/term.h"
 
 #define SDL3_LAYOUT_MAIN_TERM 0
 #define SDL3_LAYOUT_MESSAGE_TERM 1
@@ -65,6 +66,18 @@ struct sdl3_layout {
 	int rows;
 };
 
+/* Stable camera clearance in interface cells, not a world clipping rectangle.
+ * Message text can change without moving the camera. */
+struct sdl3_hud_insets {
+	int left;
+	int top;
+	int bottom;
+};
+
+struct sdl3_hud_insets sdl3_layout_hud_insets(int sidebar, int map_col,
+		int map_row, bool stats_visible, bool messages_visible,
+		enum sdl3_dock_placement placement, int message_rows);
+
 void sdl3_layout_init(struct sdl3_layout *layout);
 void sdl3_layout_configure(struct sdl3_layout *layout, bool dock_visible,
 		int dock_rows);
@@ -89,5 +102,17 @@ enum sdl3_dock_placement sdl3_dock_placement_change(
 void sdl3_layout_message_offset(enum sdl3_dock_placement placement,
 		int cols, int rows, int content_end_col, int history_rows,
 		int *col, int *row);
+
+/* Bottom messages retain the left margin; the sidebar fits above them.
+ * Top messages exclude visible stats. All messages exclude the cave strip.
+ * Use the same width for terminal wrapping and final overlay placement. */
+struct sdl3_cell_bounds sdl3_layout_message_area(int cols, int rows,
+		int sidebar, bool stats_visible, int reserved_bottom_rows,
+		enum sdl3_dock_placement placement);
+
+/* Exclusive end row for left stats, including a gap above bottom messages. */
+int sdl3_layout_sidebar_end(int rows, int reserved_bottom_rows,
+		bool messages_visible, enum sdl3_dock_placement placement,
+		int message_rows);
 
 #endif /* INCLUDED_SDL3_LAYOUT_H */

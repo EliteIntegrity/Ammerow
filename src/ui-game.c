@@ -255,7 +255,6 @@ struct cmd_info cmd_hidden[] =
 	{ "Start running", { '.', ',' }, CMD_RUN, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Start exploring", { 'p' }, CMD_EXPLORE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Stand still", { ',', '.' }, CMD_HOLD, NULL, NULL, 0, NULL, NULL, NULL, 0 },
-	{ "Center map", { KTRL('L'), '@' }, CMD_NULL, do_cmd_center_map, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Toggle wizard mode", { KTRL('W') }, CMD_NULL, do_cmd_wizard, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Repeat previous command", { 'n', KTRL('V') }, CMD_REPEAT, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Do autopickup", { KTRL('G') }, CMD_AUTOPICKUP, NULL, NULL, 0, NULL, NULL, NULL, 0 },
@@ -396,6 +395,13 @@ struct command_list cmds_all[] =
 /* List of directly accessible commands indexed by char */
 static struct cmd_info *converted_list[KEYMAP_MAX][UCHAR_MAX+1];
 
+/* SDL3 follows the player automatically. Keep the terminal shortcut for old
+ * keymaps without listing it in any player-facing command menu. */
+static struct cmd_info legacy_center_map = {
+	"Center map", { KTRL('L'), '@' }, CMD_NULL, do_cmd_center_map,
+	NULL, 0, NULL, NULL, NULL, 0
+};
+
 /*
  * Lists of nested commands; each list is also indexed by char but there's no
  * distinction between original/roguelike keys
@@ -474,6 +480,10 @@ void cmd_init(void)
 					&commands[i];
 			}
 		}
+	}
+	for (i = 0; i < KEYMAP_MAX; i++) {
+		assert(!converted_list[i][legacy_center_map.key[i]]);
+		converted_list[i][legacy_center_map.key[i]] = &legacy_center_map;
 	}
 }
 

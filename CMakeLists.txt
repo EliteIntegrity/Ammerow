@@ -1243,6 +1243,7 @@ set(ANGBAND_TEST_CASE_SOURCES
       sdl3/inspect-card.c
       sdl3/item-screen.c
       sdl3/layout.c
+      sdl3/map-presenter.c
     sdl3/monster-art.c
     sdl3/monster-card-data.c
     sdl3/monster-card-layout.c
@@ -1534,6 +1535,22 @@ foreach(ANGBAND_TEST_CASE_SOURCE ${ANGBAND_TEST_CASE_SOURCES})
             src/sdl3/layout.c
             src/sdl3/term.c
         )
+    elseif(ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/map-presenter.c")
+        list(APPEND ANGBAND_TEST_CASE_EXTRA_SOURCES
+            src/sdl3/map-presenter.c
+            src/sdl3/layout.c
+            src/sdl3/term.c
+            src/sdl3/zoom.c
+            src/sdl3/terrain.c
+            src/sdl3/spelunking-presenter.c
+            src/sdl3/inspect-card-presenter.c
+            src/sdl3/monster-card-presenter.c
+            src/sdl3/monster-card-data.c
+            src/sdl3/ascii-art.c
+            src/sdl3/tiles.c
+            src/sdl3/monster-art.c
+            src/sdl3/font.c
+        )
     elseif(ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/monster-art.c")
         list(APPEND ANGBAND_TEST_CASE_EXTRA_SOURCES
             src/sdl3/font.c
@@ -1634,6 +1651,7 @@ foreach(ANGBAND_TEST_CASE_SOURCE ${ANGBAND_TEST_CASE_SOURCES})
 			ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/font.c" OR
             ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/input.c" OR
             ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/inspect-card.c" OR
+            ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/map-presenter.c" OR
             ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/monster-art.c" OR
             ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/spelunking-presenter.c" OR
 			ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/tiles.c" OR

@@ -153,8 +153,54 @@ static int test_page_rows_are_shared_with_pointer_layout(void *state)
 	ok;
 }
 
+static int test_all_pages_fit_and_hit_test(void *state)
+{
+	static const int cols[] = { 80, 100, 120, 140 };
+	static const int rows[] = { 24, 30, 36, 42 };
+	(void)state;
+	for (int size = 0; size < 4; size++) {
+		for (int page = SDL3_SETTINGS_HUB; page <= SDL3_SETTINGS_DISPLAY; page++) {
+			struct sdl3_settings_overlay overlay;
+			struct sdl3_settings_layout layout = sdl3_settings_layout(page,
+				cols[size], rows[size]);
+			struct sdl3_menu_layout *menu = &layout.menu;
+			int last = sdl3_menu_item_row(menu, menu->count - 1);
+			sdl3_settings_init(&overlay);
+			overlay.page = page;
+			require(menu->col >= 0 && menu->col + menu->width <= cols[size]);
+			require(menu->row > 5);
+			require(last + menu->item_height < layout.footer_row);
+			if (layout.note_rows) {
+				require(layout.note_row > last + menu->item_height);
+				require(layout.note_row + layout.note_rows < layout.footer_row);
+			}
+			for (int i = 0; i < menu->count; i++) {
+				int row = sdl3_menu_item_row(menu, i);
+				require(sdl3_settings_select_at(&overlay, cols[size], rows[size],
+					menu->col + 4, row));
+				if (page == SDL3_SETTINGS_HUB) {
+					eq(overlay.selected_hub_row, i);
+				} else {
+					enum sdl3_settings_row expected;
+					require(sdl3_settings_page_row_at(page, i, &expected));
+					eq(overlay.selected_row, expected);
+				}
+				if (menu->step > menu->item_height)
+					require(!sdl3_settings_select_at(&overlay, cols[size], rows[size],
+						menu->col + 4, row + menu->item_height));
+			}
+			require(!sdl3_settings_select_at(&overlay, cols[size], rows[size],
+				menu->col + 4, layout.footer_row));
+			require(!sdl3_settings_select_at(&overlay, cols[size], rows[size],
+				menu->col - 1, menu->row));
+		}
+	}
+	ok;
+}
+
 const char *suite_name = "sdl3/settings-model";
 struct test tests[] = {
+	{ "all settings pages fit and hit-test at every density", test_all_pages_fit_and_hit_test },
 	{ "open and toggle", test_open_and_toggle },
 	{ "hub navigation", test_hub_navigation },
 	{ "hub contains only settings", test_hub_contains_only_settings },

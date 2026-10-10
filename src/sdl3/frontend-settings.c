@@ -203,6 +203,11 @@ void sdl3_frontend_change_stats_visibility(struct sdl3_app *app)
 {
 	if (!app) return;
 	app->config.hud_stats_visible = !app->config.hud_stats_visible;
+	if (!sdl3_frontend_apply_dock_layout(app, app->config.dock_visible,
+			app->config.dock_placement, app->config.dock_rows,
+			app->config.dock_cols)) {
+		app->config.hud_stats_visible = !app->config.hud_stats_visible;
+	}
 	sdl3_grid_mark_dirty(&app->grid);
 }
 

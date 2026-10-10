@@ -101,6 +101,58 @@ static void select_first_page_row(struct sdl3_settings_overlay *overlay)
 	if (rows && count > 0) overlay->selected_row = rows[0];
 }
 
+struct sdl3_settings_layout sdl3_settings_layout(
+		enum sdl3_settings_page page, int cols, int rows)
+{
+	struct sdl3_settings_layout result = { 0 };
+	struct sdl3_menu_layout *menu = &result.menu;
+	int last_allowed;
+	menu->width = cols - 8 < 88 ? cols - 8 : 88;
+	menu->col = (cols - menu->width) / 2;
+	menu->row = 9;
+	menu->count = sdl3_settings_page_row_count(page);
+	menu->step = 2;
+	menu->item_height = 1;
+	result.footer_row = rows - 3;
+	if (page == SDL3_SETTINGS_HUB) {
+		menu->count = SDL3_SETTINGS_HUB_ROW_COUNT;
+		menu->step = 3;
+		menu->item_height = 2;
+		if (rows / 3 > menu->row) menu->row = rows / 3;
+	} else {
+		if (page == SDL3_SETTINGS_DISPLAY) result.note_rows = 2;
+		else if (page == SDL3_SETTINGS_INTERFACE ||
+				page == SDL3_SETTINGS_APPEARANCE) result.note_rows = 1;
+		/* Keep a blank line before notes and before the fixed footer. */
+		last_allowed = result.footer_row - 2 -
+			(result.note_rows ? result.note_rows + 1 : 0);
+		if (menu->row + (menu->count - 1) * menu->step > last_allowed)
+			menu->step = 1;
+	}
+	result.note_row = sdl3_menu_item_row(menu, menu->count - 1) + 2;
+	return result;
+}
+
+bool sdl3_settings_select_at(struct sdl3_settings_overlay *overlay, int cols,
+		int rows, int col, int row)
+{
+	struct sdl3_settings_layout layout;
+	enum sdl3_settings_row setting_row;
+	int item;
+	if (!overlay) return false;
+	layout = sdl3_settings_layout(overlay->page, cols, rows);
+	item = sdl3_menu_item_at(&layout.menu, col, row);
+	if (item < 0) return false;
+	if (overlay->page == SDL3_SETTINGS_HUB) {
+		overlay->selected_hub_row = item;
+	} else {
+		if (!sdl3_settings_page_row_at(overlay->page, item, &setting_row))
+			return false;
+		overlay->selected_row = setting_row;
+	}
+	return true;
+}
+
 void sdl3_settings_init(struct sdl3_settings_overlay *overlay)
 {
 	if (!overlay) return;

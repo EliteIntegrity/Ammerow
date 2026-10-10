@@ -1,0 +1,26 @@
+# Populate real message history beside the southern world boundary.
+name:camera-south-edge
+seed:20260828
+race:Nearlander
+class:Warrior
+player:Camera Tester
+location:core.hub
+entry:edge.south
+inventory:potion:Enlightenment
+inventory:potion:Heroism
+inventory:potion:Boldness
+bot:scripted
+capture:both
+expect:complete
+map-style:natural
+map-presentation:ascii
+map-zoom:200
+screen-width:1280
+screen-height:720
+action:quaff:Enlightenment
+action:quaff:Heroism
+action:quaff:Boldness
+action:walk:east
+action:walk:east
+action:walk:east
+action:inspect:refresh

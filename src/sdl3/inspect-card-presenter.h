@@ -18,8 +18,6 @@ struct term;
 struct world_spelunk_runtime;
 struct world_spelunk_system;
 
-bool sdl3_inspect_card_cursor_tracks(const struct sdl3_map_view *view,
-		struct term *main_term, int cursor_col, int cursor_row);
 void sdl3_inspect_card_configure(struct sdl3_inspect_card *card,
 		const struct sdl3_map_view *view, struct term *main_term,
 		int cursor_col, int cursor_row, bool cursor_visible,

@@ -18,6 +18,7 @@
 #include "sdl3/screen-model.h"
 #include "ui-context.h"
 #include "ui-game.h"
+#include "ui-knowledge.h"
 #include "ui-output.h"
 #include "ui-prefs.h"
 #include "z-quark.h"
@@ -461,8 +462,48 @@ static int test_capture_previews_are_read_only(void *state)
 	ok;
 }
 
+static int test_legacy_centering_is_unadvertised_but_compatible(void *state)
+{
+	bool saved_center = OPT(player, center_player);
+	bool saved_keyset = OPT(player, rogue_like_commands);
+	(void)state;
+	for (int i = 0; cmds_all[i].name; i++) {
+		for (size_t j = 0; j < cmds_all[i].len; j++) {
+			require(cmds_all[i].list[j].hook != do_cmd_center_map);
+		}
+	}
+	for (int page = 0; page < OPT_PAGE_MAX; page++) {
+		for (int i = 0; option_page[page][i] != OPT_none; i++) {
+			require(option_page[page][i] != OPT_center_player);
+		}
+	}
+	/* Existing preferences still round-trip under the same type and name. */
+	OPT(player, center_player) = true;
+	require(options_save_custom(&player->opts, OP_INTERFACE));
+	OPT(player, center_player) = false;
+	require(options_restore_custom(&player->opts, OP_INTERFACE));
+	require(OPT(player, center_player));
+	OPT(player, center_player) = saved_center;
+	require(options_save_custom(&player->opts, OP_INTERFACE));
+	for (int mode = 0; mode < 2; mode++) {
+		OPT(player, rogue_like_commands) = mode != 0;
+		begin();
+		test_term.offset_x = test_term.offset_y = 10;
+		key(NULL, 0, mode ? '@' : KTRL('L'));
+		textui_process_command();
+		eq(test_term.offset_x, 0);
+		eq(test_term.offset_y, 0);
+		eq(step_position, step_count);
+		eq(messages, 0);
+		require(!screen.active);
+	}
+	OPT(player, rogue_like_commands) = saved_keyset;
+	ok;
+}
+
 const char *suite_name = "sdl3/command-screen";
 struct test tests[] = {
+	{ "legacy centring is hidden but compatible", test_legacy_centering_is_unadvertised_but_compatible },
 	{ "Items and Information browse without messages", test_items_and_information_are_quiet },
 	{ "every command and keyset selects exactly once", test_every_leaf_selects_its_authoritative_command },
 	{ "dispatch checks prerequisites after closing", test_dispatch_checks_once_after_menu_closes },

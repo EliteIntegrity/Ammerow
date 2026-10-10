@@ -10,6 +10,7 @@
 #include "effects.h"
 #include "game-event.h"
 #include "init.h"
+#include "monster.h"
 #include "obj-util.h"
 #include "player-birth.h"
 #include "player-calcs.h"
@@ -183,8 +184,70 @@ static int test_quiet_digestion_refreshes_but_no_change_does_not(void *state)
 	ok;
 }
 
+static int test_optional_rows_pack_and_redraw(void *state)
+{
+	int16_t old_level = player->lev;
+	int old_speed = player->state.speed;
+	struct monster target = { 0 };
+	int air, food;
+	(void)state;
+	Term_resize(100, 24);
+	test_term.sidebar_mode = SIDEBAR_LEFT;
+	Term_clear();
+	player->lev = 0;
+	player->state.speed = 110;
+	player->upkeep->health_who = NULL;
+	event_signal(EVENT_STATUS);
+	air = find_text("AIR", COL_MAP, 1, 23);
+	food = find_text("Fed", COL_MAP, 1, 23);
+	require(air > 0);
+	eq(food, air + 1);
+	eq(find_text("FP ", COL_MAP, 1, 23), -1);
+	/* New rows move food down; their own event must repaint displaced text. */
+	player->lev = (int16_t)player->class->magic.spell_first;
+	event_signal(EVENT_MANA);
+	eq(find_text("FP ", COL_MAP, 1, 23), air + 1);
+	eq(find_text("Fed", COL_MAP, 1, 23), food + 1);
+	player->lev = 0;
+	event_signal(EVENT_PLAYERLEVEL);
+	eq(find_text("FP ", COL_MAP, 1, 23), -1);
+	eq(find_text("Fed", COL_MAP, 1, 23), food);
+	player->upkeep->health_who = &target;
+	event_signal(EVENT_MONSTERHEALTH);
+	eq(find_text("[----------]", COL_MAP, 1, 23), air + 1);
+	eq(find_text("Fed", COL_MAP, 1, 23), food + 1);
+	player->upkeep->health_who = NULL;
+	event_signal(EVENT_MONSTERHEALTH);
+	eq(find_text("[----------]", COL_MAP, 1, 23), -1);
+	eq(find_text("Fed", COL_MAP, 1, 23), food);
+	player->state.speed = 120;
+	event_signal(EVENT_PLAYERSPEED);
+	eq(find_text("Fast", COL_MAP, 1, 23), food + 1);
+	player->state.speed = 110;
+	event_signal(EVENT_PLAYERSPEED);
+	eq(find_text("Fast", COL_MAP, 1, 23), -1);
+	/* A fully occupied Large sidebar drops identity before a vital meter. */
+	player->lev = (int16_t)player->class->magic.spell_first;
+	player->upkeep->health_who = &target;
+	player->state.speed = 120;
+	player->timed[TMD_POISONED] = 10;
+	event_signal(EVENT_STATUS);
+	require(find_text("Fed", COL_MAP, 1, 23) > 0);
+	require(find_text("HP ", COL_MAP, 1, 23) > 0);
+	require(find_text("FP ", COL_MAP, 1, 23) > 0);
+	require(find_text("Poisoned", COL_MAP, 1, 23) > 0);
+	require(find_text("AIR", COL_MAP, 1, 23) > 0);
+	player->timed[TMD_POISONED] = 0;
+	player->upkeep->health_who = NULL;
+	player->lev = old_level;
+	player->state.speed = old_speed;
+	event_signal(EVENT_STATUS);
+	ok;
+}
+
 const char *suite_name = "ui/sidebar";
 struct test tests[] = {
+	{ "optional meters pack and clear on their own events", test_optional_rows_pack_and_redraw },
 	{ "poison is adjacent to HP and does not overwrite map or footer", test_poison_appears_and_clears_without_overflow },
 	{ "topbar poison appears and clears", test_topbar_keeps_poison_next_to_hp },
 	{ "food effects refresh percentages within Fed", test_food_effects_refresh_within_fed_grade },

@@ -37,6 +37,10 @@ float sdl3_zoom_camera_center(int first_cell, int cell_count, int focus_cell,
 /* Keep a complete focus cell clear of HUD edges, allowing blank world margins. */
 float sdl3_zoom_safe_center(float center, int focus_cell, float viewport_size,
 		float cell_size, float leading_inset, float trailing_inset);
+/* Protect the focus and nearby cells; reduce the margin at extreme zoom. */
+float sdl3_zoom_safe_focus_center(float center, int focus_cell,
+		float viewport_size, float cell_size, float leading_inset,
+		float trailing_inset);
 int sdl3_zoom_cell_from_pixel(float pixel, float viewport_start,
 		float viewport_size, float cell_size, float camera_center);
 

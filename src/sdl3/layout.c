@@ -41,6 +41,27 @@ void sdl3_layout_init(struct sdl3_layout *layout)
 	sdl3_layout_configure(layout, true, SDL3_LAYOUT_DEFAULT_DOCK_ROWS);
 }
 
+struct sdl3_hud_insets sdl3_layout_hud_insets(int sidebar, int map_col,
+		int map_row, bool stats_visible, bool messages_visible,
+		enum sdl3_dock_placement placement, int message_rows)
+{
+	struct sdl3_hud_insets result = { 0 };
+
+	/* One interface cell also clears the panels' padded backplates. */
+	if (stats_visible) {
+		if (sidebar == SIDEBAR_LEFT) result.left = MAX(0, map_col) + 1;
+		if (sidebar == SIDEBAR_TOP) result.top = MAX(0, map_row) + 1;
+	}
+	if (messages_visible && message_rows > 0) {
+		int rows = MIN(SDL3_LAYOUT_MAX_DOCK_ROWS, message_rows) + 1;
+		if (placement == SDL3_DOCK_TOP || placement == SDL3_DOCK_TOP_RIGHT)
+			result.top += rows;
+		else
+			result.bottom = rows;
+	}
+	return result;
+}
+
 void sdl3_layout_configure(struct sdl3_layout *layout, bool dock_visible,
 		int dock_rows)
 {
@@ -111,8 +132,10 @@ enum sdl3_interface_density sdl3_interface_density_change(
 	if (changed < 0 || changed >= SDL3_INTERFACE_DENSITY_COUNT) {
 		changed = SDL3_INTERFACE_DENSITY_DEFAULT;
 	}
-	if (delta > 0 && changed < SDL3_INTERFACE_DENSITY_COUNT - 1) changed++;
-	if (delta < 0 && changed > 0) changed--;
+	/* Presets cycle for mouse activation as well as keyboard navigation. */
+	if (delta > 0) changed = (changed + 1) % SDL3_INTERFACE_DENSITY_COUNT;
+	if (delta < 0) changed = (changed + SDL3_INTERFACE_DENSITY_COUNT - 1) %
+		SDL3_INTERFACE_DENSITY_COUNT;
 	return (enum sdl3_interface_density)changed;
 }
 
@@ -181,8 +204,8 @@ enum sdl3_dock_placement sdl3_dock_placement_change(
 	return message_positions[index].placement;
 }
 
-/* Position the whole text block, not each line. Keep the full-width history
- * buffer so selecting Top right never truncates more text than Top/Bottom.
+/* Position the whole text block, not each line, inside its available area.
+ * Wrapping uses the width of the available area for that placement.
  * content_end_col is exclusive, including any leading indentation. */
 void sdl3_layout_message_offset(enum sdl3_dock_placement placement,
 		int cols, int rows, int content_end_col, int history_rows,
@@ -192,4 +215,30 @@ void sdl3_layout_message_offset(enum sdl3_dock_placement placement,
 		MAX(0, cols - MAX(0, content_end_col)) : 0;
 	if (row) *row = placement == SDL3_DOCK_TOP ||
 		placement == SDL3_DOCK_TOP_RIGHT ? 0 : MAX(0, rows - history_rows);
+}
+
+struct sdl3_cell_bounds sdl3_layout_message_area(int cols, int rows,
+		int sidebar, bool stats_visible, int reserved_bottom_rows,
+		enum sdl3_dock_placement placement)
+{
+	struct sdl3_cell_bounds area = { 0, 0, MAX(1, cols), MAX(1, rows) };
+	bool top = placement == SDL3_DOCK_TOP || placement == SDL3_DOCK_TOP_RIGHT;
+	if (top && stats_visible && sidebar == SIDEBAR_LEFT)
+		area.col = MIN(area.cols - 1, col_map[sidebar] + 1);
+	if (stats_visible && sidebar == SIDEBAR_TOP)
+		area.row = MIN(area.rows - 1, row_top_map[sidebar] + 1);
+	area.cols -= area.col;
+	area.rows = MAX(1, area.rows - area.row - MAX(0, reserved_bottom_rows));
+	return area;
+}
+
+int sdl3_layout_sidebar_end(int rows, int reserved_bottom_rows,
+		bool messages_visible, enum sdl3_dock_placement placement,
+		int message_rows)
+{
+	int end = rows - MAX(0, reserved_bottom_rows);
+	if (messages_visible && placement != SDL3_DOCK_TOP &&
+			placement != SDL3_DOCK_TOP_RIGHT)
+		end -= MIN(SDL3_LAYOUT_MAX_DOCK_ROWS, MAX(0, message_rows));
+	return MAX(2, end - 1);
 }

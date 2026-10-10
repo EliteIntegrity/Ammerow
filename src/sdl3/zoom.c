@@ -173,3 +173,21 @@ float sdl3_zoom_safe_center(float center, int focus_cell, float viewport_size,
 	if (position > maximum) return center + (position - maximum) / cell_size;
 	return center;
 }
+
+float sdl3_zoom_safe_focus_center(float center, int focus_cell,
+		float viewport_size, float cell_size, float leading_inset,
+		float trailing_inset)
+{
+	/* Three clear map cells make an edge approach readable. Limit the margin
+	 * to a quarter of the usable span so large tiles cannot squeeze the focus
+	 * out of the remaining space. The whole map still draws behind the HUD. */
+	const float nearby_cells = 3.0f;
+	float available, margin;
+	if (viewport_size <= 0.0f || cell_size <= 0.0f) return center;
+	leading_inset = fmaxf(0.0f, leading_inset);
+	trailing_inset = fmaxf(0.0f, trailing_inset);
+	available = fmaxf(0.0f, viewport_size - leading_inset - trailing_inset - cell_size);
+	margin = fminf(nearby_cells * cell_size, available * 0.25f);
+	return sdl3_zoom_safe_center(center, focus_cell, viewport_size, cell_size,
+		leading_inset + margin, trailing_inset + margin);
+}
