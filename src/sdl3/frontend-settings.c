@@ -13,6 +13,12 @@
 #include "sdl3/frontend-internal.h"
 
 #include "snd-sdl3.h"
+#include "ui-options.h"
+#include "game-input.h"
+#include "game-world.h"
+#include "ui-output.h"
+#include "ui-input.h"
+#include "player-util.h"
 #include "sdl3/audio.h"
 #include "sdl3/font.h"
 #include "sdl3/settings-model.h"
@@ -220,9 +226,71 @@ static void change_audio_volume(struct sdl3_app *app, int *volume, int delta)
 	sdl3_audio_set_settings(&app->config.audio);
 }
 
+/* Reuse the semantic options screens, hiding SDL overlays while the nested
+ * screen owns input. These are the same preferences reached with '='. */
+static void show_game_options(struct sdl3_app *app, bool items)
+{
+	bool home = app->home.visible, pause = app->pause_menu.visible;
+	if (!player || !character_dungeon || player->is_dead) return;
+	app->home.visible = app->pause_menu.visible = app->settings.visible = false;
+	sdl3_grid_mark_dirty(&app->grid);
+	sdl3_frontend_render(app);
+	if (items) do_cmd_options_item("Item ignoring setup", 0);
+	else do_cmd_options();
+	app->home.visible = home;
+	app->pause_menu.visible = pause;
+	app->settings.visible = true;
+	sdl3_grid_mark_all_dirty(&app->grid);
+}
+
+static void save_game_defaults(struct sdl3_app *app)
+{
+	bool home = app->home.visible, pause = app->pause_menu.visible;
+	char key;
+	bool saved;
+	if (!player) return;
+	saved = options_save_custom(&player->opts, OP_INTERFACE);
+	app->home.visible = app->pause_menu.visible = app->settings.visible = false;
+	screen_save();
+	get_com(saved ? "Gameplay defaults saved. Press any key." :
+		"Could not save gameplay defaults. Press any key.", &key);
+	screen_load();
+	app->home.visible = home;
+	app->pause_menu.visible = pause;
+	app->settings.visible = true;
+	sdl3_grid_mark_all_dirty(&app->grid);
+}
+
 void sdl3_frontend_change_selected_setting(struct sdl3_app *app, int delta)
 {
 	switch (app->settings.selected_row) {
+	case SDL3_SETTINGS_EXPLORE:
+		if (player) {
+			int mode = !OPT(player, autoexplore_commands) ? 0 :
+				OPT(player, autoexplore_continuous) ? 2 : 1;
+			mode = (mode + (delta < 0 ? 2 : 1)) % 3;
+			option_set("autoexplore_commands", mode != 0);
+			option_set("autoexplore_continuous", mode == 2);
+		}
+		break;
+	case SDL3_SETTINGS_AUTO_STAIRS:
+		if (player) option_set("auto_stairs", !OPT(player, auto_stairs));
+		break;
+	case SDL3_SETTINGS_PICKUP_MATCHING:
+		if (player) option_set("pickup_inven", !OPT(player, pickup_inven));
+		break;
+	case SDL3_SETTINGS_PICKUP_ALL:
+		if (player) option_set("pickup_always", !OPT(player, pickup_always));
+		break;
+	case SDL3_SETTINGS_ITEM_RULES:
+		if (delta > 0) show_game_options(app, true);
+		break;
+	case SDL3_SETTINGS_ALL_OPTIONS:
+		if (delta > 0) show_game_options(app, false);
+		break;
+	case SDL3_SETTINGS_SAVE_GAME_DEFAULTS:
+		if (delta > 0) save_game_defaults(app);
+		break;
 	case SDL3_SETTINGS_THEME:
 		change_theme(app, delta);
 		break;
@@ -258,6 +326,9 @@ void sdl3_frontend_change_selected_setting(struct sdl3_app *app, int delta)
 			sdl3_effects_clear(&app->combat_effects);
 			app->missile_previous_valid = false;
 		}
+		break;
+	case SDL3_SETTINGS_EDGE_WARNINGS:
+		app->config.edge_warnings = !app->config.edge_warnings;
 		break;
 	case SDL3_SETTINGS_TERRAIN:
 		app->config.terrain_style = sdl3_terrain_style_change(

@@ -17,6 +17,7 @@
 #include "monster.h"
 #include "obj-tval.h"
 #include "player-timed.h"
+#include "player-resource.h"
 #include "sdl3/map-presenter.h"
 #include "sdl3/inspect-card-presenter.h"
 #include "sdl3/monster-art.h"
@@ -27,6 +28,35 @@
 #include "ui-output.h"
 #include "ui-spelunking.h"
 #include "world-turn.h"
+#include "world-spelunking-breath.h"
+#include "world-spelunking-runtime.h"
+
+enum sdl3_edge_warning sdl3_map_player_warning(const struct player *p,
+		bool side_view)
+{
+	const struct world_spelunk_state *state = side_view && p && p->spelunking ?
+		&p->spelunking->state : NULL;
+	int air, max_air;
+	bool exposed;
+	if (!p || p->is_dead || p->mhp <= 0) return SDL3_EDGE_WARNING_NONE;
+	/* Near-death HP outranks everything. Otherwise imminent drowning takes
+	 * precedence over low HP, then hazardous exertion, then fainting hunger.
+	 * Poison retains its explicit status beside HP rather than adding fog. */
+	if (p->chp <= p->mhp / 10) return SDL3_EDGE_WARNING_HEALTH;
+	if (state && world_spelunk_is_submerged(state) &&
+			world_spelunk_player_air_status(p, &air, &max_air) &&
+			max_air > 0 && air <= max_air / 4) return SDL3_EDGE_WARNING_AIR;
+	if (p->chp <= p->mhp / 4) return SDL3_EDGE_WARNING_HEALTH;
+	exposed = state && (state->movement == WORLD_SPELUNK_SWIMMING ||
+		((state->movement == WORLD_SPELUNK_CLIMBING ||
+		state->movement == WORLD_SPELUNK_HANGING) &&
+		!world_spelunk_is_grounded(state)));
+	if (exposed && player_stamina_maximum(p) > 0 &&
+			player_stamina_current(p) <= player_stamina_maximum(p) / 5)
+		return SDL3_EDGE_WARNING_STAMINA;
+	if (p->timed[TMD_FOOD] < PY_FOOD_FAINT) return SDL3_EDGE_WARNING_HUNGER;
+	return SDL3_EDGE_WARNING_NONE;
+}
 
 static void add_map_art_subject(struct sdl3_map_view *view, int col, int row,
 		wchar_t glyph, int attr, enum sdl3_map_art_priority priority,
@@ -731,6 +761,8 @@ void sdl3_map_presenter_configure(struct sdl3_map_presenter *presenter,
 	}
 
 finish:
+	if (view->active && options->edge_warnings && !options->settings_visible)
+		view->edge_warning = sdl3_map_player_warning(player, side_view);
 	view->hud_insets = sdl3_layout_hud_insets(view->sidebar_mode,
 		view->term_col, view->term_row, options->hud_stats_visible,
 		options->messages_visible, options->message_placement,

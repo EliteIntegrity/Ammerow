@@ -128,6 +128,7 @@ static const struct {
 	{ "quests", wr_quests, 1 },
 	{ "player", wr_player, 1 },
 	{ "resources", wr_player_resources, 1 },
+	{ "advancement", wr_advancement, 1 },
 	{ "ignore", wr_ignore, 1 },
 	{ "misc", wr_misc, 1 },
 	{ "artifacts", wr_artifacts, 1 },
@@ -160,6 +161,7 @@ static const struct blockinfo loaders[] = {
 	{ "quests", rd_quests, 1 },
 	{ "player", rd_player, 1 },
 	{ "resources", rd_player_resources, 1 },
+	{ "advancement", rd_advancement, 1 },
 	{ "ignore", rd_ignore, 1 },
 	{ "misc", rd_misc, 1 },
 	{ "artifacts", rd_artifacts, 1 },
@@ -435,6 +437,8 @@ bool savefile_save(const char *path)
 	bool ok = false;
 
 	player_resources_ensure(player);
+	player_advancement_ensure(player);
+	if (!player_advancement_valid(&player->advancement)) return false;
 	if (!relic_broker_state_valid(&player->broker)) return false;
 	if (player->spelunking && !world_spelunk_player_sync_resources(player)) {
 		return false;
@@ -709,8 +713,11 @@ bool savefile_load(const char *path, bool cheat_death)
 		return false;
 	}
 
+	/* A missing block is an older save, not a supply of unclaimed rewards. */
+	memset(&player->advancement, 0, sizeof(player->advancement));
 	ok = try_load(f, loaders);
 	file_close(f);
+	if (ok) player_advancement_ensure(player);
 	if (ok && !player->resources.initialized) {
 		if (player->spelunking &&
 				world_spelunk_runtime_is_valid(player->spelunking)) {

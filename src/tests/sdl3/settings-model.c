@@ -48,13 +48,14 @@ static int test_hub_navigation(void *state)
 		SDL3_SETTINGS_THEME,
 		SDL3_SETTINGS_INTERFACE_FONT,
 		SDL3_SETTINGS_AUDIO_ENABLED,
-		SDL3_SETTINGS_FULLSCREEN
+		SDL3_SETTINGS_FULLSCREEN,
+		SDL3_SETTINGS_EXPLORE
 	};
 	struct sdl3_settings_overlay overlay;
 	int i;
 	(void)state;
 
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < SDL3_SETTINGS_HUB_ROW_COUNT; i++) {
 		sdl3_settings_init(&overlay);
 		sdl3_settings_open(&overlay);
 		while (overlay.selected_hub_row != i) {
@@ -70,7 +71,7 @@ static int test_hub_navigation(void *state)
 		require(!sdl3_settings_back(&overlay));
 	}
 	sdl3_settings_move(&overlay, -1);
-	eq(overlay.selected_hub_row, 2);
+	eq(overlay.selected_hub_row, SDL3_SETTINGS_HUB_ROW_COUNT - 2);
 	ok;
 }
 
@@ -82,9 +83,9 @@ static int test_hub_contains_only_settings(void *state)
 	sdl3_settings_init(&overlay);
 	sdl3_settings_open(&overlay);
 	sdl3_settings_move(&overlay, -1);
-	eq(overlay.selected_hub_row, SDL3_SETTINGS_HUB_DISPLAY);
+	eq(overlay.selected_hub_row, SDL3_SETTINGS_HUB_CONTROLS);
 	require(sdl3_settings_activate(&overlay));
-	eq(overlay.page, SDL3_SETTINGS_DISPLAY);
+	eq(overlay.page, SDL3_SETTINGS_CONTROLS);
 	ok;
 }
 
@@ -140,7 +141,8 @@ static int test_page_rows_are_shared_with_pointer_layout(void *state)
 	eq(row, SDL3_SETTINGS_HYBRID_DETAIL);
 	eq(sdl3_settings_page_row_count(SDL3_SETTINGS_INTERFACE), 7);
 	eq(sdl3_settings_page_row_count(SDL3_SETTINGS_SOUND), 9);
-	eq(sdl3_settings_page_row_count(SDL3_SETTINGS_DISPLAY), 4);
+	eq(sdl3_settings_page_row_count(SDL3_SETTINGS_DISPLAY), 5);
+	eq(sdl3_settings_page_row_count(SDL3_SETTINGS_CONTROLS), 7);
 	eq(sdl3_settings_page_row_count(SDL3_SETTINGS_HUB), 0);
 	require(sdl3_settings_page_row_at(SDL3_SETTINGS_INTERFACE, 2, &row));
 	eq(row, SDL3_SETTINGS_BIG_STAT_CARDS);
@@ -150,6 +152,8 @@ static int test_page_rows_are_shared_with_pointer_layout(void *state)
 	eq(row, SDL3_SETTINGS_ANIMATED_COMBAT);
 	require(sdl3_settings_page_row_at(SDL3_SETTINGS_DISPLAY, 3, &row));
 	eq(row, SDL3_SETTINGS_WEATHER);
+	require(sdl3_settings_page_row_at(SDL3_SETTINGS_DISPLAY, 4, &row));
+	eq(row, SDL3_SETTINGS_EDGE_WARNINGS);
 	ok;
 }
 
@@ -159,7 +163,7 @@ static int test_all_pages_fit_and_hit_test(void *state)
 	static const int rows[] = { 24, 30, 36, 42 };
 	(void)state;
 	for (int size = 0; size < 4; size++) {
-		for (int page = SDL3_SETTINGS_HUB; page <= SDL3_SETTINGS_DISPLAY; page++) {
+		for (int page = SDL3_SETTINGS_HUB; page < SDL3_SETTINGS_PAGE_COUNT; page++) {
 			struct sdl3_settings_overlay overlay;
 			struct sdl3_settings_layout layout = sdl3_settings_layout(page,
 				cols[size], rows[size]);

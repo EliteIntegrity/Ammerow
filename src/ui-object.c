@@ -46,6 +46,7 @@
 #include "player-util.h"
 #include "store.h"
 #include "ui-command.h"
+#include "ui-context.h"
 #include "ui-display.h"
 #include "ui-game.h"
 #include "ui-input.h"
@@ -1249,8 +1250,24 @@ static struct object *item_menu(cmd_code cmd, int prompt_size, int mode)
 
 	menu_layout(m, &area);
 
-	/* Choose */
-	evt = menu_select(m, 0, true);
+	/* Keep the selector and its cursor alive throughout harmless inspection.
+	 * Commands are only queued here; the game executes them after we close. */
+	do {
+		int result;
+		evt = menu_select(m, 0, true);
+		if (!(item_mode & SHOW_ITEM_ACTIONS) || !selection) break;
+		track_object(player->upkeep, selection);
+		if (player_is_shapechanged(player)) {
+			selection = NULL;
+			continue;
+		}
+		do {
+			menu_refresh(m, false);
+			result = context_menu_object(selection);
+		} while (result == 2);
+		if (result != 3) break;
+		selection = NULL;
+	} while (true);
 
 	/* Clean up */
 	mem_free(m->inscriptions);
@@ -1650,16 +1667,8 @@ void display_object_kind_recall(struct object_kind *kind)
  */
 void display_object_recall_interactive(struct object *obj)
 {
-	char header_buf[120];
-	textblock *tb;
-
 	event_signal(EVENT_MESSAGE_FLUSH);
-
-	tb = object_info(obj, OINFO_NONE);
-	object_desc(header_buf, sizeof(header_buf), obj,
-		ODESC_PREFIX | ODESC_FULL, player);
-	textui_textblock_show(tb, SCREEN_REGION, header_buf);
-	textblock_free(tb);
+	ui_item_details_show(obj);
 }
 
 /**
@@ -1667,11 +1676,6 @@ void display_object_recall_interactive(struct object *obj)
  */
 void textui_obj_examine(void)
 {
-	char header_buf[120];
-
-	textblock *tb;
-	region local_area = { 0, 0, 0, 0 };
-
 	struct object *obj;
 
 	/* Select item */
@@ -1682,13 +1686,7 @@ void textui_obj_examine(void)
 	/* Track object for object recall */
 	track_object(player->upkeep, obj);
 
-	/* Display info */
-	tb = object_info(obj, OINFO_NONE);
-	object_desc(header_buf, sizeof(header_buf), obj,
-		ODESC_PREFIX | ODESC_FULL | ODESC_CAPITAL, player);
-
-	textui_textblock_show(tb, local_area, header_buf);
-	textblock_free(tb);
+	ui_item_details_show(obj);
 }
 
 

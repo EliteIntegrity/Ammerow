@@ -325,6 +325,8 @@ ANGFILES0 = \
 	player-class.o \
 	player-history.o \
 	player-path.o \
+	player-explore.o \
+	player-advancement.o \
 	player-properties.o \
 	player-resource.o \
 	player-quest.o \
@@ -397,6 +399,7 @@ ANGFILES0 = \
 	ui-store-screen.o \
 	ui-relic-broker.o \
 	ui-story.o \
+	ui-advancement.o \
 	ui-target.o \
 	ui-term.o \
 	ui-travel.o \

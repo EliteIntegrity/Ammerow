@@ -42,6 +42,7 @@
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player-explore.h"
 #include "store.h"
 #include "target.h"
 #include "world-turn.h"
@@ -370,6 +371,18 @@ static void process_command(cmd_context ctx, struct command *cmd)
 		CMD_COMMAND_MONSTER : cmd->code;
 	/* Hack - command a monster */
 	int idx = cmd_idx(effective_code);
+	/* A queued pickup is also part of an exploration session: stop before
+	 * command-monster coercion or any other handler can act on new danger. */
+	if (cmd->background_command && player_explore_active(player) &&
+			!player_explore_check(player)) return;
+	/* Exploration never initiates combat, even via command coercion. */
+	if (cmd->code == CMD_EXPLORE && OPT(player, autoexplore_commands) &&
+			OPT(player, autoexplore_continuous) &&
+			(player->timed[TMD_BLOODLUST] || player->timed[TMD_COMMAND])) {
+		disturb(player);
+		msg("Cannot explore: your condition needs manual control.");
+		return;
+	}
 
 	/* Alternate location modes must opt commands in explicitly.  Keep this
 	 * guard ahead of repeat setup, prompts, handler dispatch, and any access to

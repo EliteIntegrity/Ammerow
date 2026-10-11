@@ -245,8 +245,82 @@ static int test_optional_rows_pack_and_redraw(void *state)
 	ok;
 }
 
+static int test_progress_and_gold(void *state)
+{
+	int16_t level = player->lev, max_level = player->max_lev;
+	uint8_t factor = player->expfact;
+	int32_t xp = player->exp, max_xp = player->max_exp, gold = player->au;
+	int row, attr;
+	wchar_t ch;
+	(void)state;
+	Term_resize(100, 32);
+	Term_clear();
+	test_term.sidebar_mode = SIDEBAR_LEFT;
+	player->lev = player->max_lev = 4;
+	player->expfact = 100;
+	player->exp = player->max_exp = player_exp[3] - 27;
+	player->au = 149;
+	event_signal(EVENT_PLAYERLEVEL);
+	row = find_text("L4 Next 27", 13, 1, 31);
+	require(row > 0);
+	eq(find_text("LEVEL", 13, 1, 31), -1);
+	eq(find_text("NXT", 13, 1, 31), -1);
+	require(find_text("Gold", 13, 1, 31) > row);
+	eq(find_text("AU ", 13, 1, 31), -1);
+	Term_putch(13, row, COLOUR_WHITE, L'@');
+	/* XP alone redraws the combined line and erases leftover digits. */
+	player->exp = player->max_exp = player_exp[3] - 3;
+	event_signal(EVENT_EXPERIENCE);
+	eq(find_text("L4 Next 3 ", 13, 1, 31), row);
+	player->max_exp++;
+	event_signal(EVENT_EXPERIENCE);
+	Term_what(8, row, &attr, &ch);
+	eq(attr, COLOUR_YELLOW);
+	/* All levels, including drained XP, must stay inside the 13-column HUD. */
+	for (int lev = 1; lev <= PY_MAX_LEVEL; lev++) {
+		player->lev = player->max_lev = (int16_t)lev;
+		player->expfact = 145;
+		player->exp = 0;
+		player->max_exp = 99999999;
+		event_signal(EVENT_PLAYERLEVEL);
+		Term_what(13, row, &attr, &ch);
+		eq(ch, L'@');
+	}
+	eq(find_text("L50 MAX", 13, 1, 31), row);
+	player->lev = player->max_lev = 49;
+	player->expfact = 100;
+	player->exp = player->max_exp = player_exp[48] - 10001;
+	event_signal(EVENT_PLAYERLEVEL);
+	eq(find_text("L49 Next 11k", 13, 1, 31), row);
+	/* Gold uses exact values when possible and never rounds wealth upwards. */
+	player->au = 9999999;
+	event_signal(EVENT_GOLD);
+	require(find_text("Gold 9999999", 13, 1, 31) > 0);
+	player->au = 2147483647;
+	event_signal(EVENT_GOLD);
+	require(find_text("2.1B", 13, 1, 31) > 0);
+	player->au = 1;
+	event_signal(EVENT_GOLD);
+	require(find_text("Gold       1", 13, 1, 31) > 0);
+	test_term.sidebar_mode = SIDEBAR_TOP;
+	Term_clear();
+	event_signal(EVENT_EXPERIENCE);
+	eq(find_text("L49 Next 11k", 100, 1, 2), 1);
+	eq(find_text("Gold:1", 100, 1, 2), 1);
+	player->lev = level;
+	player->max_lev = max_level;
+	player->expfact = factor;
+	player->exp = xp;
+	player->max_exp = max_xp;
+	player->au = gold;
+	test_term.sidebar_mode = SIDEBAR_LEFT;
+	event_signal(EVENT_PLAYERLEVEL);
+	ok;
+}
+
 const char *suite_name = "ui/sidebar";
 struct test tests[] = {
+	{ "combined progress and bounded gold refresh", test_progress_and_gold },
 	{ "optional meters pack and clear on their own events", test_optional_rows_pack_and_redraw },
 	{ "poison is adjacent to HP and does not overwrite map or footer", test_poison_appears_and_clears_without_overflow },
 	{ "topbar poison appears and clears", test_topbar_keeps_poison_next_to_hp },

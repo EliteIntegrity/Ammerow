@@ -30,6 +30,7 @@ void sdl3_screen_capture(struct sdl3_screen *screen,
 	if (!source || source->kind == UI_SCREEN_NONE) return;
 	screen->active = true;
 	screen->kind = source->kind;
+	screen->modal = source->modal;
 	my_strcpy(screen->title, source->title ? source->title : "",
 		sizeof(screen->title));
 	my_strcpy(screen->subtitle, source->subtitle ? source->subtitle : "",
@@ -214,6 +215,24 @@ void sdl3_screen_capture(struct sdl3_screen *screen,
 	screen->subject_glyph = source->subject_glyph;
 	screen->subject_attr = source->subject_attr;
 	screen->subject_unique = source->subject_unique;
+	screen->subject_unidentified = source->subject_unidentified;
+}
+
+void sdl3_screen_present(struct sdl3_screen *screen,
+		struct sdl3_screen *parent, const struct ui_screen *source)
+{
+	if (!screen || !parent) return;
+	if (!source && screen->modal) {
+		*screen = *parent;
+		sdl3_screen_clear(parent);
+		return;
+	}
+	if (source && source->modal) {
+		if (!screen->modal) *parent = *screen;
+	} else {
+		sdl3_screen_clear(parent);
+	}
+	sdl3_screen_capture(screen, source);
 }
 
 bool sdl3_screen_measure(const struct sdl3_screen *screen, int cols, int rows,
@@ -241,6 +260,7 @@ bool sdl3_screen_measure(const struct sdl3_screen *screen, int cols, int rows,
 		MIN(18, layout->width / 4) : 0;
 	layout->list_width = layout->width;
 	if (screen->context[0] && screen->kind != UI_SCREEN_STORE &&
+			screen->kind != UI_SCREEN_ADVANCEMENT &&
 			(layout->width >= 72 || screen->kind == UI_SCREEN_STORY)) {
 		layout->list_width = screen->kind == UI_SCREEN_STORY ? 0 :
 			screen->kind == UI_SCREEN_CHARACTER_DOSSIER ?
@@ -316,7 +336,9 @@ int sdl3_screen_action_menu_keys(const struct sdl3_screen *screen, int index,
 {
 	int distance, count, i;
 	keycode_t direction;
-	if (!screen || !screen->active || screen->kind != UI_SCREEN_ACTION_MENU ||
+	if (!screen || !screen->active ||
+			(screen->kind != UI_SCREEN_ACTION_MENU && screen->kind != UI_SCREEN_ITEM_ACTIONS &&
+			 screen->kind != UI_SCREEN_ADVANCEMENT) ||
 			!keys || index < 0 || index >= screen->row_count ||
 			index >= SDL3_SCREEN_ROW_CAPACITY ||
 			screen->cursor < 0 || screen->cursor >= screen->row_count ||

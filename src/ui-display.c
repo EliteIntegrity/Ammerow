@@ -62,6 +62,7 @@
 #include "ui-prefs.h"
 #include "ui-store.h"
 #include "ui-story.h"
+#include "ui-advancement.h"
 #include "ui-fishing.h"
 #include "ui-spelunking.h"
 #include "ui-term.h"
@@ -217,52 +218,63 @@ static void prt_title(int row, int col)
 	prt_field(buf, row, col);
 }
 
-/**
- * Prints level
- */
-static void prt_level(int row, int col)
+/* Preserve exact small values. Rounded XP never understates the work left;
+ * abbreviated gold never overstates the player's purchasing power. */
+static void compact_hud_number(char *out, size_t capacity, long value,
+		int width, bool round_up)
 {
-	char tmp[32];
-
-	strnfmt(tmp, sizeof(tmp), "%6d", player->lev);
-
-	if (player->lev >= player->max_lev) {
-		put_str("LEVEL ", row, col);
-		c_put_str(COLOUR_L_GREEN, tmp, row, col + 6);
-	} else {
-		put_str("Level ", row, col);
-		c_put_str(COLOUR_YELLOW, tmp, row, col + 6);
+	static const long units[] = { 1000, 1000000, 1000000000 };
+	static const char suffixes[] = { 'k', 'M', 'B' };
+	size_t i;
+	value = MAX(0L, value);
+	strnfmt(out, capacity, "%ld", value);
+	if (strlen(out) <= (size_t)width) return;
+	for (i = 0; i < N_ELEMENTS(units); i++) {
+		long step = units[i] / 10;
+		long tenths = value / step + (round_up && value % step != 0);
+		long whole;
+		if (i + 1 < N_ELEMENTS(units) && value >= units[i + 1]) continue;
+		if (tenths % 10) {
+			strnfmt(out, capacity, "%ld.%ld%c", tenths / 10,
+				tenths % 10, suffixes[i]);
+		} else {
+			strnfmt(out, capacity, "%ld%c", tenths / 10, suffixes[i]);
+		}
+		if (strlen(out) <= (size_t)width) return;
+		whole = value / units[i] + (round_up && value % units[i] != 0);
+		strnfmt(out, capacity, "%ld%c", whole, suffixes[i]);
+		if (strlen(out) <= (size_t)width) return;
 	}
 }
 
-
-/**
- * Display the experience
- */
-static void prt_exp(int row, int col)
+/** One bounded level/XP line shared by the sidebar and topbar. */
+static int prt_progress(int row, int col)
 {
-	char out_val[32];
-	bool lev_max = (player->lev == PY_MAX_LEVEL);
-
-	long xp = (long)player->exp;
-
-
-	/* Calculate XP for next level */
-	if (!lev_max)
-		xp = (long)(player_exp[player->lev - 1] * player->expfact / 100L) -
-			player->exp;
-
-	/* Format XP */
-	strnfmt(out_val, sizeof(out_val), "%8ld", xp);
-
-
-	if (player->exp >= player->max_exp) {
-		put_str((lev_max ? "EXP" : "NXT"), row, col);
-		c_put_str(COLOUR_L_GREEN, out_val, row, col + 4);
-	} else {
-		put_str((lev_max ? "Exp" : "Nxt"), row, col);
-		c_put_str(COLOUR_YELLOW, out_val, row, col + 4);
+	char prefix[16], number[32];
+	uint8_t attr = player->lev < player->max_lev ||
+		player->exp < player->max_exp ? COLOUR_YELLOW : COLOUR_L_GREEN;
+	int length;
+	if (player->lev >= PY_MAX_LEVEL) {
+		strnfmt(prefix, sizeof(prefix), "L%d MAX", player->lev);
+		c_put_str(attr, prefix, row, col);
+		return (int)strlen(prefix) + 1;
 	}
+	strnfmt(prefix, sizeof(prefix), "L%d Next ", player->lev);
+	length = (int)strlen(prefix);
+	compact_hud_number(number, sizeof(number),
+		(long)player_exp[MAX(1, player->lev) - 1] * player->expfact / 100L -
+		player->exp, 13 - length, true);
+	put_str(prefix, row, col);
+	/* Colour the level too, so level/experience drain remains visible. */
+	c_put_str(attr, format("%d", player->lev), row, col + 1);
+	c_put_str(attr, number, row, col + length);
+	return length + (int)strlen(number) + 1;
+}
+
+static void prt_progress_sidebar(int row, int col)
+{
+	Term_erase(col, row, 13);
+	(void)prt_progress(row, col);
 }
 
 
@@ -273,9 +285,11 @@ static void prt_gold(int row, int col)
 {
 	char tmp[32];
 
-	put_str("AU ", row, col);
-	strnfmt(tmp, sizeof(tmp), "%9ld", (long)player->au);
-	c_put_str(COLOUR_L_GREEN, tmp, row, col + 3);
+	Term_erase(col, row, 13);
+	put_str("Gold ", row, col);
+	/* Align with the other numeric rows and keep the map-side gutter. */
+	compact_hud_number(tmp, sizeof(tmp), (long)player->au, 7, false);
+	c_put_str(COLOUR_L_GREEN, tmp, row, col + 12 - (int)strlen(tmp));
 }
 
 
@@ -704,25 +718,8 @@ static void prt_class(int row, int col) {
 }
 
 /**
- * Prints level
+ * Prints a compact attribute
  */
-static int prt_level_short(int row, int col)
-{
-	char tmp[32];
-
-	strnfmt(tmp, sizeof(tmp), "%d", player->lev);
-
-	if (player->lev >= player->max_lev) {
-		put_str("L:", row, col);
-		c_put_str(COLOUR_L_GREEN, tmp, row, col + 2);
-	} else {
-		put_str("l:", row, col);
-		c_put_str(COLOUR_YELLOW, tmp, row, col + 2);
-	}
-
-	return 3+strlen(tmp);
-}
-
 static int prt_stat_short(int stat, int row, int col)
 {
 	char tmp[32];
@@ -750,32 +747,6 @@ static int prt_stat_short(int stat, int row, int col)
 	return 3+strlen(tmp);
 }
 
-static int prt_exp_short(int row, int col)
-{
-	char out_val[32];
-	bool lev50 = (player->lev == 50);
-
-	long xp = (long)player->exp;
-
-	/* Calculate XP for next level */
-	if (!lev50)
-		xp = (long)(player_exp[player->lev - 1] * player->expfact / 100L) -
-			player->exp;
-
-	/* Format XP */
-	strnfmt(out_val, sizeof(out_val), "%ld", xp);
-
-	if (player->exp >= player->max_exp) {
-		put_str((lev50 ? "EXP:" : "NXT:"), row, col);
-		c_put_str(COLOUR_L_GREEN, out_val, row, col + 4);
-	} else {
-		put_str((lev50 ? "exp:" : "nxt:"), row, col);
-		c_put_str(COLOUR_YELLOW, out_val, row, col + 4);
-	}
-
-	return 5+strlen(out_val);
-}
-
 static int prt_ac_short(int row, int col)
 {
 	char tmp[32];
@@ -791,10 +762,10 @@ static int prt_gold_short(int row, int col)
 {
 	char tmp[32];
 
-	put_str("AU:", row, col);
+	put_str("Gold:", row, col);
 	strnfmt(tmp, sizeof(tmp), "%ld", (long)player->au);
-	c_put_str(COLOUR_L_GREEN, tmp, row, col + 3);
-	return 4+strlen(tmp);
+	c_put_str(COLOUR_L_GREEN, tmp, row, col + 5);
+	return 6+strlen(tmp);
 }
 
 static int prt_hp_short(int row, int col)
@@ -960,9 +931,7 @@ static void update_topbar(game_event_type type, game_event_data *data,
 
 	prt("", row, col);	
 
-	col += prt_level_short(row, col);
-
-	col += prt_exp_short(row, col);
+	col += prt_progress(row, col);
 	
 	col += prt_stat_short(STAT_STR, row, col);
 	col += prt_stat_short(STAT_INT, row, col);
@@ -1021,8 +990,7 @@ static const struct side_handler_t
 	{ prt_race,    19, EVENT_RACE_CLASS },
 	{ prt_title,   18, EVENT_PLAYERTITLE },
 	{ prt_class,   22, EVENT_RACE_CLASS },
-	{ prt_level,   10, EVENT_PLAYERLEVEL },
-	{ prt_exp,     16, EVENT_EXPERIENCE },
+	{ prt_progress_sidebar, 10, EVENT_EXPERIENCE },
 	{ prt_gold,    11, EVENT_GOLD },
 	{ prt_equippy, 17, EVENT_EQUIPMENT },
 	{ prt_str,      6, EVENT_STATS },
@@ -2360,8 +2328,7 @@ static void update_player_compact_subwindow(game_event_type type,
 	prt_title(row++, col);
 
 	/* Level/Experience */
-	prt_level(row++, col);
-	prt_exp(row++, col);
+	prt_progress_sidebar(row++, col);
 
 	/* Gold */
 	prt_gold(row++, col);
@@ -3109,6 +3076,7 @@ static void ui_enter_world(game_event_type type, game_event_data *data,
 
 	/* Present narrative without coupling the world model to a frontend. */
 	event_add_handler(EVENT_STORY, ui_story_event, NULL);
+	event_add_handler(EVENT_ADVANCEMENT, ui_advancement_event, NULL);
 
 	/* Decrease "icky" depth */
 	screen_save_depth--;
@@ -3174,6 +3142,7 @@ static void ui_leave_world(game_event_type type, game_event_data *data,
 
 	/* Stop receiving narrative while the game view is inactive. */
 	event_remove_handler(EVENT_STORY, ui_story_event, NULL);
+	event_remove_handler(EVENT_ADVANCEMENT, ui_advancement_event, NULL);
 
 	/* Prepare to interact with a store */
 	event_add_handler(EVENT_USE_STORE, use_store, NULL);

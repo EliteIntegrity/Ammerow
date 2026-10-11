@@ -46,7 +46,18 @@ static const enum sdl3_settings_row display_rows[] = {
 	SDL3_SETTINGS_FULLSCREEN,
 	SDL3_SETTINGS_ZOOM,
 	SDL3_SETTINGS_ANIMATED_COMBAT,
-	SDL3_SETTINGS_WEATHER
+	SDL3_SETTINGS_WEATHER,
+	SDL3_SETTINGS_EDGE_WARNINGS
+};
+
+static const enum sdl3_settings_row controls_rows[] = {
+	SDL3_SETTINGS_EXPLORE,
+	SDL3_SETTINGS_AUTO_STAIRS,
+	SDL3_SETTINGS_PICKUP_MATCHING,
+	SDL3_SETTINGS_PICKUP_ALL,
+	SDL3_SETTINGS_ITEM_RULES,
+	SDL3_SETTINGS_ALL_OPTIONS,
+	SDL3_SETTINGS_SAVE_GAME_DEFAULTS
 };
 
 static const enum sdl3_settings_row *page_rows(
@@ -65,6 +76,9 @@ static const enum sdl3_settings_row *page_rows(
 	case SDL3_SETTINGS_DISPLAY:
 		*count = (int)(sizeof(display_rows) / sizeof(display_rows[0]));
 		return display_rows;
+	case SDL3_SETTINGS_CONTROLS:
+		*count = (int)(sizeof(controls_rows) / sizeof(controls_rows[0]));
+		return controls_rows;
 	default:
 		*count = 0;
 		return NULL;
@@ -119,8 +133,11 @@ struct sdl3_settings_layout sdl3_settings_layout(
 		menu->step = 3;
 		menu->item_height = 2;
 		if (rows / 3 > menu->row) menu->row = rows / 3;
+		if (menu->row + (menu->count - 1) * menu->step +
+				menu->item_height >= result.footer_row) menu->step = 2;
 	} else {
-		if (page == SDL3_SETTINGS_DISPLAY) result.note_rows = 2;
+		if (page == SDL3_SETTINGS_CONTROLS) result.note_rows = 3;
+		else if (page == SDL3_SETTINGS_DISPLAY) result.note_rows = 2;
 		else if (page == SDL3_SETTINGS_INTERFACE ||
 				page == SDL3_SETTINGS_APPEARANCE) result.note_rows = 1;
 		/* Keep a blank line before notes and before the fixed footer. */

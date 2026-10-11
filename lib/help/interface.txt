@@ -7,7 +7,8 @@ F1 or ?
 Home references
   Lore introduces the world, its peoples, and Classes & Ranks. Memorial lists
   scored expeditions. Help / Field Guide opens these practical instructions.
-  Settings changes presentation; About holds the version, credits and licences.
+  Settings changes presentation and convenience controls; About holds the
+  version, credits and licences.
 
 Escape
   Open the small in-game menu during play.  It also backs out of menus and
@@ -35,6 +36,15 @@ Character creation
   R rerolls and P swaps with the previous candidate; colours and +/- marks
   compare the final stats.  Stat effects have thresholds, not linear gains.
 
+Level feelings
+  Off by default. During character creation, press = to enable 'Level feelings
+  (unseen danger/treasure hints)'. This gives hints about generated dungeon
+  danger and treasure, including things you have not discovered, but not their
+  locations. Danger hints appear on arrival; treasure hints need some exploration.
+  They do not guide or interrupt Continuous exploration. Traditional running
+  still pauses for a new treasure feeling. Existing saves, saved birth defaults
+  and quickstart choices keep their setting; it is locked once a run begins.
+
 Ctrl+Alt+S
   Open settings.  Appearance controls theme, map font, ASCII treatment, and
   the ASCII/Hybrid playfield choice. Hybrid uses portrait sprites at 32 x 32
@@ -42,7 +52,26 @@ Ctrl+Alt+S
   changes do not change map scale. Cards and shopkeepers remain coloured
   ASCII illustrations. Interface controls the non-map font,
   density, statistics and message overlays.  Sound and display/performance
-  have their own pages.
+  have their own pages. Controls & Convenience brings together exploration,
+  walking to stairs, existing pickup rules, item ignoring and all options (=).
+
+Controls & Convenience
+  Explore mode (p): Off, Traditional (Angband), or Continuous (Ammerow).
+  Traditional walks toward one unexplored location using Angband's running
+  rules. Continuous keeps choosing reachable unexplored ground on the current
+  top-down map. It stops for any perceived monster, newly discovered loot that
+  is not ignored, injury/status interruptions, low health, hunger or no light.
+  Any key or click cancels; holding p cannot restart past a safety stop.
+  Nothing fights for you. Closed doors, known traps, shops, stairs and world
+  exits stay manual. Hidden hazards can still surprise you: it is not safety
+  insurance. Side-view spelunking remains entirely manual.
+  Starting again acknowledges the loot you already know about. Exploration
+  does not chase loot; passing over an acknowledged pile uses your normal
+  pickup settings. A stop message reports why, steps taken and gold collected.
+  Walk to stairs (< / >) is independent of Explore mode: walk to the nearest
+  known stair, then press again to use it. On the surface, < still opens the
+  world map. Save gameplay defaults makes these choices apply to future
+  characters; otherwise they are saved with the current character.
 
 F11 or Alt+Enter
   Toggle fullscreen.
@@ -64,6 +93,39 @@ Shops
 Poison
   While poisoned, the statistics panel shows Poisoned beside the HP display,
   in addition to messages and the status line. It clears when poison ends.
+
+Level, experience and gold
+  L4 Next 27 means level 4, with 27 XP still needed for level 5. At the level
+  cap it reads L50 MAX. Yellow numbers indicate drained levels or experience.
+  Gold is your spendable money. Large numbers use k (thousand), M (million)
+  or B (billion) only when they will not fit; XP rounds up, gold rounds down.
+  The character screen keeps exact experience and gold totals; shops show
+  exact spending money.
+
+Level celebrations and supply rewards
+  Reaching a new personal highest level brings a card and the level-up sound
+  after the current action finishes. Levels 5, 10, 15 and so on through 50
+  offer one choice: the named potion bundle, scroll bundle, or gold shown.
+  These are small supplies, not permanent stat or experience bonuses.
+  Choose later (or Escape) keeps a reward for Enter > Information > Level
+  rewards. A full pack never forfeits a reward or drops it on the floor;
+  make room for the entire bundle, choose gold, or come back later.
+  Each milestone can be claimed only once. Losing and regaining levels does
+  not repeat cards or rewards. Pending choices survive saving and reloading.
+  Existing characters earn these only above their previous highest level:
+  there are no retrospective rewards when loading an older save.
+
+Warning border
+  Display / Performance has Warning border: Subtle (static) or Off. It is on
+  by default and independent of Animated combat. The narrow border does not
+  flash or pulse, and sits behind the stats and messages, leaving them clear.
+  Red means HP at or below one quarter; blue means at most one quarter of
+  usable air remains while submerged. Yellow-orange warns of stamina at or below one
+  fifth while swimming or hanging/climbing without firm footing. Brown-orange
+  warns of fainting/starving hunger, not ordinary hunger. Only one border is
+  shown: near-death HP, low air, low HP, dangerous exhaustion, then hunger.
+  Keep reading the resource numbers and written statuses: colour is only an
+  extra reminder. Poison continues to use its explicit status beside HP.
 
 Learning and using magic
 ------------------------

@@ -1,0 +1,17 @@
+# Copyright (c) 2026 John Horton
+# SPDX-License-Identifier: GPL-2.0-only
+name:level-rewards
+seed:20260828
+race:Nearlander
+class:Warrior
+player:Reward Tester
+location:core.main.001
+entry:default
+start-anchor:open-floor
+bot:scripted
+capture:both
+expect:complete
+map-presentation:ascii
+screen-width:1280
+screen-height:720
+action:inspect:level-reward

@@ -595,10 +595,46 @@ static int test_spelunking_spell_commands(void *state)
 	ok;
 }
 
+static int test_spelunking_level_reward(void *state)
+{
+	enum world_spelunk_tile cells[36];
+	struct chunk *top_down;
+	struct level *level;
+	struct object_kind *kind;
+	enum advancement_result result;
+	int before;
+	(void)state;
+	reset_before_load();
+	require(savefile_load("Test1", false));
+	for (int i = 0; i < 36; i++) cells[i] = WORLD_SPELUNK_AIR;
+	for (int i = 0; i < 6; i++) cells[30 + i] = WORLD_SPELUNK_ROCK;
+	require(install_spelunking_runtime(cells, 6, 6, 2, 4, 90));
+	level = (struct level *)world_player_level(player);
+	notnull(level);
+	my_strcpy(player->world_location.entry, "stair.main",
+		sizeof(player->world_location.entry));
+	level->mode = WORLD_MODE_SPELUNKING;
+	require(world_spelunk_player_is_active(player));
+	kind = lookup_kind(TV_SCROLL, lookup_sval(TV_SCROLL, "Seam Step"));
+	before = carried_kind_count(player, kind);
+	/* Real XP progression and an inventory-only grant, with no native map. */
+	top_down = cave;
+	cave = NULL;
+	player_exp_gain(player, player_exp[3] * player->expfact / 100 - player->exp);
+	result = player_advancement_claim(player, 5, ADVANCEMENT_SCROLL);
+	cave = top_down;
+	eq(player->lev, 5);
+	eq(result, ADVANCEMENT_OK);
+	eq(carried_kind_count(player, kind), before + 3);
+	eq(player_advancement_claim(player, 5, ADVANCEMENT_GOLD), ADVANCEMENT_UNAVAILABLE);
+	ok;
+}
+
 const char *suite_name = "game/spelunking-items";
 struct test tests[] = {
 	{ "consumables", test_spelunking_consumables },
 	{ "magic devices", test_spelunking_magic_devices },
 	{ "spell commands", test_spelunking_spell_commands },
+	{ "level reward without native map", test_spelunking_level_reward },
 	{ NULL, NULL }
 };

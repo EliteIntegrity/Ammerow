@@ -1205,6 +1205,15 @@ int menu_dynamic_select(struct menu *m)
 	return entry->value;
 }
 
+const char *menu_dynamic_text(struct menu *m, int index)
+{
+	struct menu_entry *entry;
+	if (!m || index < 0 || index >= m->count) return "";
+	assert(m->row_funcs == &dynamic_iter);
+	for (entry = menu_priv(m); index; index--) entry = entry->next;
+	return entry->text;
+}
+
 void menu_dynamic_free(struct menu *m)
 {
 	struct menu_entry *entry = menu_priv(m);

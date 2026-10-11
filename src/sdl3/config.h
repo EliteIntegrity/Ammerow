@@ -20,7 +20,7 @@
 #include "sdl3/terrain.h"
 #include "sdl3/weather.h"
 
-#define SDL3_CONFIG_VERSION 22
+#define SDL3_CONFIG_VERSION 23
 #define SDL3_CONFIG_FILE "ammerow.ini"
 #define SDL3_CONFIG_LEGACY_FILE "sdl3init.txt"
 #define SDL3_CONFIG_PATH_CAPACITY 1024
@@ -54,6 +54,7 @@ struct sdl3_config {
 	bool hud_stats_visible;
 	bool big_stat_cards;
 	bool animated_combat;
+	bool edge_warnings;
 	bool tile_mode;
 	int hybrid_tile_size;
 	bool writable;

@@ -626,6 +626,77 @@ static int test_action_menu_pointer_keys(void *state)
 	ok;
 }
 
+static int test_advancement_pointer_and_layout(void *state)
+{
+	struct sdl3_screen screen = { 0 };
+	struct sdl3_screen_layout layout;
+	keycode_t keys[8];
+	(void)state;
+	screen.active = screen.modal = true;
+	screen.kind = UI_SCREEN_ADVANCEMENT;
+	screen.row_count = screen.content_rows = 4;
+	screen.cursor = 3;
+	screen.content_col = 6;
+	screen.content_row = 10;
+	screen.content_cols = 68;
+	my_strcpy(screen.context, "Choose one reward.", sizeof(screen.context));
+	for (int i = 0; i < 4; i++) screen.rows[i].enabled = true;
+	require(sdl3_screen_measure(&screen, 80, 24, &layout));
+	eq(layout.context_width, 0); /* Instruction stays above, not beside rows. */
+	eq(layout.visible_rows, 4);
+	eq(sdl3_screen_action_menu_keys(&screen, 0, true, keys, 8), 4);
+	eq(keys[0], ARROW_UP);
+	eq(keys[1], ARROW_UP);
+	eq(keys[2], ARROW_UP);
+	eq(keys[3], KC_ENTER);
+	eq(sdl3_screen_action_menu_keys(&screen, 3, true, keys, 8), 1);
+	eq(keys[0], KC_ENTER);
+	eq(sdl3_screen_action_menu_keys(&screen, -1, true, keys, 8), 0);
+	ok;
+}
+
+static int test_modal_retains_owned_parent(void *state)
+{
+	static struct sdl3_screen current, parent;
+	char name[] = "Inventory item";
+	struct ui_screen_row row = { .label = name, .enabled = true };
+	struct ui_screen base = { .kind = UI_SCREEN_ITEM_SELECTOR, .row_count = 1,
+		.rows = &row, .cursor = 0 };
+	struct ui_screen overlay = { .kind = UI_SCREEN_ITEM_ACTIONS, .modal = true };
+	(void)state;
+	sdl3_screen_present(&current, &parent, &base);
+	sdl3_screen_present(&current, &parent, &overlay);
+	name[0] = 'X';
+	require(parent.active && current.modal);
+	require(streq(parent.rows[0].label, "Inventory item"));
+	overlay.kind = UI_SCREEN_ITEM_DETAILS;
+	sdl3_screen_present(&current, &parent, &overlay);
+	eq(parent.kind, UI_SCREEN_ITEM_SELECTOR);
+	sdl3_screen_present(&current, &parent, NULL);
+	eq(current.kind, UI_SCREEN_ITEM_SELECTOR);
+	require(!current.modal && !parent.active);
+	require(streq(current.rows[0].label, "Inventory item"));
+	sdl3_screen_present(&current, &parent, NULL);
+	require(!current.active);
+	/* A map inspection has no semantic parent to restore. */
+	sdl3_screen_present(&current, &parent, &overlay);
+	require(!parent.active);
+	sdl3_screen_present(&current, &parent, NULL);
+	require(!current.active);
+	/* Shop inspection retains the shop, and a new full screen clears it. */
+	base.kind = UI_SCREEN_STORE;
+	sdl3_screen_present(&current, &parent, &base);
+	sdl3_screen_present(&current, &parent, &overlay);
+	sdl3_screen_present(&current, &parent, NULL);
+	eq(current.kind, UI_SCREEN_STORE);
+	sdl3_screen_present(&current, &parent, &overlay);
+	base.kind = UI_SCREEN_HELP;
+	sdl3_screen_present(&current, &parent, &base);
+	require(!parent.active);
+	eq(current.kind, UI_SCREEN_HELP);
+	ok;
+}
+
 const char *suite_name = "sdl3/screen-model";
 struct test tests[] = {
 	{ "capture is owned", test_capture_is_owned },
@@ -655,5 +726,7 @@ struct test tests[] = {
 		test_measure_store_columns_keep_price_gutter },
 	{ "measure character dossier", test_measure_character_dossier },
 	{ "action menu pointer keys", test_action_menu_pointer_keys },
+	{ "advancement pointer and layout", test_advancement_pointer_and_layout },
+	{ "modal retains an owned parent", test_modal_retains_owned_parent },
 	{ NULL, NULL },
 };

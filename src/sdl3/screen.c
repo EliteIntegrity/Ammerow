@@ -18,6 +18,7 @@
 #include "sdl3/theme.h"
 #include "sdl3/ui-draw.h"
 #include "sdl3/world-map-screen.h"
+#include "ui-object-screen.h"
 
 static void draw_text_ellipsized(struct sdl3_visual *visual,
 		const char *source, int col, int row, int width, SDL_Color color)
@@ -363,6 +364,49 @@ void sdl3_screen_draw_document(const struct sdl3_screen *screen,
 	}
 }
 
+static void draw_item_details(const struct sdl3_screen *screen,
+		SDL_Renderer *renderer, struct sdl3_visual *visual,
+		const struct sdl3_theme *theme)
+{
+	struct ui_item_details_layout layout;
+	char key[SDL3_ASCII_ART_KEY_CAPACITY];
+	SDL_FRect target;
+	SDL_Color color = sdl3_theme_color(theme, screen->subject_attr);
+	ui_item_details_measure(visual->cols, visual->rows, &layout);
+	sdl3_ui_draw_panel(renderer, visual, theme, layout.panel_col,
+		layout.panel_row, layout.panel_cols, layout.panel_rows, false);
+	sdl3_ui_draw_text(visual, "ITEM DETAILS", layout.text_col, 4,
+		layout.heading_cols, theme->accent);
+	sdl3_font_draw(&visual->font, screen->subject_glyph, color,
+		(float)(visual->origin_x + layout.text_col * visual->cell_width),
+		(float)(visual->origin_y + 5 * visual->cell_height),
+		(float)visual->cell_width, (float)visual->cell_height);
+	draw_text_ellipsized(visual, screen->title, layout.text_col + 2, 5,
+		layout.heading_cols - 2, theme->title);
+	draw_text_ellipsized(visual, screen->subtitle, layout.text_col, 6,
+		layout.heading_cols, theme->muted);
+	target = (SDL_FRect) {
+		(float)(visual->origin_x + layout.art_col * visual->cell_width),
+		(float)(visual->origin_y + layout.art_row * visual->cell_height),
+		(float)(layout.art_cols * visual->cell_width),
+		(float)(layout.art_rows * visual->cell_height)
+	};
+	sdl3_ascii_art_make_key(key, sizeof(key), screen->subject_unidentified ?
+		SDL3_ASCII_ART_ITEM_UNIDENTIFIED : SDL3_ASCII_ART_ITEM_KIND,
+		screen->subject_art_id, NULL);
+	if (!sdl3_monster_art_draw(&visual->monster_art, renderer,
+			visual->font.path, key, &target)) {
+		/* A missing/private plate must still leave a useful, coloured symbol. */
+		if (!visual->card_font_loaded) sdl3_visual_ensure_card_font(visual, renderer);
+		sdl3_font_draw(visual->card_font_loaded ? &visual->card_font : &visual->font,
+			screen->subject_glyph, color, target.x, target.y, target.w, target.h);
+	}
+	sdl3_screen_draw_document(screen, visual, theme,
+		layout.text_col, layout.text_cols);
+	sdl3_ui_draw_text(visual, screen->help, layout.text_col,
+		visual->rows - 4, visual->cols - 12, theme->muted);
+}
+
 void sdl3_screen_draw(const struct sdl3_screen *screen,
 		SDL_Renderer *renderer, struct sdl3_visual *visual,
 		const struct sdl3_theme *theme)
@@ -370,9 +414,50 @@ void sdl3_screen_draw(const struct sdl3_screen *screen,
 	struct sdl3_screen_layout layout;
 
 	if (!screen || !screen->active || !renderer || !visual || !theme) return;
-	sdl3_ui_fill_output(renderer, visual,
-		(SDL_Color){ 0, 0, 0, SDL_ALPHA_OPAQUE });
+	if (screen->modal) {
+		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+		sdl3_ui_fill_output(renderer, visual, (SDL_Color){ 0, 0, 0, 155 });
+		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+		if (screen->kind == UI_SCREEN_ITEM_DETAILS) {
+			draw_item_details(screen, renderer, visual, theme);
+			return;
+		}
+	} else {
+		sdl3_ui_fill_output(renderer, visual,
+			(SDL_Color){ 0, 0, 0, SDL_ALPHA_OPAQUE });
+	}
 	if (!sdl3_screen_measure(screen, visual->cols, visual->rows, &layout)) {
+		return;
+	}
+	if (screen->kind == UI_SCREEN_ITEM_ACTIONS) {
+		sdl3_ui_draw_panel(renderer, visual, theme, layout.left - 2,
+			screen->content_row - 5, layout.width + 4,
+			screen->content_rows + 8, false);
+		sdl3_ui_draw_text(visual, screen->title, layout.left,
+			screen->content_row - 4, layout.width, theme->accent);
+		draw_text_ellipsized(visual, screen->subtitle, layout.left,
+			screen->content_row - 2, layout.width, theme->title);
+		layout.detail_width = 0;
+		layout.label_width = MAX(1, layout.width - 8);
+		draw_rows(screen, renderer, visual, theme, &layout);
+		sdl3_ui_draw_text(visual, screen->help, layout.left,
+			screen->content_row + screen->content_rows + 1,
+			layout.width, theme->muted);
+		return;
+	}
+	if (screen->kind == UI_SCREEN_ADVANCEMENT) {
+		int top = screen->content_row - 8;
+		int height = screen->content_rows + 14;
+		sdl3_ui_draw_panel(renderer, visual, theme, layout.left - 2, top,
+			layout.width + 4, height, false);
+		sdl3_ui_draw_text(visual, screen->title, layout.left, top + 2, layout.width, theme->title);
+		draw_text_ellipsized(visual, screen->subtitle, layout.left, top + 4, layout.width, theme->text);
+		sdl3_ui_draw_text(visual, screen->context, layout.left, top + 6, layout.width, theme->accent);
+		layout.detail_width = 0;
+		layout.label_width = MAX(1, layout.width - 8);
+		draw_rows(screen, renderer, visual, theme, &layout);
+		sdl3_ui_draw_text(visual, screen->help, layout.left, top + height - 2,
+			layout.width, theme->muted);
 		return;
 	}
 	sdl3_ui_draw_text(visual, screen->title, layout.left, 2, layout.width,

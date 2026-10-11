@@ -39,7 +39,10 @@ enum ui_screen_kind {
 	UI_SCREEN_STORY,
 	UI_SCREEN_OPTIONS,
 	UI_SCREEN_BIRTH_STATS,
-	UI_SCREEN_HELP
+	UI_SCREEN_HELP,
+	UI_SCREEN_ITEM_ACTIONS,
+	UI_SCREEN_ITEM_DETAILS,
+	UI_SCREEN_ADVANCEMENT
 };
 
 #define UI_SCREEN_MAP_STAMP_WIDTH 5
@@ -96,6 +99,8 @@ struct ui_screen_map_cell {
  */
 struct ui_screen {
 	enum ui_screen_kind kind;
+	/* A single child panel; NULL dismisses it and restores its parent. */
+	bool modal;
 	const char *title;
 	const char *subtitle;
 	const char *help;
@@ -135,6 +140,7 @@ struct ui_screen {
 	wchar_t subject_glyph;
 	uint8_t subject_attr;
 	bool subject_unique;
+	bool subject_unidentified;
 };
 
 #endif /* INCLUDED_UI_SCREEN_H */

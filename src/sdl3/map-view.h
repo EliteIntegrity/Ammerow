@@ -21,6 +21,15 @@
 
 #define SDL3_MAP_ART_CAPACITY 2048
 
+/* One stable, prioritised warning; never a stack of coloured overlays. */
+enum sdl3_edge_warning {
+	SDL3_EDGE_WARNING_NONE = 0,
+	SDL3_EDGE_WARNING_HEALTH,
+	SDL3_EDGE_WARNING_AIR,
+	SDL3_EDGE_WARNING_STAMINA,
+	SDL3_EDGE_WARNING_HUNGER
+};
+
 enum sdl3_map_art_priority {
 	SDL3_MAP_ART_TERRAIN = 0,
 	SDL3_MAP_ART_ITEM,
@@ -40,6 +49,7 @@ struct sdl3_map_art_subject {
 
 struct sdl3_map_view {
 	bool active;
+	enum sdl3_edge_warning edge_warning;
 	/* A knowledge-safe map source independent from Angband's terminal panel.
 	 * Used for zoom-out and for smooth camera following at normal zoom. */
 	bool expanded_source;

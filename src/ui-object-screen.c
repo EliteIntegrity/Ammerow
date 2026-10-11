@@ -14,11 +14,15 @@
 #include "game-input.h"
 #include "obj-desc.h"
 #include "obj-knowledge.h"
+#include "obj-info.h"
 #include "obj-util.h"
 #include "store.h"
 #include "ui-menu.h"
+#include "ui-input.h"
+#include "ui-output.h"
 #include "ui-object-screen.h"
 #include "ui-screen.h"
+#include "z-textblock.h"
 
 #define UI_OBJECT_SCREEN_CAPACITY 50
 
@@ -205,4 +209,158 @@ void ui_object_screen_present(struct menu *menu,
 	screen.tab_count = tab_count;
 	screen.tabs = tabs;
 	Term->screen_hook(&screen);
+}
+
+void ui_object_actions_present(struct menu *menu)
+{
+	struct ui_screen screen = { 0 };
+	struct ui_screen_row rows[32] = { 0 };
+	int count = MIN(menu->count, (int)N_ELEMENTS(rows));
+	for (int i = 0; i < count; i++) {
+		rows[i].label = menu_dynamic_text(menu, i);
+		rows[i].tag = menu->selections[i];
+		rows[i].enabled = menu->row_funcs->valid_row(menu, i) == MN_ROW_VALID;
+		rows[i].attr = COLOUR_WHITE;
+	}
+	screen.kind = UI_SCREEN_ITEM_ACTIONS;
+	screen.modal = true;
+	screen.title = "Item actions";
+	screen.subtitle = menu->title;
+	screen.help = "Arrows select   Enter chooses   Escape returns";
+	screen.content_col = menu->active.col;
+	screen.content_row = menu->active.row;
+	screen.content_cols = menu->active.width;
+	screen.content_rows = menu->active.page_rows;
+	screen.rows = rows;
+	screen.row_count = count;
+	screen.cursor = menu->cursor;
+	screen.row_offset = menu->top;
+	Term->screen_hook(&screen);
+}
+
+void ui_item_details_measure(int cols, int rows,
+		struct ui_item_details_layout *layout)
+{
+	memset(layout, 0, sizeof(*layout));
+	layout->panel_col = 4;
+	layout->panel_row = 3;
+	layout->panel_cols = MAX(12, cols - 8);
+	layout->panel_rows = MAX(10, rows - 6);
+	layout->text_col = 6;
+	layout->text_row = 8;
+	layout->text_cols = MAX(8, cols - 12);
+	layout->art_cols = cols >= 100 ? MIN(32, cols / 4) : MIN(18, cols / 4);
+	layout->art_col = cols - 6 - layout->art_cols;
+	layout->art_row = cols >= 100 ? 8 : 5;
+	layout->art_rows = cols >= 100 ? MAX(4, rows - 14) : 5;
+	if (cols >= 100) {
+		layout->text_cols -= layout->art_cols + 3;
+		layout->heading_cols = cols - 15;
+	} else {
+		layout->text_row = 11;
+		layout->heading_cols = MAX(8, layout->art_col - 10);
+	}
+	layout->text_rows = MAX(1, rows - layout->text_row - 5);
+}
+
+static int present_item_details(const struct object *obj, textblock *tb,
+		int offset)
+{
+	struct ui_item_details_layout layout;
+	struct ui_screen screen = { 0 };
+	size_t *starts = NULL, *lengths = NULL;
+	size_t count;
+	char name[160], subtitle[160], help[192];
+	bool unidentified = obj->kind->flavor && !object_flavor_is_aware(obj);
+	int maximum;
+
+	ui_item_details_measure(Term->wid, Term->hgt, &layout);
+	count = textblock_calculate_lines(tb, &starts, &lengths, layout.text_cols);
+	maximum = MAX(0, (int)count - layout.text_rows);
+	object_desc(name, sizeof(name), obj,
+		ODESC_PREFIX | ODESC_FULL | ODESC_CAPITAL, player);
+	strnfmt(subtitle, sizeof(subtitle), "%s | %d.%d lb each",
+		unidentified ? "Identity unknown" : object_fully_known(obj) ?
+		"Fully known" : "Partly known", obj->weight / 10, ABS(obj->weight % 10));
+	strnfmt(help, sizeof(help), maximum ?
+		"Up/Down scroll  PgUp/PgDn page  Enter/Esc/Click returns  [%d-%d/%d]" :
+		"Enter / Escape / Click to return", MIN(MAX(offset, 0), maximum) + 1,
+		MIN((int)count, MIN(MAX(offset, 0), maximum) + layout.text_rows), (int)count);
+	screen.kind = UI_SCREEN_ITEM_DETAILS;
+	screen.modal = true;
+	screen.title = name;
+	screen.subtitle = subtitle;
+	screen.help = help;
+	screen.content_col = layout.text_col;
+	screen.content_row = layout.text_row;
+	screen.content_cols = layout.text_cols;
+	screen.content_rows = layout.text_rows;
+	screen.document_text = textblock_text(tb);
+	screen.document_length = wcslen(screen.document_text);
+	screen.document_attrs = textblock_attrs(tb);
+	screen.document_cols = layout.text_cols;
+	screen.document_line_count = (int)count;
+	screen.document_line_starts = starts;
+	screen.document_line_lengths = lengths;
+	screen.document_line_offset = MIN(MAX(offset, 0), maximum);
+	screen.subject_glyph = object_char(obj);
+	screen.subject_attr = object_attr(obj);
+	screen.subject_unidentified = unidentified;
+	/* Never send the true kind's art ID across the presentation boundary
+	 * until its flavor is known, including to headless snapshots. */
+	screen.subject_art_id = unidentified ?
+		(obj->kind->base ? obj->kind->base->unaware_art_id : NULL) :
+		obj->kind->art_id;
+	Term->screen_hook(&screen);
+	mem_free(starts);
+	mem_free(lengths);
+	return maximum;
+}
+
+int ui_item_details_present(const struct object *obj, int offset)
+{
+	textblock *tb;
+	int maximum;
+	if (!obj || !obj->kind || !Term || !Term->screen_hook) return 0;
+	tb = object_info(obj, OINFO_NONE);
+	maximum = present_item_details(obj, tb, offset);
+	textblock_free(tb);
+	return maximum;
+}
+
+void ui_item_details_show(struct object *obj)
+{
+	textblock *tb = object_info(obj, OINFO_NONE);
+	int offset = 0;
+	bool done = false;
+	if (!Term->screen_hook) {
+		char name[160];
+		object_desc(name, sizeof(name), obj, ODESC_PREFIX | ODESC_FULL, player);
+		textui_textblock_show(tb, SCREEN_REGION, name);
+		textblock_free(tb);
+		return;
+	}
+	screen_save();
+	while (!done) {
+		struct ui_item_details_layout layout;
+		int maximum = present_item_details(obj, tb, offset);
+		ui_event event = inkey_ex();
+		ui_item_details_measure(Term->wid, Term->hgt, &layout);
+		if (event.type == EVT_MOUSE || event.type == EVT_DISCONNECT) break;
+		if (event.type != EVT_KBRD) continue;
+		switch (event.key.code) {
+		case ESCAPE: case KC_ENTER: case 'q': done = true; break;
+		case ARROW_UP: offset--; break;
+		case ARROW_DOWN: offset++; break;
+		case KC_PGUP: offset -= layout.text_rows; break;
+		case KC_PGDOWN: case ' ': offset += layout.text_rows; break;
+		case KC_HOME: offset = 0; break;
+		case KC_END: offset = maximum; break;
+		default: break;
+		}
+		offset = MIN(MAX(0, offset), maximum);
+	}
+	Term->screen_hook(NULL);
+	screen_load();
+	textblock_free(tb);
 }

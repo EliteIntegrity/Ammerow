@@ -11,6 +11,7 @@
  */
 
 #include "sdl3/settings.h"
+#include "option.h"
 
 #include "sdl3/menu-layout.h"
 #include "sdl3/render-internal.h"
@@ -21,14 +22,16 @@ static const char *hub_labels[SDL3_SETTINGS_HUB_ROW_COUNT] = {
 	"Appearance",
 	"Interface",
 	"Sound",
-	"Display / Performance"
+	"Display / Performance",
+	"Controls & Convenience"
 };
 
 static const char *hub_descriptions[SDL3_SETTINGS_HUB_ROW_COUNT] = {
 	"Interface theme, map face, and semantic terrain style",
 	"Menu sizing, interface face, transparent HUD and messages",
 	"Master and category volumes",
-	"Fullscreen, combat animation, and visible weather"
+	"Fullscreen, combat animation, and visible weather",
+	"Exploration, stair navigation, pickup and gameplay options"
 };
 
 static void draw_setting_row(const struct sdl3_settings_overlay *overlay,
@@ -86,6 +89,7 @@ static const char *page_title(enum sdl3_settings_page page)
 	case SDL3_SETTINGS_INTERFACE: return "INTERFACE";
 	case SDL3_SETTINGS_SOUND: return "SOUND";
 	case SDL3_SETTINGS_DISPLAY: return "DISPLAY / PERFORMANCE";
+	case SDL3_SETTINGS_CONTROLS: return "CONTROLS & CONVENIENCE";
 	default: return "SETTINGS";
 	}
 }
@@ -97,10 +101,11 @@ static void draw_page(const struct sdl3_settings_overlay *overlay,
 		enum sdl3_interface_density interface_density, int zoom_percent,
 		enum sdl3_terrain_style terrain_style,
 		enum sdl3_weather_mode weather_mode, bool fullscreen, bool dock_visible,
-		bool hud_stats_visible, bool big_stat_cards, bool animated_combat,
+		bool hud_stats_visible, bool big_stat_cards, bool animated_combat, bool edge_warnings,
 		bool tile_mode, int hybrid_tile_size,
 		enum sdl3_dock_placement dock_placement, int dock_rows, int dock_cols,
-		const struct sdl3_audio_settings *audio)
+		const struct sdl3_audio_settings *audio,
+		const struct player_options *game_options, bool playing)
 {
 	char ambient[16];
 	char creature[16];
@@ -131,6 +136,39 @@ static void draw_page(const struct sdl3_settings_overlay *overlay,
 	}
 
 	switch (overlay->page) {
+	case SDL3_SETTINGS_CONTROLS:
+		if (!game_options) break;
+		draw_setting_row(overlay, renderer, visual, theme, menu,
+			SDL3_SETTINGS_EXPLORE, "Explore mode (p)",
+			!game_options->opt[OPT_autoexplore_commands] ? "Off" :
+			game_options->opt[OPT_autoexplore_continuous] ?
+			"Continuous (Ammerow)" : "Traditional (Angband)");
+		draw_setting_row(overlay, renderer, visual, theme, menu,
+			SDL3_SETTINGS_AUTO_STAIRS, "Walk to stairs (< / >)",
+			game_options->opt[OPT_auto_stairs] ? "On" : "Off");
+		draw_setting_row(overlay, renderer, visual, theme, menu,
+			SDL3_SETTINGS_PICKUP_MATCHING, "Pick up matching items",
+			game_options->opt[OPT_pickup_inven] ? "On" : "Off");
+		draw_setting_row(overlay, renderer, visual, theme, menu,
+			SDL3_SETTINGS_PICKUP_ALL, "Pick up all items",
+			game_options->opt[OPT_pickup_always] ? "On (except ignored)" : "Off");
+		draw_setting_row(overlay, renderer, visual, theme, menu,
+			SDL3_SETTINGS_ITEM_RULES, "Item ignoring...", playing ? "Open" : "During a run");
+		draw_setting_row(overlay, renderer, visual, theme, menu,
+			SDL3_SETTINGS_ALL_OPTIONS, "All gameplay options", playing ? "Open (= in game)" : "During a run");
+		draw_setting_row(overlay, renderer, visual, theme, menu,
+			SDL3_SETTINGS_SAVE_GAME_DEFAULTS, "Save gameplay defaults", "For future characters");
+		sdl3_ui_draw_text(visual,
+			"p explores; < / > walk to stairs. Surface < opens the world map.",
+			left + 4, layout.note_row, width - 6, theme->muted);
+		sdl3_ui_draw_text(visual,
+			"Continuous stops for monsters/new loot. Combat stays manual.",
+			left + 4, layout.note_row + 1, width - 6, theme->muted);
+		sdl3_ui_draw_text(visual,
+			playing ? "Changes affect this run. Save defaults for future runs." :
+			"Before starting a run, save your choices as defaults.",
+			left + 4, layout.note_row + 2, width - 6, theme->muted);
+		break;
 	case SDL3_SETTINGS_APPEARANCE:
 		draw_setting_row(overlay, renderer, visual, theme, menu,
 			SDL3_SETTINGS_THEME, "Interface theme", theme->name);
@@ -193,6 +231,9 @@ static void draw_page(const struct sdl3_settings_overlay *overlay,
 			animated_combat ? "Enabled" : "Disabled");
 		draw_setting_row(overlay, renderer, visual, theme, menu, SDL3_SETTINGS_WEATHER, "Visible weather",
 			weather_mode == SDL3_WEATHER_OFF ? "Off" : "On");
+		draw_setting_row(overlay, renderer, visual, theme, menu,
+			SDL3_SETTINGS_EDGE_WARNINGS, "Warning border",
+			edge_warnings ? "Subtle (static)" : "Off");
 		sdl3_ui_draw_text(visual,
 			"Map zoom affects only the play area; interface size is separate.",
 			left + 4, layout.note_row, width - 6, theme->muted);
@@ -213,9 +254,10 @@ void sdl3_settings_draw(const struct sdl3_settings_overlay *overlay,
 		int zoom_percent, enum sdl3_terrain_style terrain_style,
 		enum sdl3_weather_mode weather_mode, bool fullscreen,
 		bool dock_visible, bool hud_stats_visible, bool big_stat_cards,
-		bool animated_combat, bool tile_mode, int hybrid_tile_size,
+		bool animated_combat, bool edge_warnings, bool tile_mode, int hybrid_tile_size,
 		enum sdl3_dock_placement dock_placement, int dock_rows, int dock_cols,
-		const struct sdl3_audio_settings *audio)
+		const struct sdl3_audio_settings *audio,
+		const struct player_options *game_options, bool playing)
 {
 	int width;
 	int left;
@@ -242,9 +284,9 @@ void sdl3_settings_draw(const struct sdl3_settings_overlay *overlay,
 		draw_page(overlay, renderer, visual, theme, left, width,
 			interface_font_name, map_font_name, interface_density,
 			zoom_percent, terrain_style, weather_mode, fullscreen, dock_visible,
-			hud_stats_visible, big_stat_cards, animated_combat, tile_mode, hybrid_tile_size,
+			hud_stats_visible, big_stat_cards, animated_combat, edge_warnings, tile_mode, hybrid_tile_size,
 			dock_placement,
-			dock_rows, dock_cols, audio);
+			dock_rows, dock_cols, audio, game_options, playing);
 		sdl3_ui_draw_text(visual,
 			"Click/Enter changes   Arrows select/change   Esc back   F1/? guide",
 			left, layout.footer_row, width, theme->muted);

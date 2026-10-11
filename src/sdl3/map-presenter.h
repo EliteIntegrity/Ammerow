@@ -30,6 +30,7 @@ struct sdl3_map_presenter_options {
 	int message_rows;
 	bool big_stat_cards;
 	bool animated_combat;
+	bool edge_warnings;
 	bool tile_mode;
 	int zoom_percent;
 	enum sdl3_terrain_style terrain_style;
@@ -55,6 +56,10 @@ struct sdl3_map_presenter {
 	int terrain_dungeon_row;
 	bool terrain_positioned;
 };
+
+/* Read-only warning policy, shared by top-down and side-view presentation. */
+enum sdl3_edge_warning sdl3_map_player_warning(const struct player *p,
+		bool side_view);
 
 void sdl3_map_presenter_free(struct sdl3_map_presenter *presenter);
 void sdl3_map_presenter_reset(struct sdl3_map_presenter *presenter);

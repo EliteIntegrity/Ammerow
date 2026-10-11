@@ -4116,150 +4116,41 @@ void do_cmd_messages(void)
 
 
 
-#define GET_ITEM_PARAMS \
- 	(USE_EQUIP | USE_INVEN | USE_QUIVER | USE_FLOOR | SHOW_QUIVER | SHOW_EMPTY | IS_HARMLESS)
- 
-/**
- * Display inventory
- */
-void do_cmd_inven(void)
+/** Browse without dismantling the selector between an item and its details. */
+static void browse_items(int initial_list)
 {
 	struct object *obj = NULL;
-	int ret = 3;
+	player->upkeep->command_wrk = initial_list;
+	get_item(&obj, "Select Item:", "You have nothing to inspect.",
+		CMD_NULL, NULL, USE_EQUIP | USE_INVEN | USE_QUIVER | USE_FLOOR |
+		SHOW_QUIVER | SHOW_EMPTY | IS_HARMLESS | SHOW_ITEM_ACTIONS);
+}
 
-	if (player->upkeep->inven[0] == NULL) {
+void do_cmd_inven(void)
+{
+	if (!player->upkeep->inven[0]) {
 		msg("You have nothing in your inventory.");
 		return;
 	}
-
-	/* Start in "inventory" mode */
-	player->upkeep->command_wrk = (USE_INVEN);
-
-	/* Loop this menu until an object context menu says differently */
-	while (ret == 3) {
-		/* Save screen */
-		screen_save();
-
-		/* Get an item to use a context command on (Display the inventory) */
-		if (get_item(&obj, "Select Item:",
-				"Error in do_cmd_inven(), please report.",
-				CMD_NULL, NULL, GET_ITEM_PARAMS)) {
-			/* Load screen */
-			screen_load();
-
-			if (obj && obj->kind) {
-				/* Track the object */
-				track_object(player->upkeep, obj);
-
-				if (!player_is_shapechanged(player)) {
-					while ((ret = context_menu_object(obj)) == 2);
-				}
-			}
-		} else {
-			/* Load screen */
-			screen_load();
-
-			ret = -1;
-		}
-	}
+	browse_items(USE_INVEN);
 }
 
-
-/**
- * Display equipment
- */
 void do_cmd_equip(void)
 {
-	struct object *obj = NULL;
-	int ret = 3;
-
 	if (!player->upkeep->equip_cnt) {
 		msg("You are not wielding or wearing anything.");
 		return;
 	}
-
-	/* Start in "equipment" mode */
-	player->upkeep->command_wrk = (USE_EQUIP);
-
-	/* Loop this menu until an object context menu says differently */
-	while (ret == 3) {
-		/* Save screen */
-		screen_save();
-
-		/* Get an item to use a context command on (Display the equipment) */
-		if (get_item(&obj, "Select Item:",
-				"Error in do_cmd_equip(), please report.",
-				CMD_NULL, NULL, GET_ITEM_PARAMS)) {
-			/* Load screen */
-			screen_load();
-
-			if (obj && obj->kind) {
-				/* Track the object */
-				track_object(player->upkeep, obj);
-
-				if (!player_is_shapechanged(player)) {
-					while ((ret = context_menu_object(obj)) == 2);
-				}
-
-				/* Stay in "equipment" mode */
-				player->upkeep->command_wrk = (USE_EQUIP);
-			}
-		} else {
-			/* Load screen */
-			screen_load();
-
-			ret = -1;
-		}
-	}
+	browse_items(USE_EQUIP);
 }
 
-
-/**
- * Display equipment
- */
 void do_cmd_quiver(void)
 {
-	struct object *obj = NULL;
-	int ret = 3;
-
-	if (player->upkeep->quiver_cnt == 0) {
+	if (!player->upkeep->quiver_cnt) {
 		msg("You have nothing in your quiver.");
 		return;
 	}
-
-	/* Start in "quiver" mode */
-	player->upkeep->command_wrk = (USE_QUIVER);
-
-	/* Loop this menu until an object context menu says differently */
-	while (ret == 3) {
-		/* Save screen */
-		screen_save();
-
-		/* Get an item to use a context command on (Display the quiver) */
-		if (get_item(&obj, "Select Item:",
-				"Error in do_cmd_quiver(), please report.",
-				CMD_NULL, NULL, GET_ITEM_PARAMS)) {
-			/* Load screen */
-			screen_load();
-
-			if (obj && obj->kind) {
-				/* Track the object */
-				track_object(player->upkeep, obj);
-
-				if (!player_is_shapechanged(player)) {
-					while  ((ret = context_menu_object(obj)) == 2);
-				}
-
-				/* Stay in "quiver" mode */
-				player->upkeep->command_wrk = (USE_QUIVER);
-			}
-		} else {
-			/* Load screen */
-			screen_load();
-
-			ret = -1;
-		}
-	}
+	browse_items(USE_QUIVER);
 }
 
 

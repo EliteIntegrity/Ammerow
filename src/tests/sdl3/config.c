@@ -594,6 +594,32 @@ static int test_animated_combat_migration_and_round_trip(void *state)
 	ok;
 }
 
+static int test_edge_warnings_migration_and_round_trip(void *state)
+{
+	struct sdl3_config config, loaded;
+	(void)state;
+	require(write_test_config("version=22\nanimated_combat=0\n"));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(config.edge_warnings);
+	require(!config.animated_combat);
+	config.edge_warnings = false;
+	require(sdl3_config_save(&config));
+	prepare_config(&loaded);
+	require(sdl3_config_load(&loaded));
+	require(!loaded.edge_warnings);
+	config.edge_warnings = true;
+	require(sdl3_config_save(&config));
+	prepare_config(&loaded);
+	require(sdl3_config_load(&loaded));
+	require(loaded.edge_warnings);
+	require(write_test_config("version=23\nedge_warnings=2\n"));
+	prepare_config(&loaded);
+	require(sdl3_config_load(&loaded));
+	require(loaded.edge_warnings);
+	ok;
+}
+
 static int test_tile_mode_migration_and_round_trip(void *state)
 {
 	struct sdl3_config config;
@@ -671,5 +697,7 @@ struct test tests[] = {
 		test_animated_combat_migration_and_round_trip },
 	{ "tile mode migration and round trip",
 		test_tile_mode_migration_and_round_trip },
+	{ "edge warnings default, validation and persistence",
+		test_edge_warnings_migration_and_round_trip },
 	{ NULL, NULL },
 };

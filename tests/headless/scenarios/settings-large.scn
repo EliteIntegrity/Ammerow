@@ -21,6 +21,7 @@ action:inspect:settings:density
 action:inspect:settings:density
 action:inspect:settings:sound
 action:inspect:settings:display
+action:inspect:settings:controls
 action:inspect:settings:open
 action:inspect:settings:hub
 action:inspect:settings:interface

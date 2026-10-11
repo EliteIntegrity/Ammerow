@@ -27,6 +27,7 @@
 #include "obj-pile.h"
 #include "obj-util.h"
 #include "player-birth.h"
+#include "player-explore.h"
 #include "player-calcs.h"
 #include "player-history.h"
 #include "player-quest.h"
@@ -216,6 +217,8 @@ bool player_stat_dec(struct player *p, int stat, bool permanent)
 
 static void adjust_level(struct player *p, bool verbose)
 {
+	/* Establish legacy/initial progress before any level increments. */
+	player_advancement_ensure(p);
 	if (p->exp < 0)
 		p->exp = 0;
 
@@ -245,6 +248,7 @@ static void adjust_level(struct player *p, bool verbose)
 		char buf[80];
 
 		p->lev++;
+		player_advancement_gain(p, p->lev);
 
 		/* Save the highest level */
 		if (p->lev > p->max_lev)
@@ -256,7 +260,8 @@ static void adjust_level(struct player *p, bool verbose)
 			history_add(p, buf, HIST_GAIN_LEVEL);
 
 			/* Message */
-			msgt(MSG_LEVEL, "Welcome to level %d.",	p->lev);
+			/* The safe-boundary card plays the level cue, not the middle of combat. */
+			msg("Welcome to level %d.", p->lev);
 		}
 
 		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_STR, 0, 0, 0, 0, NULL);
@@ -490,6 +495,7 @@ bool player_spelunking_set_system(struct player *p,
 
 void player_cleanup_members(struct player *p)
 {
+	player_explore_free(p);
 	world_player_clear_ledgers(p);
 	player_spelunking_clear(p);
 	mem_free(p->fishing);

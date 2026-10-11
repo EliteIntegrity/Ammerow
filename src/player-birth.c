@@ -1023,6 +1023,7 @@ void player_generate(struct player *p, const struct player_race *r,
 
 	/* Level 1 */
 	p->max_lev = p->lev = 1;
+	player_advancement_reset(p, 1);
 
 	/* Experience factor */
 	p->expfact = p->race->r_exp + p->class->c_exp;

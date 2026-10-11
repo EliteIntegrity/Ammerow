@@ -511,6 +511,10 @@ static int test_newgame(void *state) {
 	eq(player->larder.food_points, 6);
 
 
+	OPT(player, autoexplore_commands) = true;
+	OPT(player, autoexplore_continuous) = true;
+	OPT(player, auto_stairs) = false;
+	OPT(player, birth_feelings) = true; /* Explicit choice survives the new default. */
 	eq(savefile_save("Test1"), true);
 	expected_random_after_save = Rand_div(UINT32_MAX);
 	world_transition_coordinator_abort(&coordinator);
@@ -530,6 +534,11 @@ static int test_loadgame(void *state) {
 
 	/* Try loading the just-saved game */
 	eq(savefile_load("Test1", false), true);
+	require(OPT(player, autoexplore_commands));
+	require(OPT(player, autoexplore_continuous));
+	require(!OPT(player, auto_stairs));
+	require(OPT(player, birth_feelings));
+	require(!player->upkeep->exploration);
 	require(Rand_div(UINT32_MAX) == expected_random_after_save);
 
 	eq(player->is_dead, false);

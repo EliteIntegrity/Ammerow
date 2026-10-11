@@ -43,6 +43,7 @@
 #include "savefile.h"
 #include "target.h"
 #include "ui-birth.h"
+#include "ui-advancement.h"
 #include "ui-command.h"
 #include "ui-context.h"
 #include "ui-death.h"
@@ -206,6 +207,7 @@ struct cmd_info cmd_item_manage[] =
  */
 struct cmd_info cmd_info[] =
 {
+	{ "Level rewards", { 0 }, CMD_NULL, do_cmd_level_rewards, NULL, 0, NULL, NULL, NULL, 0, true },
 	{ "Browse a book", { 'b', 'P' }, CMD_BROWSE_SPELL, textui_spell_browse, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Learn book magic", { 'G' }, CMD_STUDY, NULL, player_can_study_prereq, 0, NULL, NULL, NULL, 0 },
 	{ "View origin/class abilities", { 'S' }, CMD_NULL, do_cmd_abilities, NULL, 0, NULL, NULL, NULL, 0, true },

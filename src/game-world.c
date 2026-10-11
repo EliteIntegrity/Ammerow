@@ -1187,6 +1187,14 @@ void process_player(void)
 		/* Assume free turn */
 		player->upkeep->energy_use = 0;
 
+		/* Level gain may happen inside a projectile, spell, fishing or monster
+		 * action. Only present it here, before the next player command. */
+		if (!player->is_dead && !player->upkeep->generate_level &&
+				!player->timed[TMD_PARALYZED] &&
+				!player_timed_grade_eq(player, TMD_STUN, "Knocked Out") &&
+				player_advancement_next_card(player))
+			event_signal(EVENT_ADVANCEMENT);
+
 		/* Dwarves detect treasure */
 		if (world_turn_context_has_capability(context,
 				WORLD_MODE_CAP_NATIVE_CAVE) &&

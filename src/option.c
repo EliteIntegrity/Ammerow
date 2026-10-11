@@ -43,6 +43,8 @@ static struct option_entry {
 struct option_parser_context {
 	struct player_options *opts;
 	int page;
+	bool saw_auto_stairs;
+	bool saw_continuous;
 };
 
 static enum parser_error parse_option(struct parser *p)
@@ -71,14 +73,14 @@ static enum parser_error parse_option(struct parser *p)
 	yno = parser_getstr(p, "yno");
 	if (strncmp("yes", yno, 3) == 0 && contains_only_spaces(yno + 3)) {
 		ctx->opts->opt[opt] = true;
-		return PARSE_ERROR_NONE;
-	}
-	if (strncmp("no", yno, 2) == 0 && contains_only_spaces(yno + 2)) {
+	} else if (strncmp("no", yno, 2) == 0 && contains_only_spaces(yno + 2)) {
 		ctx->opts->opt[opt] = false;
-		return PARSE_ERROR_NONE;
+	} else {
+		return PARSE_ERROR_INVALID_VALUE;
 	}
-
-	return PARSE_ERROR_INVALID_VALUE;
+	if (opt == OPT_auto_stairs) ctx->saw_auto_stairs = true;
+	if (opt == OPT_autoexplore_continuous) ctx->saw_continuous = true;
+	return PARSE_ERROR_NONE;
 }
 
 /**
@@ -302,6 +304,8 @@ bool options_restore_custom(struct player_options *opts, int page)
 	p = parser_new();
 	ctx.opts = opts;
 	ctx.page = page;
+	ctx.saw_auto_stairs = false;
+	ctx.saw_continuous = false;
 	parser_setpriv(p, &ctx);
 	parser_reg(p, "option sym name str yno", parse_option);
 	maxe = get_parser_error_limit();
@@ -326,6 +330,10 @@ bool options_restore_custom(struct player_options *opts, int page)
 	}
 	parser_destroy(p);
 	(void)file_close(f);
+	if (page == OP_INTERFACE) {
+		options_migrate_exploration(opts, ctx.saw_auto_stairs,
+			ctx.saw_continuous);
+	}
 
 	return true;
 }
@@ -340,6 +348,15 @@ void options_restore_maintainer(struct player_options *opts, int page)
 		if (options[opt].type == page) {
 			(*opts).opt[opt] = options[opt].normal;
 		}
+}
+
+/* Old saves/defaults bundled p and stair navigation. Never opt an old run
+ * into continuous exploration; new saves store the switches independently. */
+void options_migrate_exploration(struct player_options *opts,
+		bool saw_stairs, bool saw_continuous)
+{
+	if (!saw_stairs) opts->opt[OPT_auto_stairs] = opts->opt[OPT_autoexplore_commands];
+	if (!saw_continuous) opts->opt[OPT_autoexplore_continuous] = false;
 }
 
 /* Keep legacy terminal centring loadable/saveable, but do not offer it as a

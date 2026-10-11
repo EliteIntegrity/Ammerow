@@ -348,6 +348,8 @@ src/option.c
 src/option.h
 src/parser.c
 src/parser.h
+src/player-advancement.c
+src/player-advancement.h
 src/player-attack.c
 src/player-attack.h
 src/player-birth.c
@@ -357,6 +359,8 @@ src/player-calcs.h
 src/player-class.c
 src/player-history.c
 src/player-history.h
+src/player-explore.c
+src/player-explore.h
 src/player-path.c
 src/player-path.h
 src/player-properties.c
@@ -527,7 +531,9 @@ src/tests/effects/destruction.c
 src/tests/effects/earthquake.c
 src/tests/effects/info.c
 src/tests/effects/suite.mk
+src/tests/game/advancement.c
 src/tests/game/basic.c
+src/tests/game/explore.c
 src/tests/game/fishing.c
 src/tests/game/game-fixture.h
 src/tests/game/larder.c
@@ -645,6 +651,7 @@ src/tests/sdl3/home-layout.c
 src/tests/sdl3/home-model.c
 src/tests/sdl3/input.c
 src/tests/sdl3/inspect-card.c
+src/tests/sdl3/item-details.c
 src/tests/sdl3/item-screen.c
 src/tests/sdl3/layout.c
 src/tests/sdl3/map-presenter.c
@@ -706,6 +713,8 @@ src/tests/z-virt/string.c
 src/tests/z-virt/suite.mk
 src/trap.c
 src/trap.h
+src/ui-advancement.c
+src/ui-advancement.h
 src/ui-birth-screen.c
 src/ui-birth-screen.h
 src/ui-birth.c
@@ -993,6 +1002,8 @@ tests/headless/scenarios/cave-fatal-fall.scn
 tests/headless/scenarios/cave-larder-loop.scn
 tests/headless/scenarios/settings-large.scn
 tests/headless/scenarios/hud-bottom-large.scn
+tests/headless/scenarios/level-rewards-large.scn
+tests/headless/scenarios/level-rewards.scn
 tests/headless/scenarios/smoke.scn
 tests/run-test
 tests/trivial/matcher/input

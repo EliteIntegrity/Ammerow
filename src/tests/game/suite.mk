@@ -1,7 +1,9 @@
 # Ammerow modifications Copyright (c) 2026 John Horton
 # SPDX-License-Identifier: GPL-2.0-only
 
-TESTPROGS += game/basic \
+TESTPROGS += game/advancement \
+	game/basic \
+	game/explore \
 	game/fishing \
 	game/larder \
 	game/mage \

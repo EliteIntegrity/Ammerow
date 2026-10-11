@@ -49,6 +49,7 @@
 #include "player-calcs.h"
 #include "player-resource.h"
 #include "player-path.h"
+#include "player-explore.h"
 #include "player-quest.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -77,7 +78,7 @@ void do_cmd_go_up(struct command *cmd)
 
 	/* Verify stairs */
 	if (!square_isupstairs(cave, player->grid)) {
-		if (OPT(player, autoexplore_commands)) {
+		if (OPT(player, auto_stairs)) {
 			do_cmd_navigate_up(cmd);
 		} else {
 			msg("I see no up staircase here.");
@@ -145,7 +146,7 @@ void do_cmd_go_down(struct command *cmd)
 
 	/* Verify stairs */
 	if (!square_isdownstairs(cave, player->grid)) {
-		if (OPT(player, autoexplore_commands)) {
+		if (OPT(player, auto_stairs)) {
 			do_cmd_navigate_down(cmd);
 		} else {
 			msg("I see no down staircase here.");
@@ -1125,6 +1126,13 @@ void move_player(int dir, bool disarm)
 
 	/* Many things can happen on movement */
 	if (m_idx > 0) {
+		/* An unseen occupant can block a paid automated move, but must not
+		 * turn exploration into combat or a free invisible-monster detector. */
+		if (player_explore_active(player)) {
+			player_explore_cancel(player, "something blocks the way");
+			disturb(player);
+			return;
+		}
 		/* Attack monsters */
 		if (monster_is_camouflaged(mon)) {
 			become_aware(cave, mon);
@@ -1134,6 +1142,9 @@ void move_player(int dir, bool disarm)
 		} else {
 			py_attack(player, grid);
 		}
+	} else if (player_explore_active(player) && door) {
+		player_explore_cancel(player, "a door blocks the way");
+		disturb(player);
 	} else if (((trap && disarm) || door) && square_isknown(cave, grid)) {
 		/* Auto-repeat if not already repeating */
 		if (cmd_get_nrepeats() == 0)
@@ -1574,6 +1585,12 @@ void do_cmd_navigate_up(struct command *cmd)
  */
 void do_cmd_explore(struct command *cmd)
 {
+	/* Internal continuations must never restart a cancelled session. */
+	if (cmd->background_command || (OPT(player, autoexplore_commands) &&
+			OPT(player, autoexplore_continuous))) {
+		player_explore_command(cmd);
+		return;
+	}
 	/* Do nothing if autoexplore commands disabled. */
 	if (!OPT(player, autoexplore_commands)) {
 		return;
@@ -1799,7 +1816,7 @@ static const char *mon_feeling_text[] =
 };
 
 /**
- * Display the feeling.  Players always get a monster feeling.
+ * Display the feeling when enabled. Monster feelings are immediate.
  * Object feelings are delayed until the player has explored some
  * of the level.
  */
@@ -1809,7 +1826,7 @@ void display_feeling(bool obj_only)
 	uint16_t mon_feeling = cave->feeling - (10 * obj_feeling);
 	const char *join;
 
-	/* Don't show feelings for cold-hearted characters */
+	/* Level feelings are optional hints, off by default. */
 	if (!OPT(player, birth_feelings)) return;
 
 	/* No useful feeling in town */
@@ -1820,7 +1837,9 @@ void display_feeling(bool obj_only)
 
 	/* Display only the object feeling when it's first discovered. */
 	if (obj_only) {
-		disturb(player);
+		/* A hint is not a newly perceived threat or item. Keep continuous
+		 * exploration moving, but preserve traditional running's interrupt. */
+		if (!player_explore_active(player)) disturb(player);
 		msg("You feel that %s", obj_feeling_text[obj_feeling]);
 		return;
 	}

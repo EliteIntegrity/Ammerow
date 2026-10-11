@@ -82,6 +82,7 @@ struct sdl3_screen_map_cell {
 struct sdl3_screen {
 	bool active;
 	enum ui_screen_kind kind;
+	bool modal;
 	char title[SDL3_SCREEN_TITLE_CAPACITY];
 	char subtitle[SDL3_SCREEN_SUBTITLE_CAPACITY];
 	char help[SDL3_SCREEN_HELP_CAPACITY];
@@ -122,6 +123,7 @@ struct sdl3_screen {
 	wchar_t subject_glyph;
 	uint8_t subject_attr;
 	bool subject_unique;
+	bool subject_unidentified;
 };
 
 struct sdl3_screen_layout {
@@ -143,6 +145,9 @@ struct sdl3_screen_layout {
 void sdl3_screen_clear(struct sdl3_screen *screen);
 void sdl3_screen_capture(struct sdl3_screen *screen,
 		const struct ui_screen *source);
+/* Present/update one modal child, retaining an owned parent snapshot. */
+void sdl3_screen_present(struct sdl3_screen *screen,
+		struct sdl3_screen *parent, const struct ui_screen *source);
 bool sdl3_screen_measure(const struct sdl3_screen *screen, int cols, int rows,
 		struct sdl3_screen_layout *layout);
 bool sdl3_screen_row_at(const struct sdl3_screen *screen, int cols, int rows,

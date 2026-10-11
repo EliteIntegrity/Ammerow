@@ -33,6 +33,7 @@
 #include "world-location.h"
 #include "world-larder.h"
 #include "relic-broker.h"
+#include "player-advancement.h"
 
 struct world_fishing_runtime;
 struct world_spelunk_system;
@@ -527,6 +528,7 @@ struct player_upkeep {
 	int resting;			/* Resting counter */
 
 	int running;			/* Running counter */
+	struct player_exploration *exploration; /* Transient, never saved. */
 	bool running_firststep;		/* Is this our first step running or following a precomputed path? */
 
 	struct object **quiver;	/* Quiver objects */
@@ -603,6 +605,7 @@ struct player {
 
 	/* Persistent physical resources shared by every world mode. */
 	struct player_resources resources;
+	struct player_advancement advancement;
 
 	int16_t stat_max[STAT_MAX];	/* Current "maximal" stat values */
 	int16_t stat_cur[STAT_MAX];	/* Current "natural" stat values */

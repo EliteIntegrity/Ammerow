@@ -61,6 +61,7 @@ struct sdl3_app {
 	struct sdl3_pause_menu pause_menu;
 	struct sdl3_settings_overlay settings;
 	struct sdl3_screen screen;
+	struct sdl3_screen screen_parent;
 	struct sdl3_presentation_state presentation;
 	struct sdl3_combat_effects combat_effects;
 	struct sdl3_map_presenter map_presenter;

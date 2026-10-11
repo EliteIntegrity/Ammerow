@@ -50,6 +50,13 @@
 #include "world-spelunking-runtime.h"
 #include "world-spelunking-system.h"
 
+void wr_advancement(void)
+{
+	wr_byte(player->advancement.highest);
+	wr_u16b(player->advancement.rewards);
+	for (int i = 0; i <= PY_MAX_LEVEL; i++) wr_byte(player->advancement.cards[i]);
+}
+
 /** Write player-owned physical resources independently of any world mode. */
 void wr_player_resources(void)
 {

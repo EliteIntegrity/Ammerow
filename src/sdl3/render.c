@@ -1078,6 +1078,44 @@ static void draw_player_vitality(struct sdl3_visual *visual,
 	SDL_SetRenderClipRect(renderer, NULL);
 }
 
+/* A static, narrow fade below the HUD. No time input, particles, pulse, or
+ * additional animation tick: it changes only when the warning state changes.
+ * Disjoint strips avoid darker corners caused by overlapping alpha blends. */
+static void draw_edge_warning(struct sdl3_visual *visual, SDL_Renderer *renderer,
+		const struct sdl3_map_view *view)
+{
+	SDL_Color color;
+	SDL_BlendMode previous_blend;
+	int width, height, band, i;
+	if (!visual || !renderer || !view || !view->active) return;
+	switch (view->edge_warning) {
+	case SDL3_EDGE_WARNING_HEALTH: color = (SDL_Color){ 220, 40, 40, 255 }; break;
+	case SDL3_EDGE_WARNING_AIR: color = (SDL_Color){ 55, 145, 225, 255 }; break;
+	case SDL3_EDGE_WARNING_STAMINA: color = (SDL_Color){ 225, 155, 40, 255 }; break;
+	case SDL3_EDGE_WARNING_HUNGER: color = (SDL_Color){ 190, 110, 35, 255 }; break;
+	default: return;
+	}
+	width = visual->output_width;
+	height = visual->output_height;
+	band = SDL_min(40, SDL_min(width, height) / 28);
+	if (band <= 0) return;
+	SDL_GetRenderDrawBlendMode(renderer, &previous_blend);
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+	for (i = 0; i < band; i++) {
+		SDL_FRect strips[4] = {
+			{ (float)i, (float)i, (float)(width - 2 * i), 1.0f },
+			{ (float)i, (float)(height - i - 1), (float)(width - 2 * i), 1.0f },
+			{ (float)i, (float)(i + 1), 1.0f, (float)(height - 2 * i - 2) },
+			{ (float)(width - i - 1), (float)(i + 1), 1.0f,
+				(float)(height - 2 * i - 2) }
+		};
+		Uint8 alpha = (Uint8)(64 * (band - i) * (band - i) / (band * band));
+		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, alpha);
+		SDL_RenderFillRects(renderer, strips, 4);
+	}
+	SDL_SetRenderDrawBlendMode(renderer, previous_blend);
+}
+
 static uint32_t weather_particle_hash(uint32_t value)
 {
 	value ^= value >> 16;
@@ -2066,6 +2104,7 @@ void sdl3_visual_render(struct sdl3_visual *visual, SDL_Renderer *renderer,
 	draw_player_vitality(visual, renderer, map_view);
 	draw_combat_effects(visual, renderer, theme, map_view,
 		frame->combat_effects);
+	draw_edge_warning(visual, renderer, map_view);
 	if (!frame->screen || !frame->screen->active ||
 			frame->screen->kind != UI_SCREEN_STORE) {
 		draw_store_art(visual, renderer, theme, frame->store_art);
@@ -2087,6 +2126,11 @@ void sdl3_visual_render(struct sdl3_visual *visual, SDL_Renderer *renderer,
 	draw_foreground_overlays(visual, renderer, theme, map_view,
 		frame->inspect_card, frame->cursor_visible, frame->cursor_col,
 		frame->cursor_row);
+	sdl3_screen_draw(frame->screen_parent, renderer, visual, theme);
+	if (frame->screen_parent && frame->screen_parent->active &&
+			frame->screen_parent->kind == UI_SCREEN_STORE) {
+		draw_store_art(visual, renderer, theme, frame->store_art);
+	}
 	sdl3_screen_draw(frame->screen, renderer, visual, theme);
 	if (frame->screen && frame->screen->active &&
 			frame->screen->kind == UI_SCREEN_STORE) {
@@ -2104,10 +2148,11 @@ void sdl3_visual_render(struct sdl3_visual *visual, SDL_Renderer *renderer,
 		frame->terrain_style,
 		frame->visible_weather ? SDL3_WEATHER_AUTO : SDL3_WEATHER_OFF,
 		frame->fullscreen, frame->dock_visible, frame->hud_stats_visible,
-		frame->big_stat_cards, frame->animated_combat, frame->tile_mode,
+		frame->big_stat_cards, frame->animated_combat, frame->edge_warnings, frame->tile_mode,
 		frame->hybrid_tile_size,
 		frame->dock_placement,
-		frame->dock_rows, frame->dock_cols, frame->audio);
+		frame->dock_rows, frame->dock_cols, frame->audio,
+		frame->game_options, frame->playing);
 
 	present_started = SDL_GetTicksNS();
 	SDL_RenderPresent(renderer);
@@ -2143,6 +2188,7 @@ bool sdl3_visual_render_overlay_frame(struct sdl3_visual *visual,
 	draw_player_vitality(visual, renderer, frame->map_view);
 	draw_combat_effects(visual, renderer, frame->theme, frame->map_view,
 		frame->combat_effects);
+	draw_edge_warning(visual, renderer, frame->map_view);
 	draw_world_stats(visual, renderer, frame->theme, frame->grid,
 		frame->map_view, frame->hud_stats_visible, fishing_active,
 		frame->dock_active, frame->dock_placement,

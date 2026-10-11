@@ -116,6 +116,7 @@ typedef enum game_event_type
 	EVENT_GEN_ROOM_END, /* has flag in event data indicating success */
 	EVENT_GEN_TUNNEL_FINISHED, /* has tunnel in event data with results */
 
+	EVENT_ADVANCEMENT, /* Safe player-command boundary; never mid-effect. */
 	EVENT_END  /* Can be sent at the end of a series of events */
 } game_event_type;
 

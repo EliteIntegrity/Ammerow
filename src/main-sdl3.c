@@ -406,6 +406,7 @@ void sdl3_frontend_render(struct sdl3_app *app)
 	map_options.message_rows = app->dock_grid.rows;
 	map_options.big_stat_cards = app->config.big_stat_cards;
 	map_options.animated_combat = app->config.animated_combat;
+	map_options.edge_warnings = app->config.edge_warnings && !app->pause_menu.visible;
 	map_options.tile_mode = app->config.tile_mode;
 	map_options.zoom_percent = app->config.map_zoom_percent;
 	map_options.terrain_style = app->config.terrain_style;
@@ -421,7 +422,10 @@ void sdl3_frontend_render(struct sdl3_app *app)
 	frame.home = &app->home;
 	frame.pause_menu = &app->pause_menu;
 	frame.settings = &app->settings;
+	frame.game_options = player ? &player->opts : NULL;
+	frame.playing = character_dungeon && player && !player->is_dead;
 	frame.screen = &app->screen;
+	frame.screen_parent = app->screen.modal ? &app->screen_parent : NULL;
 	frame.interface_font_name = info.interface_font_loaded ?
 		sdl3_font_filename(info.interface_font_path) : "";
 	frame.map_font_name = info.map_font_path[0] ?
@@ -443,6 +447,7 @@ void sdl3_frontend_render(struct sdl3_app *app)
 	frame.hud_stats_visible = app->config.hud_stats_visible;
 	frame.big_stat_cards = app->config.big_stat_cards;
 	frame.animated_combat = app->config.animated_combat;
+	frame.edge_warnings = app->config.edge_warnings;
 	frame.tile_mode = app->config.tile_mode;
 	frame.hybrid_tile_size = app->config.hybrid_tile_size;
 	frame.dock_placement = app->config.dock_placement;
@@ -614,17 +619,18 @@ static bool run_font_memory_stress(struct sdl3_app *app)
 static void term_screen_hook(const struct ui_screen *screen)
 {
 	if (screen && (screen->kind == UI_SCREEN_RUN_SUMMARY ||
-			screen->kind == UI_SCREEN_STORY) && g_app.screen.kind != screen->kind) {
+			screen->kind == UI_SCREEN_STORY || screen->kind == UI_SCREEN_ADVANCEMENT) &&
+			g_app.screen.kind != screen->kind) {
 		/* Flush queued commands AND fence future OS repeats.  Repainting the
 		 * same card must not re-arm; entering a new modal card should. */
 		sdl3_input_gate_arm(&g_app.input_gate);
 		g_app.suppress_text_codepoint = 0;
 		event_signal(EVENT_INPUT_FLUSH);
 	}
-	sdl3_screen_capture(&g_app.screen, screen);
+	sdl3_screen_present(&g_app.screen, &g_app.screen_parent, screen);
 	sdl3_presentation_set_layer(&g_app.presentation,
 		SDL3_PRESENTATION_SEMANTIC_SCREEN,
-		screen && screen->kind != UI_SCREEN_NONE);
+		g_app.screen.active);
 	sdl3_grid_mark_dirty(&g_app.grid);
 }
 
@@ -1592,18 +1598,25 @@ bool sdl3_capture_settings(const char *action)
 	if (!g_app.offscreen || !action) return false;
 	if (streq(action, "open") || streq(action, "interface") ||
 			streq(action, "sound") || streq(action, "display") ||
-			streq(action, "hub")) {
+			streq(action, "hub") || streq(action, "controls")) {
 		sdl3_settings_open(&g_app.settings);
 		g_app.settings.selected_hub_row = streq(action, "interface") ?
 			SDL3_SETTINGS_HUB_INTERFACE : streq(action, "sound") ?
 			SDL3_SETTINGS_HUB_SOUND : streq(action, "display") ?
-			SDL3_SETTINGS_HUB_DISPLAY : SDL3_SETTINGS_HUB_APPEARANCE;
+			SDL3_SETTINGS_HUB_DISPLAY : streq(action, "controls") ?
+			SDL3_SETTINGS_HUB_CONTROLS : SDL3_SETTINGS_HUB_APPEARANCE;
 		if (!streq(action, "hub"))
 			(void)sdl3_settings_activate(&g_app.settings);
 	} else if (streq(action, "close")) {
 		g_app.settings.visible = false;
-	} else if (streq(action, "map") || streq(action, "detail")) {
-		g_app.settings.selected_row = streq(action, "map") ?
+	} else if (streq(action, "explore") || streq(action, "stairs")) {
+		g_app.settings.selected_row = streq(action, "explore") ?
+			SDL3_SETTINGS_EXPLORE : SDL3_SETTINGS_AUTO_STAIRS;
+		sdl3_frontend_change_selected_setting(&g_app, 1);
+	} else if (streq(action, "map") || streq(action, "detail") ||
+			streq(action, "warnings")) {
+		g_app.settings.selected_row = streq(action, "warnings") ?
+			SDL3_SETTINGS_EDGE_WARNINGS : streq(action, "map") ?
 			SDL3_SETTINGS_TILE_MODE : SDL3_SETTINGS_HYBRID_DETAIL;
 		sdl3_frontend_change_selected_setting(&g_app, 1);
 	} else if (streq(action, "density") || streq(action, "font") ||

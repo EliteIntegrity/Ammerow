@@ -64,6 +64,19 @@
 #include "world-spelunking-layout-data.h"
 #include "world-spelunking-recipe-data.h"
 
+int rd_advancement(void)
+{
+	struct player_advancement state = { 0 };
+	if (player->advancement.initialized) return -1; /* Duplicate block. */
+	state.initialized = true;
+	rd_byte(&state.highest);
+	rd_u16b(&state.rewards);
+	for (int i = 0; i <= PY_MAX_LEVEL; i++) rd_byte(&state.cards[i]);
+	if (!player_advancement_valid(&state)) return -1;
+	player->advancement = state;
+	return 0;
+}
+
 static const struct world_spelunk_perception *spelunking_perception_for_load(
 		const struct world_spelunk_runtime *runtime, const char *recipe_id)
 {
@@ -463,6 +476,7 @@ int rd_randomizer(void)
 int rd_options(void)
 {
 	uint8_t b;
+	bool saw_stairs = false, saw_continuous = false;
 
 	/*** Special info */
 
@@ -498,8 +512,11 @@ int rd_options(void)
 			break;
 
 		rd_byte(&value);
+		if (streq(name, "auto_stairs")) saw_stairs = true;
+		if (streq(name, "autoexplore_continuous")) saw_continuous = true;
 		option_set(name, !!value);
 	}
+	options_migrate_exploration(&player->opts, saw_stairs, saw_continuous);
 
 	return 0;
 }

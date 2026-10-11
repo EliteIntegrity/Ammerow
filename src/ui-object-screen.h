@@ -15,6 +15,20 @@
 
 struct menu;
 
+struct ui_item_details_layout {
+	int panel_col, panel_row, panel_cols, panel_rows;
+	int text_col, text_row, text_cols, text_rows;
+	int art_col, art_row, art_cols, art_rows;
+	int heading_cols;
+};
+
+void ui_item_details_measure(int cols, int rows,
+		struct ui_item_details_layout *layout);
+/* Emits full, knowledge-filtered text and a knowledge-safe art identity. */
+int ui_item_details_present(const struct object *obj, int offset);
+void ui_item_details_show(struct object *obj);
+void ui_object_actions_present(struct menu *menu);
+
 struct ui_object_screen_item {
 	const struct object *object;
 	const char *fallback_name;

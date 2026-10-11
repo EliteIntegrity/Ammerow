@@ -16,6 +16,7 @@
 #include "player-birth.h"
 #include "player-calcs.h"
 #include "player-timed.h"
+#include "world-spelunking-runtime.h"
 #include "target.h"
 #include "ui-map.h"
 #include "ui-prefs.h"
@@ -320,8 +321,95 @@ static int test_no_hidden_or_hallucinated_portraits(void *state)
 	ok;
 }
 
+static int test_edge_warning_policy(void *state)
+{
+	/* Small isolated player: warning queries must not mutate game resources. */
+	struct player p = { 0 };
+	int16_t timed[TMD_MAX] = { 0 };
+	struct world_spelunk_runtime runtime = { 0 };
+	enum world_spelunk_tile cells[9] = { WORLD_SPELUNK_AIR };
+	(void)state;
+	p.timed = timed;
+	p.mhp = p.chp = 100;
+	p.resources.initialized = true;
+	p.resources.stamina.maximum = p.resources.stamina.current = 100;
+	p.resources.air.maximum = 6;
+	p.resources.air.current = 1;
+	p.spelunking = &runtime;
+	runtime.state.map = (struct world_spelunk_map){ cells, 3, 3, 3 };
+	runtime.state.x = runtime.state.y = 1;
+	timed[TMD_FOOD] = (int16_t)PY_FOOD_FULL;
+	eq(sdl3_map_player_warning(&p, false), SDL3_EDGE_WARNING_NONE);
+	timed[TMD_POISONED] = 50;
+	eq(sdl3_map_player_warning(&p, false), SDL3_EDGE_WARNING_NONE);
+	timed[TMD_FOOD] = (int16_t)PY_FOOD_FAINT;
+	eq(sdl3_map_player_warning(&p, false), SDL3_EDGE_WARNING_NONE);
+	timed[TMD_FOOD]--;
+	eq(sdl3_map_player_warning(&p, false), SDL3_EDGE_WARNING_HUNGER);
+	p.chp = 25;
+	eq(sdl3_map_player_warning(&p, false), SDL3_EDGE_WARNING_HEALTH);
+	cells[4] = WORLD_SPELUNK_WATER;
+	runtime.state.movement = WORLD_SPELUNK_SWIMMING;
+	/* Surface air above the head prevents the air warning. */
+	eq(sdl3_map_player_warning(&p, true), SDL3_EDGE_WARNING_HEALTH);
+	cells[1] = WORLD_SPELUNK_WATER;
+	eq(sdl3_map_player_warning(&p, true), SDL3_EDGE_WARNING_AIR);
+	p.chp = 10;
+	eq(sdl3_map_player_warning(&p, true), SDL3_EDGE_WARNING_HEALTH);
+	p.chp = 100;
+	p.resources.air.current = 6;
+	p.resources.stamina.current = 20;
+	eq(sdl3_map_player_warning(&p, true), SDL3_EDGE_WARNING_STAMINA);
+	/* Neither depleted resources nor a cached cave imply danger on land. */
+	timed[TMD_FOOD] = (int16_t)PY_FOOD_FULL;
+	eq(sdl3_map_player_warning(&p, false), SDL3_EDGE_WARNING_NONE);
+	cells[1] = cells[4] = WORLD_SPELUNK_AIR;
+	runtime.state.movement = WORLD_SPELUNK_STANDING;
+	eq(sdl3_map_player_warning(&p, true), SDL3_EDGE_WARNING_NONE);
+	runtime.state.movement = WORLD_SPELUNK_CLIMBING;
+	eq(sdl3_map_player_warning(&p, true), SDL3_EDGE_WARNING_STAMINA);
+	cells[7] = WORLD_SPELUNK_ROCK;
+	eq(sdl3_map_player_warning(&p, true), SDL3_EDGE_WARNING_NONE);
+	cells[7] = WORLD_SPELUNK_AIR;
+	p.resources.stamina.current = 21;
+	eq(sdl3_map_player_warning(&p, true), SDL3_EDGE_WARNING_NONE);
+	p.chp = 1;
+	p.is_dead = true;
+	eq(sdl3_map_player_warning(&p, true), SDL3_EDGE_WARNING_NONE);
+	eq(sdl3_map_player_warning(NULL, false), SDL3_EDGE_WARNING_NONE);
+	ok;
+}
+
+static int test_edge_warning_toggle_and_recovery(void *state)
+{
+	struct fixture *f = state;
+	int16_t hp = player->chp, max_hp = player->mhp;
+	player->mhp = 100;
+	player->chp = 20;
+	f->options.edge_warnings = true;
+	f->options.animated_combat = false;
+	configure(f);
+	eq(f->presenter.view.edge_warning, SDL3_EDGE_WARNING_HEALTH);
+	f->options.edge_warnings = false;
+	configure(f);
+	eq(f->presenter.view.edge_warning, SDL3_EDGE_WARNING_NONE);
+	f->options.edge_warnings = true;
+	f->options.settings_visible = true;
+	configure(f);
+	eq(f->presenter.view.edge_warning, SDL3_EDGE_WARNING_NONE);
+	f->options.settings_visible = false;
+	player->chp = 100;
+	configure(f);
+	eq(f->presenter.view.edge_warning, SDL3_EDGE_WARNING_NONE);
+	player->chp = hp;
+	player->mhp = max_hp;
+	ok;
+}
+
 const char *suite_name = "sdl3/map-presenter";
 struct test tests[] = {
+	{ "warning priority and environmental context", test_edge_warning_policy },
+	{ "warning toggle, independent animation setting and recovery", test_edge_warning_toggle_and_recovery },
 	{ "retained target follows player", test_retained_target_follows_player },
 	{ "modal inspection owns focus", test_modal_inspection_owns_focus },
 	{ "lethal melee retains 32px sprite until removal", test_death_32 },

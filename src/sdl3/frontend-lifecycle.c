@@ -380,6 +380,7 @@ static void handle_item_selector(game_event_type type,
 		sdl3_presentation_set_layer(&app->presentation,
 			SDL3_PRESENTATION_SEMANTIC_SCREEN, false);
 		sdl3_screen_clear(&app->screen);
+		sdl3_screen_clear(&app->screen_parent);
 		sdl3_frontend_apply_dock_layout(app, app->config.dock_visible,
 			app->config.dock_placement, app->config.dock_rows,
 			app->config.dock_cols);
@@ -465,6 +466,7 @@ void sdl3_frontend_reinitialize(struct sdl3_app *app)
 	sdl3_presentation_set_phase(&app->presentation,
 		SDL3_PRESENTATION_GAME_SETUP);
 	sdl3_screen_clear(&app->screen);
+	sdl3_screen_clear(&app->screen_parent);
 	sdl3_effects_clear(&app->combat_effects);
 	app->missile_previous_valid = false;
 	app->pause_menu.visible = false;

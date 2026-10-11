@@ -409,6 +409,7 @@ void menu_dynamic_add_label_valid(struct menu *m, const char *text, const char l
 size_t menu_dynamic_longest_entry(struct menu *m);
 void menu_dynamic_calc_location(struct menu *m, int mx, int my);
 int menu_dynamic_select(struct menu *m);
+const char *menu_dynamic_text(struct menu *m, int index);
 void menu_dynamic_free(struct menu *m);
 
 #endif /* INCLUDED_UI_MENU_H */

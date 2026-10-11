@@ -18,7 +18,11 @@ OP(none,                  "",
 SPECIAL, false)
 OP(rogue_like_commands,   "Use the roguelike command keyset",
 INTERFACE, false)
-OP(autoexplore_commands,  "Use autoexplore commands",
+OP(autoexplore_commands,  "Enable exploration with p",
+INTERFACE, false)
+OP(autoexplore_continuous,"Continuous exploration (never fights)",
+INTERFACE, false)
+OP(auto_stairs,           "Walk to known stairs with < and >",
 INTERFACE, false)
 OP(use_sound,             "Use sound",
 INTERFACE, false)
@@ -90,8 +94,8 @@ OP(birth_stacking,        "Stack objects on the floor",
 BIRTH, true)
 OP(birth_lose_arts,       "Lose artifacts when leaving level",
 BIRTH, false)
-OP(birth_feelings,        "Show level feelings",
-BIRTH, true)
+OP(birth_feelings,        "Level feelings (unseen danger/treasure hints)",
+BIRTH, false)
 OP(birth_no_selling,      "Increase gold drops but disable selling",
 BIRTH, false)
 OP(birth_start_kit,       "Start with a kit of useful gear",

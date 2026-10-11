@@ -1,3 +1,8 @@
+/*
+ * Ammerow modifications Copyright (c) 2026 John Horton
+ * SPDX-License-Identifier: GPL-2.0-only
+ */
+
 /**
  * \file game-input.h
  * \brief Ask for non-command input from the UI.
@@ -37,6 +42,7 @@
 #define QUIVER_TAGS   0x0200	/* 0-9 are quiver slots when selecting */
 #define SHOW_RECHARGE 0x0400	/* Show item recharge failure in item lists */
 #define SHOW_THROWING 0x0800	/* Show inventory/quiver/floor throwables*/
+#define SHOW_ITEM_ACTIONS 0x1000 /* Browse item actions without closing the list */
 
 
 extern bool (*get_string_hook)(const char *prompt, char *buf, size_t len);

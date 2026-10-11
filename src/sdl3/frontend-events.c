@@ -13,6 +13,8 @@
 #include "sdl3/frontend-internal.h"
 
 #include "snd-sdl3.h"
+#include "player-explore.h"
+#include "player-util.h"
 #include "ui-help.h"
 #include "ui-mode-input.h"
 #include "sdl3/audio.h"
@@ -133,6 +135,8 @@ static bool handle_semantic_selection_pointer(struct sdl3_app *app,
 			app->screen.kind != UI_SCREEN_CHARACTER_DOSSIER &&
 			app->screen.kind != UI_SCREEN_BIRTH_STATS &&
 			app->screen.kind != UI_SCREEN_ACTION_MENU &&
+			app->screen.kind != UI_SCREEN_ITEM_ACTIONS &&
+			app->screen.kind != UI_SCREEN_ADVANCEMENT &&
 			app->screen.kind != UI_SCREEN_OPTIONS)) {
 		return false;
 	}
@@ -148,7 +152,9 @@ static bool handle_semantic_selection_pointer(struct sdl3_app *app,
 	}
 	row = &app->screen.rows[index];
 	if (!row->enabled) return true;
-	if (app->screen.kind == UI_SCREEN_ACTION_MENU) {
+	if (app->screen.kind == UI_SCREEN_ACTION_MENU ||
+			app->screen.kind == UI_SCREEN_ITEM_ACTIONS ||
+			app->screen.kind == UI_SCREEN_ADVANCEMENT) {
 		keycode_t keys[SDL3_SCREEN_ROW_CAPACITY];
 		int count = sdl3_screen_action_menu_keys(&app->screen, index,
 			activate, keys, N_ELEMENTS(keys));
@@ -386,12 +392,33 @@ bool sdl3_frontend_dispatch_event(struct sdl3_app *app,
 {
 	if (!app || !event) return false;
 	if (!sdl3_input_gate_accept(&app->input_gate, event)) return false;
+	/* Consume a deliberate interrupt before shortcuts can open an overlay
+	 * and accidentally leave the simulation running behind it. */
+	if (player_explore_active(player) &&
+			(event->type == SDL_EVENT_KEY_DOWN ||
+			 event->type == SDL_EVENT_MOUSE_BUTTON_DOWN)) {
+		player_explore_cancel(player, "stopped by you");
+		disturb(player);
+		sdl3_input_gate_arm(&app->input_gate);
+		app->suppress_text_codepoint = 0;
+		return false;
+	}
 	switch (event->type) {
 	case SDL_EVENT_QUIT:
 		terms_disconnecting = 1;
 		return true;
 	case SDL_EVENT_KEY_DOWN:
 		app->suppress_text_codepoint = 0;
+		/* Holding p must not restart exploration past its safety stops. */
+		if (event->key.repeat && event->key.key == SDLK_P && player &&
+				OPT(player, autoexplore_commands) &&
+				OPT(player, autoexplore_continuous) &&
+				app->presentation.phase == SDL3_PRESENTATION_WORLD &&
+				!app->settings.visible && !app->pause_menu.visible &&
+				!app->home.visible) {
+			app->suppress_text_codepoint = 'p';
+			return true;
+		}
 		if (event->key.repeat && event->key.key == SDLK_P &&
 				app->spelunk_peek_key_down) {
 			app->suppress_text_codepoint =
@@ -614,6 +641,12 @@ bool sdl3_frontend_dispatch_event(struct sdl3_app *app,
 			}
 			if (wheel_y == 0.0f) return false;
 			direction = wheel_y > 0.0f ? 1 : -1;
+			if (app->screen.active && app->screen.kind == UI_SCREEN_ITEM_DETAILS &&
+					!app->settings.visible && !app->pause_menu.visible) {
+				for (int i = 0; i < 3; i++)
+					Term_keypress(direction > 0 ? ARROW_UP : ARROW_DOWN, 0);
+				return true;
+			}
 			if (app->home.visible && app->home.page == SDL3_HOME_WORLD_PAGE &&
 					!app->settings.visible && !app->pause_menu.visible) {
 				struct ui_world_intro_layout layout;

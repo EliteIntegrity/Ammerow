@@ -42,6 +42,7 @@
 #include "player-calcs.h"
 #include "player-history.h"
 #include "player-util.h"
+#include "player-explore.h"
 #include "trap.h"
 
 /**
@@ -431,8 +432,10 @@ int do_autopickup(struct player *p)
 		if (!ignore_item_ok(p, obj)) {
 			int auto_num;
 
-			/* Disturb */
-			disturb(p);
+			/* Acknowledged loot uses the normal pickup rules without ending
+			 * continuous exploration. New discoveries still stop it. */
+			if (!player_explore_active(p) || player_explore_new_loot(p))
+				disturb(p);
 
 			/* Automatically pick up items into the backpack */
 			auto_num = auto_pickup_okay(obj);
@@ -481,14 +484,16 @@ void do_cmd_pickup(struct command *cmd)
  */
 void do_cmd_autopickup(struct command *cmd)
 {
+	if (!player_explore_check(player)) return;
 	/* Get the obvious things */
 	player->upkeep->energy_use = do_autopickup(player)
 		* z_info->move_energy / 10;
 	if (player->upkeep->energy_use > z_info->move_energy)
 		player->upkeep->energy_use = z_info->move_energy;
 
-	/* Look at or feel what's left */
-	event_signal(EVENT_SEEFLOOR);
+	/* Acknowledged piles must not open a floor-selection modal mid-route.
+	 * Manual movement keeps the usual look/feel behaviour. */
+	if (!player_explore_active(player)) event_signal(EVENT_SEEFLOOR);
 
 	/* Redraw the object list using the upkeep flag so that the update can be
 	 * somewhat coalesced. Use event_signal(EVENT_ITEMLIST to force update. */

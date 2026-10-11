@@ -28,14 +28,14 @@ steps.
 the letter key with the control key also depressed.  You may also press
 and release ^ and then press and release the letter key to activate the
 same command in case your system intercepts the control plus key
-combination and does not pass it on.  The autoexplore_commands option
-modifies the '<', '>', and 'p' commands.  When that option is off (that
-is the default), the commands act as described below.  When that option
-is on, '<' or '>' will use the staircase at the player's location if it
-is the appropriate kind of staircase or will move to the nearest known
-staircase of the appropriate kind if the player is not already at that
-kind of staircase.  'p' will move to the nearest unexplored location
-when the autoexplore_commands option is on.
+combination and does not pass it on. Settings > Controls & Convenience offers
+Explore mode (p): Off, Traditional (Angband), or Continuous (Ammerow).
+Traditional walks to one unexplored location; Continuous keeps exploring the
+current top-down map, stopping for monsters and new non-ignored loot. Combat,
+doors, known traps and exits stay manual. Any key or click stops Continuous;
+restart deliberately to acknowledge old loot. See 'interface.txt' for details.
+Walk to stairs (< / >) is a separate setting: it walks to a known appropriate
+staircase, or uses it when already there. Surface < still opens the world map.
 
   a    Aim a wand                      A    Activate an object
   b    Browse a book                   B    -

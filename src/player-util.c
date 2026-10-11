@@ -43,6 +43,7 @@
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player-explore.h"
 #include "project.h"
 #include "score.h"
 #include "store.h"
@@ -1661,6 +1662,7 @@ void player_handle_post_move(struct player *p, bool eval_trap,
  */
 void disturb(struct player *p)
 {
+	player_explore_cancel(p, NULL);
 	/* Cancel repeated commands */
 	cmd_cancel_repeat();
 

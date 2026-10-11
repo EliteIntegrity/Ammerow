@@ -36,6 +36,7 @@ static void set_defaults(struct sdl3_config *config)
 	config->hud_stats_visible = true;
 	config->big_stat_cards = true;
 	config->animated_combat = true;
+	config->edge_warnings = true;
 	config->tile_mode = false;
 	config->hybrid_tile_size = 64;
 	config->terrain_style = SDL3_TERRAIN_NATURAL;
@@ -218,6 +219,14 @@ bool sdl3_config_load(struct sdl3_config *config)
 			} else {
 				SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
 					"Ignoring invalid SDL3 stat-card size on line %d",
+					line_number);
+			}
+		} else if (streq(key, "edge_warnings")) {
+			if (parse_integer(value, 0, 1, &parsed)) {
+				candidate.edge_warnings = parsed != 0;
+			} else {
+				SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+					"Ignoring invalid SDL3 edge warning setting on line %d",
 					line_number);
 			}
 		} else if (streq(key, "animated_combat")) {
@@ -482,6 +491,8 @@ bool sdl3_config_save(const struct sdl3_config *config)
 			config->big_stat_cards ? 1 : 0) &&
 		file_putf(file, "animated_combat=%d\n",
 			config->animated_combat ? 1 : 0) &&
+		file_putf(file, "edge_warnings=%d\n",
+			config->edge_warnings ? 1 : 0) &&
 		file_putf(file, "tile_mode=%d\n", config->tile_mode ? 1 : 0) &&
 		file_putf(file, "hybrid_tile_size=%d\n", config->hybrid_tile_size) &&
 		file_putf(file, "terrain_style=%d\n",

@@ -90,5 +90,7 @@ void clean_options(void);
 bool options_save_custom(struct player_options *opts, int page);
 bool options_restore_custom(struct player_options *opts, int page);
 void options_restore_maintainer(struct player_options *opts, int page);
+void options_migrate_exploration(struct player_options *opts,
+		bool saw_stairs, bool saw_continuous);
 
 #endif /* !INCLUDED_OPTIONS_H */
