@@ -91,6 +91,8 @@ struct sdl3_map_view {
 	int tile_height;
 	int zoom_percent;
 	bool tile_mode;
+	bool ascii_square;
+	bool ascii_enhanced;
 	/* Reserved strip: never inferred from the legacy terminal text. */
 	struct ui_spelunking_status cave_status;
 	int status_rows;

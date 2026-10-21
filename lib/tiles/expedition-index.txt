@@ -1,0 +1,12 @@
+# Copyright (c) 2026 John Horton; SPDX-License-Identifier: GPL-2.0-only
+# Generated bindings; PNG artwork is separately licensed.
+domain:object
+rope-length -> 0,0
+scuba-gear -> 1,0
+reed-bank-rod -> 2,0
+ash-water-rod -> 2,0
+yew-longline-rod -> 2,0
+rain-minnow -> 3,0
+mudbelly -> 4,0
+glassfin -> 5,0
+loot-pile -> 6,0

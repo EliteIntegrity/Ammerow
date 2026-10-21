@@ -11,6 +11,8 @@
  */
 
 #include "world-spelunking-runtime.h"
+#include "world-spelunking-door.h"
+#include "world-spelunking-fixture.h"
 #include "world-spelunking-actor-data.h"
 #include "world-spelunking-visibility.h"
 #include "z-util.h"
@@ -67,15 +69,23 @@ size_t world_spelunk_runtime_encoded_size(
 		const struct world_spelunk_runtime *runtime)
 {
 	size_t actor_bytes = 0;
+	size_t door_bytes = 1;
+	size_t fixture_bytes = 1;
 	size_t geology_bytes = 1;
 	size_t count;
 	size_t i;
 
 	if (!world_spelunk_runtime_is_valid(runtime)) return 0;
 	for (i = 0; i < runtime->actor_count; i++) {
-		actor_bytes += 11u + strlen(runtime->actors[i].id);
+		actor_bytes += 27u + strlen(runtime->actors[i].id);
+	}
+	for (i = 0; i < runtime->door_count; i++) {
+		door_bytes += 7u + strlen(runtime->doors[i].id);
 	}
 	count = (size_t)runtime->state.map.width * runtime->state.map.height;
+	for (i = 0; i < runtime->fixture_count; i++) {
+		fixture_bytes += 9u + strlen(runtime->fixtures[i].id);
+	}
 	if (runtime->geology_profile_id[0]) {
 		geology_bytes += 7u + strlen(runtime->geology_profile_id) +
 			3u * byte_run_count(runtime->material_tags, count) +
@@ -88,7 +98,7 @@ size_t world_spelunk_runtime_encoded_size(
 		3u * byte_run_count(runtime->ropes,
 			count) +
 		3u * byte_run_count(runtime->explored,
-			count) + 2u + actor_bytes + geology_bytes;
+			count) + 2u + actor_bytes + geology_bytes + door_bytes + fixture_bytes;
 }
 
 static void put_u8(struct write_cursor *cursor, uint8_t value)
@@ -238,6 +248,39 @@ enum world_spelunk_codec_result world_spelunk_runtime_encode(
 	put_u16(&cursor, (uint16_t)state->rules.grip_down_stamina_cost);
 	put_u16(&cursor, (uint16_t)state->rules.rope_up_stamina_cost);
 	put_u16(&cursor, (uint16_t)state->rules.rope_lateral_stamina_cost);
+	/* Version fourteen appends bounded fixtures; previous terrain is unchanged. */
+	put_u8(&cursor, (uint8_t)runtime->door_count);
+	for (i = 0; i < runtime->door_count; i++) {
+		const struct world_spelunk_door *d = &runtime->doors[i];
+		size_t n = strlen(d->id);
+		put_u8(&cursor, (uint8_t)n);
+		for (start = 0; start < n; start++) put_u8(&cursor, (uint8_t)d->id[start]);
+		put_s16(&cursor, (int16_t)d->x);
+		put_s16(&cursor, (int16_t)d->y);
+		put_u8(&cursor, d->state);
+		put_u8(&cursor, d->known);
+	}
+	/* Version fifteen adds traps/chests and their separate observed state. */
+	put_u8(&cursor, (uint8_t)runtime->fixture_count);
+	for (i = 0; i < runtime->fixture_count; i++) {
+		const struct world_spelunk_fixture *f = &runtime->fixtures[i];
+		size_t n = strlen(f->id);
+		put_u8(&cursor, (uint8_t)n);
+		for (start = 0; start < n; start++) put_u8(&cursor, (uint8_t)f->id[start]);
+		put_s16(&cursor, (int16_t)f->x);
+		put_s16(&cursor, (int16_t)f->y);
+		put_u8(&cursor, f->state);
+		put_u8(&cursor, f->known);
+		put_u8(&cursor, f->armed);
+		put_u8(&cursor, f->trap_known);
+	}
+	/* Version sixteen appends actor state, retaining every earlier byte offset. */
+	for (i = 0; i < runtime->actor_count; i++) {
+		int s;
+		put_u16(&cursor, runtime->actors[i].reward);
+		for (s = 0; s < WORLD_SPELUNK_STATUS_MAX; s++)
+			put_u16(&cursor, runtime->actors[i].status[s]);
+	}
 	*written = cursor.position;
 	return cursor.position == needed ? WORLD_SPELUNK_CODEC_OK :
 		WORLD_SPELUNK_CODEC_INVALID_STATE;
@@ -353,6 +396,10 @@ enum world_spelunk_codec_result world_spelunk_runtime_decode(
 	uint8_t *material_tags = NULL;
 	uint8_t *decoration_tags = NULL;
 	struct world_spelunk_actor actors[WORLD_SPELUNK_ACTOR_MAX] = { 0 };
+	struct world_spelunk_door doors[WORLD_SPELUNK_DOOR_MAX] = { 0 };
+	uint8_t door_count = 0;
+	struct world_spelunk_fixture fixtures[WORLD_SPELUNK_FIXTURE_MAX] = { 0 };
+	uint8_t fixture_count = 0;
 	char location_id[WORLD_ID_LEN];
 	char geology_profile_id[WORLD_ID_LEN] = "";
 	uint8_t byte;
@@ -388,6 +435,9 @@ enum world_spelunk_codec_result world_spelunk_runtime_decode(
 	}
 	if (!get_u16(&cursor, &version)) return WORLD_SPELUNK_CODEC_TRUNCATED;
 	if (version != WORLD_SPELUNK_PAYLOAD_VERSION &&
+			version != WORLD_SPELUNK_PAYLOAD_VERSION_FIXTURES &&
+			version != WORLD_SPELUNK_PAYLOAD_VERSION_DOORS &&
+			version != WORLD_SPELUNK_PAYLOAD_VERSION_DIRECTIONAL_STAMINA &&
 			version != WORLD_SPELUNK_PAYLOAD_VERSION_SWIMMING &&
 			version != WORLD_SPELUNK_PAYLOAD_VERSION_GEOLOGY &&
 			version != WORLD_SPELUNK_PAYLOAD_VERSION_LAYOUT_REVISION &&
@@ -652,6 +702,7 @@ enum world_spelunk_codec_result world_spelunk_runtime_decode(
 			actors[i].hp = MIN((int)hp, definition->hitpoints);
 			actors[i].max_hp = definition->hitpoints;
 			actors[i].energy = energy;
+			actors[i].reward = (uint16_t)definition->experience;
 		}
 	}
 	if (version >= WORLD_SPELUNK_PAYLOAD_VERSION_GEOLOGY) {
@@ -743,16 +794,74 @@ enum world_spelunk_codec_result world_spelunk_runtime_decode(
 		if (!get_u16(&cursor, &value16)) goto directional_truncated;
 		rules.rope_lateral_stamina_cost = value16;
 	}
-	if (cursor.position != cursor.length) {
-		mem_free(decoration_tags);
-		mem_free(material_tags);
-		mem_free(explored);
-		mem_free(ropes);
-		mem_free(pitons);
-		mem_free(cells);
-		return WORLD_SPELUNK_CODEC_CORRUPT;
+	if (version >= WORLD_SPELUNK_PAYLOAD_VERSION_DOORS) {
+		if (!get_u8(&cursor, &door_count)) goto directional_truncated;
+		if (door_count > WORLD_SPELUNK_DOOR_MAX) goto doors_corrupt;
+		for (i = 0; i < door_count; i++) {
+			uint8_t n;
+			unsigned j;
+			int16_t dx, dy;
+			if (!get_u8(&cursor, &n)) goto directional_truncated;
+			if (!n || n >= WORLD_ID_LEN) goto doors_corrupt;
+			for (j = 0; j < n; j++) {
+				if (!get_u8(&cursor, &byte)) goto directional_truncated;
+				if (!byte) goto doors_corrupt;
+				doors[i].id[j] = (char)byte;
+			}
+			if (!get_s16(&cursor, &dx) || !get_s16(&cursor, &dy) ||
+				!get_u8(&cursor, &doors[i].state) || !get_u8(&cursor, &doors[i].known))
+				goto directional_truncated;
+			doors[i].x = dx;
+			doors[i].y = dy;
+			if (!world_spelunk_door_by_id(doors[i].id)) goto doors_corrupt;
+		}
 	}
+	if (version >= WORLD_SPELUNK_PAYLOAD_VERSION_FIXTURES) {
+		if (!get_u8(&cursor, &fixture_count)) goto directional_truncated;
+		if (fixture_count > WORLD_SPELUNK_FIXTURE_MAX) goto doors_corrupt;
+		for (i = 0; i < fixture_count; i++) {
+			uint8_t n;
+			unsigned j;
+			int16_t x, y;
+			if (!get_u8(&cursor, &n)) goto directional_truncated;
+			if (!n || n >= WORLD_ID_LEN) goto doors_corrupt;
+			for (j = 0; j < n; j++) {
+				if (!get_u8(&cursor, &byte)) goto directional_truncated;
+				if (!byte) goto doors_corrupt;
+				fixtures[i].id[j] = (char)byte;
+			}
+			if (!get_s16(&cursor, &x) || !get_s16(&cursor, &y) ||
+				!get_u8(&cursor, &fixtures[i].state) || !get_u8(&cursor, &fixtures[i].known) ||
+				!get_u8(&cursor, &fixtures[i].armed) || !get_u8(&cursor, &fixtures[i].trap_known))
+				goto directional_truncated;
+			fixtures[i].x = x;
+			fixtures[i].y = y;
+			if (!world_spelunk_fixture_by_id(fixtures[i].id)) goto doors_corrupt;
+		}
+	}
+	if (version >= WORLD_SPELUNK_PAYLOAD_VERSION_ACTOR_EFFECTS) {
+		for (i = 0; i < actor_count; i++) {
+			int s;
+			uint16_t reward;
+			if (!get_u16(&cursor, &reward)) goto directional_truncated;
+			actors[i].reward = MIN(reward, actors[i].reward);
+			for (s = 0; s < WORLD_SPELUNK_STATUS_MAX; s++) {
+				if (!get_u16(&cursor, &actors[i].status[s])) goto directional_truncated;
+				if (actors[i].status[s] > 2000) goto doors_corrupt;
+			}
+		}
+	}
+	if (cursor.position != cursor.length) goto doors_corrupt;
 	goto directional_complete;
+
+doors_corrupt:
+	mem_free(decoration_tags);
+	mem_free(material_tags);
+	mem_free(explored);
+	mem_free(ropes);
+	mem_free(pitons);
+	mem_free(cells);
+	return WORLD_SPELUNK_CODEC_CORRUPT;
 
 directional_truncated:
 	mem_free(decoration_tags);
@@ -839,6 +948,21 @@ directional_complete:
 	if (geology_profile_id[0] &&
 			!world_spelunk_runtime_set_geology(runtime, geology_profile_id,
 				geology_version, material_tags, decoration_tags)) {
+		world_spelunk_runtime_free(runtime);
+		mem_free(decoration_tags);
+		mem_free(material_tags);
+		mem_free(explored);
+		mem_free(ropes);
+		mem_free(pitons);
+		return WORLD_SPELUNK_CODEC_CORRUPT;
+	}
+	/* Old versions intentionally have no doors, including already visited nodes. */
+	runtime->door_count = door_count;
+	memcpy(runtime->doors, doors, sizeof(doors));
+	world_spelunk_doors_rebuild(runtime);
+	runtime->fixture_count = fixture_count;
+	memcpy(runtime->fixtures, fixtures, sizeof(fixtures));
+	if (!world_spelunk_doors_valid(runtime) || !world_spelunk_fixtures_valid(runtime)) {
 		world_spelunk_runtime_free(runtime);
 		mem_free(decoration_tags);
 		mem_free(material_tags);

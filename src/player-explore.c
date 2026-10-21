@@ -66,22 +66,33 @@ bool player_explore_new_loot(const struct player *p)
 	return false;
 }
 
-static bool perceived_monster(void)
+static const char *monster_stop_reason(const struct monster *mon)
 {
-	if (!cave) return false;
+	/* VIEW includes telepathy in line of sight, not just optical vision.
+	 * Neither flag guarantees the creature fits on a zoomed/panned screen. */
+	return monster_is_in_view(mon) ?
+		"a creature is in view (seen or sensed; check the monster list)" :
+		"a creature is detected beyond normal sight (check the monster list)";
+}
+
+static const struct monster *perceived_monster(void)
+{
+	if (!cave) return NULL;
 	for (int i = 1; i < cave_monster_max(cave); i++) {
 		const struct monster *mon = cave_monster(cave, i);
-		if (mon->race && monster_is_obvious(mon)) return true;
+		if (mon->race && monster_is_obvious(mon)) return mon;
 	}
-	return false;
+	return NULL;
 }
 
 static const char *unsafe_player(const struct player *p)
 {
+	const struct monster *mon;
 	if (p->is_dead || p->upkeep->generate_level ||
 			world_turn_context_for_player(p) != WORLD_TURN_CONTEXT_TOP_DOWN)
 		return "location changed";
-	if (perceived_monster()) return "a monster is present";
+	mon = perceived_monster();
+	if (mon) return monster_stop_reason(mon);
 	if (p->timed[TMD_CONFUSED] || p->timed[TMD_BLIND] ||
 			p->timed[TMD_IMAGE] || p->timed[TMD_PARALYZED] ||
 			p->timed[TMD_BLOODLUST] || p->timed[TMD_COMMAND] ||
@@ -132,12 +143,21 @@ void player_explore_cancel(struct player *p, const char *reason)
 	e = p->upkeep->exploration;
 	moves = e->moves + (loc_eq(p->grid, e->last) ? 0 : 1);
 	gold = p->au - e->starting_gold;
-	if (!reason) reason = unsafe_player(p);
-	if (!reason && player_explore_new_loot(p)) reason = "new loot discovered";
+	/* A generic disturbance is not evidence that a particular currently
+	 * perceived creature, item or condition caused it. Callers with a known
+	 * cause supply that cause before disturbing. */
 	player_explore_free(p);
 	msg("Explore stopped: %s. %d %s; %ld gold collected.",
 		reason ? reason : "interrupted", moves,
 		moves == 1 ? "step" : "steps", (long)MAX(0, gold));
+}
+
+void player_explore_notice_monster(struct player *p, const struct monster *mon)
+{
+	if (!player_explore_active(p) || !mon || !mon->race ||
+			!monster_is_obvious(mon)) return;
+	player_explore_cancel(p, monster_stop_reason(mon));
+	disturb(p);
 }
 
 static void stop(struct player *p, const char *reason)

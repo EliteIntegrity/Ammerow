@@ -17,6 +17,7 @@
 #include "player-util.h"
 #include "ui-help.h"
 #include "ui-mode-input.h"
+#include "ui-spelunking-survey.h"
 #include "sdl3/audio.h"
 #include "sdl3/credits.h"
 #include "sdl3/fishing.h"
@@ -129,6 +130,28 @@ static bool handle_semantic_selection_pointer(struct sdl3_app *app,
 	int screen_row;
 	int index;
 	int delta;
+
+	if (app && event && app->screen.active &&
+			app->screen.kind == UI_SCREEN_CAVE_SURVEY) {
+		/* Selection is a semantic index, not a click on the hidden terminal
+		 * map. Hover and blank clicks must not navigate or change focus. */
+		if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+			if (event->button.button == SDL_BUTTON_RIGHT) {
+				Term_keypress(ESCAPE, 0);
+			} else if (activate && pointer_event_cell(app, event, &col, &screen_row)) {
+				if (sdl3_screen_map_node_at(&app->screen, app->grid.cols,
+						app->grid.rows, col, screen_row, &index)) {
+					Term_keypress(KC_SURVEY_SELECT_FIRST + index, 0);
+				} else if (sdl3_screen_tab_at(&app->screen, app->grid.cols,
+						app->grid.rows, col, screen_row, &index)) {
+					/* Survey is the last tab; step backward to the clicked tab. */
+					for (int i = app->screen.tab_count - 1; i > index; i--)
+						Term_keypress(ARROW_LEFT, 0);
+				}
+			}
+		}
+		return true;
+	}
 
 	if (!app || !event || !app->screen.active ||
 			(app->screen.kind != UI_SCREEN_CHARACTER_CREATION &&
@@ -772,31 +795,22 @@ int sdl3_frontend_wait_event(struct sdl3_app *app, SDL_Event *event)
 			!terms_disconnecting) {
 		Uint64 now = SDL_GetTicks();
 		Uint64 next_tick = UINT64_MAX;
+		bool redraw = false, weather_due, fishing_due = false;
 		int timeout;
 
+		/* Never make an already queued key wait for an animation present.
+		 * Ordinary movement frames advance weather too, so it keeps moving. */
+		if (SDL_PollEvent(event)) return 1;
 		if (app->combat_effects.active) {
 			if (now >= app->combat_effects.next_frame_ms) {
-				if (sdl3_effects_advance(&app->combat_effects, now) &&
-						!sdl3_frontend_render_animated_overlay(app)) {
-					sdl3_grid_mark_dirty(&app->grid);
-					sdl3_frontend_render(app);
-				}
-				continue;
+				redraw = sdl3_effects_advance(&app->combat_effects, now);
 			}
-			next_tick = app->combat_effects.next_frame_ms;
+			if (app->combat_effects.active)
+				next_tick = app->combat_effects.next_frame_ms;
 		}
-		if (app->weather.visible && !app->weather_next_tick_ms) {
-			app->weather_next_tick_ms = now + SDL3_WEATHER_TICK_MS;
-		}
-		if (app->weather.visible && now >= app->weather_next_tick_ms) {
-			if (sdl3_weather_advance(&app->weather) &&
-					!sdl3_frontend_render_animated_overlay(app)) {
-				sdl3_grid_mark_dirty(&app->grid);
-				sdl3_frontend_render(app);
-			}
-			app->weather_next_tick_ms = now + SDL3_WEATHER_TICK_MS;
-			continue;
-		}
+		weather_due = sdl3_weather_tick(&app->weather, now,
+			&app->weather_next_tick_ms);
+		redraw |= weather_due;
 		if (app->weather.visible) {
 			next_tick = MIN(next_tick, app->weather_next_tick_ms);
 		}
@@ -806,20 +820,28 @@ int sdl3_frontend_wait_event(struct sdl3_app *app, SDL_Event *event)
 			app->fishing_next_tick_ms = now + SDL3_FISHING_ANIMATION_MS;
 		}
 		if (fishing_active && now >= app->fishing_next_tick_ms) {
-			if (!sdl3_frontend_render_animated_overlay(app)) {
-				sdl3_grid_mark_dirty(&app->grid);
-				sdl3_frontend_render(app);
-			}
+			redraw = fishing_due = true;
 			app->fishing_next_tick_ms = now + SDL3_FISHING_ANIMATION_MS;
-			continue;
 		}
 		if (fishing_active) {
 			next_tick = MIN(next_tick, app->fishing_next_tick_ms);
 		} else {
 			app->fishing_next_tick_ms = 0;
 		}
+		if (redraw) {
+			/* One present for all due overlays; discard missed cosmetic ticks. */
+			if (!sdl3_frontend_render_animated_overlay(app)) {
+				sdl3_grid_mark_dirty(&app->grid);
+				sdl3_frontend_render(app);
+			}
+			now = SDL_GetTicks();
+			if (weather_due) app->weather_next_tick_ms = now + SDL3_WEATHER_TICK_MS;
+			if (fishing_due) app->fishing_next_tick_ms = now + SDL3_FISHING_ANIMATION_MS;
+			continue;
+		}
 		if (next_tick == UINT64_MAX) continue;
-		timeout = (int)MIN((Uint64)INT_MAX, next_tick - now);
+		now = SDL_GetTicks();
+		timeout = next_tick > now ? (int)MIN((Uint64)INT_MAX, next_tick - now) : 0;
 		if (SDL_WaitEventTimeout(event, timeout)) return 1;
 	}
 	return 0;

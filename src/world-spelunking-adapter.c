@@ -11,6 +11,7 @@
  */
 
 #include "world-spelunking-adapter.h"
+#include "world-spelunking-fixture.h"
 
 #include "game-world.h"
 #include "player.h"
@@ -145,6 +146,10 @@ enum world_spelunk_player_result world_spelunk_player_apply(
 				committed_damage = p->chp + 1;
 			}
 			take_hit(p, committed_damage, "a fall");
+		}
+		if (!p->is_dead) {
+			world_spelunk_fixture_step(p);
+			world_spelunk_fixture_notice(p);
 		}
 		return p->is_dead ? WORLD_SPELUNK_PLAYER_DEAD :
 			WORLD_SPELUNK_PLAYER_TURN;

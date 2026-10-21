@@ -58,5 +58,9 @@ void sdl3_weather_reset(struct sdl3_weather_state *weather,
 void sdl3_weather_set_visible(struct sdl3_weather_state *weather,
 		bool visible);
 bool sdl3_weather_advance(struct sdl3_weather_state *weather);
+bool sdl3_weather_tick(struct sdl3_weather_state *weather, uint64_t now,
+		uint64_t *next_tick);
+float sdl3_weather_splash_half_width(float cell_width, float progress,
+		float display_scale);
 
 #endif /* INCLUDED_SDL3_WEATHER_H */

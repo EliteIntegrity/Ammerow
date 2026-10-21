@@ -151,7 +151,7 @@ const char help_sdl3[] =
 	"-M(font-memory stress test) "
 	"-f<interface font> -m<map font> -t<theme> "
 	"-a<classic|natural> "
-	"-g ascii|hybrid-32|hybrid-64 "
+	"-g ascii|hybrid-32|hybrid-64|full-32|full-64 --ascii-grid classic|square "
 #ifdef USE_HEADLESS
 	"-z<width>x<height> "
 #endif
@@ -378,6 +378,10 @@ static void configure_weather(struct sdl3_app *app)
 			SDL_GetTicks() + SDL3_WEATHER_TICK_MS : 0;
 		sdl3_grid_mark_dirty(&app->grid);
 	}
+	/* Held movement can keep input queued. Fold a due weather tick into the
+	 * ordinary frame instead of forcing an extra present ahead of that input. */
+	if (sdl3_weather_tick(&app->weather, SDL_GetTicks(),
+			&app->weather_next_tick_ms)) sdl3_grid_mark_dirty(&app->grid);
 }
 
 void sdl3_frontend_render(struct sdl3_app *app)
@@ -409,6 +413,10 @@ void sdl3_frontend_render(struct sdl3_app *app)
 	map_options.edge_warnings = app->config.edge_warnings && !app->pause_menu.visible;
 	map_options.tile_mode = app->config.tile_mode;
 	map_options.zoom_percent = app->config.map_zoom_percent;
+	map_options.ascii_square = app->config.ascii_square;
+	map_options.ascii_enhanced = app->config.ascii_enhanced;
+	map_options.cell_width = info.cell_width;
+	map_options.cell_height = info.cell_height;
 	map_options.terrain_style = app->config.terrain_style;
 	map_options.verbose = app->verbose;
 	sdl3_map_presenter_configure(&app->map_presenter, &app->grid,
@@ -450,6 +458,13 @@ void sdl3_frontend_render(struct sdl3_app *app)
 	frame.edge_warnings = app->config.edge_warnings;
 	frame.tile_mode = app->config.tile_mode;
 	frame.hybrid_tile_size = app->config.hybrid_tile_size;
+	frame.ascii_square = app->config.ascii_square;
+	frame.ascii_enhanced = app->config.ascii_enhanced;
+	frame.ascii_floors = app->config.ascii_floors;
+	sdl3_settings_set_floors_available(&app->settings,
+		app->config.tile_mode == SDL3_TILE_MODE_FULL);
+	sdl3_settings_set_enhanced_available(&app->settings,
+		app->config.ascii_square && app->config.tile_mode == SDL3_TILE_MODE_ASCII);
 	frame.dock_placement = app->config.dock_placement;
 	frame.dock_rows = app->config.dock_rows;
 	frame.dock_cols = app->config.dock_cols;
@@ -1270,10 +1285,21 @@ errr init_sdl3(int argc, char **argv)
 				SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
 					"Ignoring invalid SDL3 map style: %s", argv[i] + 2);
 			}
+		} else if (streq(argv[i], "--ascii-grid") && i + 1 < argc) {
+			const char *shape = argv[++i];
+			if (streq(shape, "square") || streq(shape, "classic"))
+				g_app.config.ascii_square = streq(shape, "square");
+			else SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+				"Ignoring invalid ASCII grid: %s", shape);
 		} else if (streq(argv[i], "-g") && i + 1 < argc) {
 			const char *presentation = argv[++i];
 
-			if (my_stricmp(presentation, "hybrid-32") == 0) {
+			if (my_stricmp(presentation, "full-32") == 0 ||
+					my_stricmp(presentation, "full-64") == 0) {
+				g_app.config.tile_mode = SDL3_TILE_MODE_FULL;
+				g_app.config.hybrid_tile_size =
+					my_stricmp(presentation, "full-32") == 0 ? 32 : 64;
+			} else if (my_stricmp(presentation, "hybrid-32") == 0) {
 				g_app.config.tile_mode = true;
 				g_app.config.hybrid_tile_size = 32;
 			} else if (my_stricmp(presentation, "tiles") == 0 ||
@@ -1316,6 +1342,12 @@ errr init_sdl3(int argc, char **argv)
 				"Ignoring SDL3 option: %s", argv[i]);
 		}
 	}
+	if (g_app.config.tile_mode == SDL3_TILE_MODE_FULL &&
+			!sdl3_tiles_full_available()) {
+		SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+			"Full Tile media is not installed; retaining Hybrid presentation");
+		g_app.config.tile_mode = SDL3_TILE_MODE_HYBRID;
+	}
 	my_strcpy(requested_theme, g_app.config.theme, sizeof(requested_theme));
 	g_app.theme = sdl3_theme_by_id(requested_theme);
 	if (requested_theme[0] &&
@@ -1355,7 +1387,7 @@ errr init_sdl3(int argc, char **argv)
 		SDL_Log("Map style: %s",
 			sdl3_terrain_style_name(g_app.config.terrain_style));
 		SDL_Log("Map presentation: %s",
-			g_app.config.tile_mode ? "Hybrid" : "ASCII");
+			sdl3_tile_mode_name(g_app.config.tile_mode));
 		SDL_Log("Hybrid detail: %d x %d", g_app.config.hybrid_tile_size,
 			g_app.config.hybrid_tile_size);
 		SDL_Log("Town weather: %s at %u Hz",
@@ -1608,14 +1640,19 @@ bool sdl3_capture_settings(const char *action)
 		if (!streq(action, "hub"))
 			(void)sdl3_settings_activate(&g_app.settings);
 	} else if (streq(action, "close")) {
-		g_app.settings.visible = false;
+		/* Exercise production close/persistence, not only the overlay flag. */
+		sdl3_frontend_set_settings_visible(&g_app, false);
 	} else if (streq(action, "explore") || streq(action, "stairs")) {
 		g_app.settings.selected_row = streq(action, "explore") ?
 			SDL3_SETTINGS_EXPLORE : SDL3_SETTINGS_AUTO_STAIRS;
 		sdl3_frontend_change_selected_setting(&g_app, 1);
 	} else if (streq(action, "map") || streq(action, "detail") ||
-			streq(action, "warnings")) {
-		g_app.settings.selected_row = streq(action, "warnings") ?
+			streq(action, "warnings") || streq(action, "grid") ||
+			streq(action, "enhanced") || streq(action, "floors")) {
+		g_app.settings.selected_row = streq(action, "floors") ?
+			SDL3_SETTINGS_ASCII_FLOORS : streq(action, "enhanced") ?
+			SDL3_SETTINGS_ASCII_ENHANCED : streq(action, "grid") ?
+			SDL3_SETTINGS_ASCII_GRID : streq(action, "warnings") ?
 			SDL3_SETTINGS_EDGE_WARNINGS : streq(action, "map") ?
 			SDL3_SETTINGS_TILE_MODE : SDL3_SETTINGS_HYBRID_DETAIL;
 		sdl3_frontend_change_selected_setting(&g_app, 1);

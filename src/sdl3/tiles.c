@@ -19,6 +19,35 @@
 #include <errno.h>
 #include <limits.h>
 
+const char *sdl3_tile_mode_name(enum sdl3_tile_mode mode)
+{
+	switch (mode) {
+	case SDL3_TILE_MODE_HYBRID: return "Hybrid";
+	case SDL3_TILE_MODE_FULL: return "Full Tile";
+	default: return "ASCII";
+	}
+}
+
+enum sdl3_tile_mode sdl3_tile_mode_change(enum sdl3_tile_mode mode,
+		int delta, bool full_available)
+{
+	int count = full_available ? 3 : 2;
+	int current = (int)mode;
+	if (current < 0 || current >= count) current = SDL3_TILE_MODE_HYBRID;
+	if (!delta) return (enum sdl3_tile_mode)current;
+	return (enum sdl3_tile_mode)((current + (delta < 0 ? count - 1 : 1)) % count);
+}
+
+bool sdl3_tiles_full_available(void)
+{
+	char path[1024];
+	if (!ANGBAND_DIR_TILES) return false;
+	path_build(path, sizeof(path), ANGBAND_DIR_TILES, "full-32.txt");
+	if (!file_exists(path)) return false;
+	path_build(path, sizeof(path), ANGBAND_DIR_TILES, "full-64.txt");
+	return file_exists(path);
+}
+
 static const char *namespace_name(enum sdl3_tile_namespace name_space)
 {
 	switch (name_space) {

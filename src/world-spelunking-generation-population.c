@@ -9,6 +9,10 @@
  */
 
 #include "world-spelunking-generation-population.h"
+#include "world-spelunking-door.h"
+#include "world-spelunking-fixture.h"
+#include "world-spelunking-visibility.h"
+#include "world-spelunking-traversal-proof.h"
 
 #include "obj-make.h"
 #include "obj-pile.h"
@@ -253,6 +257,71 @@ static bool place_objects(struct world_spelunk_runtime *runtime,
 	return true;
 }
 
+static bool near_certified_route(const struct world_spelunk_generated_layout *g,
+	int x, int y)
+{
+	size_t i;
+	for (i = 0; i < g->witness_step_count; i++) {
+		const struct world_spelunk_witness_step *step = &g->witness_steps[i];
+		if (abs(x-step->expected_x) <= 1 && abs(y-step->expected_y) <= 1) return true;
+	}
+	return false;
+}
+
+static bool place_door(struct world_spelunk_runtime *r,
+	const struct world_spelunk_generated_layout *g,
+	const struct world_spelunk_population_profile *profile, uint32_t seed)
+{
+	int x, y, best_x = -1, best_y = -1;
+	uint32_t best = UINT32_MAX;
+	if (!profile->door_id) return true;
+	for (y = 1; y < g->height - 1; y++) {
+		for (x = 1; x < g->width - 1; x++) {
+			uint32_t score;
+			if (!world_spelunk_door_site(r, x, y) ||
+				near_certified_route(g, x, y) ||
+				!is_legal_population_cell(r, g, profile, x, y, 18, 85) ||
+				r->decoration_tags[y*g->width+x]) continue;
+			score = mix32(seed ^ 0x646f6f72u ^ (uint32_t)(y*g->width+x));
+			if (score < best) {
+				best = score;
+				best_x = x;
+				best_y = y;
+			}
+		}
+	}
+	/* Missing a suitable throat is normal; never carve terrain to force it. */
+	if (best_x < 0) return true;
+	if (!world_spelunk_door_add(r, profile->door_id, best_x, best_y)) return false;
+	/* Initial sight must be calculated with fixtures in place. The earlier
+	 * constructor's empty-geometry view must not reveal behind a closed door. */
+	memset(r->explored, 0, (size_t)g->width * g->height);
+	world_spelunk_visibility_follow_player(r);
+	return true;
+}
+
+static bool place_fixture(struct world_spelunk_runtime *r,
+	const struct world_spelunk_generated_layout *g,
+	const struct world_spelunk_population_profile *profile, const char *id, uint32_t salt)
+{
+	int x, y, best_x = -1, best_y = -1;
+	uint32_t best = UINT32_MAX;
+	if (!id) return true;
+	for (y = 1; y < g->height - 1; y++) {
+		for (x = 1; x < g->width - 1; x++) {
+			uint32_t score;
+			if (near_certified_route(g, x, y) ||
+				!is_legal_population_cell(r, g, profile, x, y, 24, 85) ||
+				world_spelunk_door_at(r, x, y) || world_spelunk_fixture_at(r, x, y) ||
+				r->pitons[y*g->width+x] || r->ropes[y*g->width+x] ||
+				r->decoration_tags[y*g->width+x]) continue;
+			score = mix32(salt ^ (uint32_t)(y*g->width+x));
+			if (score < best) { best = score; best_x = x; best_y = y; }
+		}
+	}
+	return best_x < 0 || world_spelunk_fixture_add(r, id, best_x, best_y);
+}
+
 bool world_spelunk_populate_generated_runtime(
 		struct world_spelunk_runtime *runtime,
 		const struct world_spelunk_generated_layout *generated,
@@ -276,8 +345,14 @@ bool world_spelunk_populate_generated_runtime(
 	seed = mix32(generated->seed ^ hash_text(profile->id) ^ 0x706f7075u);
 	populated = place_actors(runtime, generated, profile, seed) &&
 		place_objects(runtime, generated, profile, seed, added, &added_count) &&
+		place_door(runtime, generated, profile, seed) &&
+		place_fixture(runtime, generated, profile, profile->trap_id, seed ^ 0x74726170u) &&
+		place_fixture(runtime, generated, profile, profile->chest_id, seed ^ 0x63686573u) &&
 		world_spelunk_runtime_is_valid(runtime);
 	if (!populated) {
+		runtime->fixture_count = 0;
+		runtime->door_count = 0;
+		world_spelunk_doors_rebuild(runtime);
 		while (added_count > 0) {
 			struct object *obj = added[--added_count];
 

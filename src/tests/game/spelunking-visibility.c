@@ -367,7 +367,7 @@ static int test_physical_actions_and_exit_translate(void *unused)
 		TEXTUI_SPELUNKING_UNHANDLED);
 	key.code = 'D';
 	eq(textui_spelunking_translate_key(key, &binding),
-		TEXTUI_SPELUNKING_DROP);
+		TEXTUI_SPELUNKING_UNHANDLED);
 	key.code = 'p';
 	eq(textui_spelunking_translate_key(key, &binding),
 		TEXTUI_SPELUNKING_PEEK);
@@ -408,7 +408,7 @@ static int test_item_effect_policy_is_fail_closed(void *unused)
 	struct effect light = { NULL, EF_LIGHT_LEVEL, NULL, 0, 0, 0, 0, 0,
 		NULL };
 	struct effect recall = { NULL, EF_RECALL, NULL, 0, 0, 0, 0, 0, NULL };
-	struct effect unsupported = { NULL, EF_SUMMON, NULL, 0, 0, 0, 0, 0,
+	struct effect unsupported = { NULL, EF_EARTHQUAKE, NULL, 0, 0, 0, 0, 0,
 		NULL };
 	struct effect bolt = { NULL, EF_BOLT, NULL, 0, 0, 0, 0, 0, NULL };
 	struct effect status_bolt = { NULL, EF_BOLT_AWARE, NULL, 0, 0, 0, 0, 0,
@@ -425,7 +425,7 @@ static int test_item_effect_policy_is_fail_closed(void *unused)
 	require(world_spelunk_item_effect_is_safe(&select));
 	require(world_spelunk_item_effect_is_safe(&light));
 	require(world_spelunk_item_effect_is_safe(&bolt));
-	require(!world_spelunk_item_effect_is_safe(&status_bolt));
+	require(world_spelunk_item_effect_is_safe(&status_bolt));
 	require(!world_spelunk_effect_chain_is_player_local(&recall));
 	require(world_spelunk_item_effect_is_safe(&recall));
 	require(!world_spelunk_item_effect_is_safe(&unsupported));
@@ -451,11 +451,13 @@ static bool spelunking_policy_expected(cmd_code code)
 		code == CMD_SPELUNK_EXIT || code == CMD_INSCRIBE ||
 		code == CMD_UNINSCRIBE || code == CMD_WIELD ||
 		code == CMD_TAKEOFF || code == CMD_DROP || code == CMD_REFILL ||
+		code == CMD_PICKUP || code == CMD_AUTOPICKUP || code == CMD_IGNORE ||
 		code == CMD_EAT || code == CMD_QUAFF || code == CMD_READ_SCROLL ||
 		code == CMD_USE_STAFF || code == CMD_USE_WAND ||
 		code == CMD_USE_ROD || code == CMD_ACTIVATE || code == CMD_USE ||
 		code == CMD_BROWSE_SPELL || code == CMD_STUDY || code == CMD_CAST ||
-		code == CMD_FIRE || code == CMD_THROW ||
+		code == CMD_FIRE || code == CMD_THROW || code == CMD_OPEN ||
+		code == CMD_CLOSE || code == CMD_DISARM || code == CMD_TUNNEL || code == CMD_REST ||
 		code == CMD_FISHING_START || code == CMD_FISHING_ACTION ||
 		code == CMD_FISHING_STOP || code == CMD_SLEEP || code == CMD_RETIRE;
 }

@@ -15,6 +15,7 @@
 
 struct object;
 struct player;
+#include <stdbool.h>
 
 enum world_spelunk_local_action {
 	WORLD_SPELUNK_LOCAL_PITON = 0,
@@ -47,6 +48,13 @@ struct world_spelunk_local_report {
 /** Commit a mode-owned tool placement or pickup through shared inventory. */
 enum world_spelunk_local_result world_spelunk_player_apply_local(
 		struct player *p, enum world_spelunk_local_action action,
+		struct world_spelunk_local_report *report);
+
+/** Pick up this cell's eligible objects, or just selected. Never reaches away.
+ * Automatic pickup shares native options/inscriptions; coins are free, other
+ * items use one cave handling action for the batch. */
+enum world_spelunk_local_result world_spelunk_player_pickup(
+		struct player *p, struct object *selected, bool automatic,
 		struct world_spelunk_local_report *report);
 
 /** Move part of one carried stack to the side-view ground-object owner. */

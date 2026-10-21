@@ -46,6 +46,10 @@ struct world_spelunk_population_profile {
 	const char *id;
 	const char *name;
 	const char *description;
+	/** At most one optional door where a dry, supported throat fits. */
+	const char *door_id;
+	const char *trap_id;
+	const char *chest_id;
 	uint16_t version;
 	uint16_t entrance_exclusion_radius;
 	uint16_t landmark_exclusion_radius;

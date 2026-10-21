@@ -65,6 +65,7 @@ notice:The full-content release includes compiled FROGART3 ASCII portraits, 32x3
 notice:Missing map tiles use ordinary glyphs; missing portraits use the normal fallback presentation. Missing effects use the program's code-synthesised fallback; missing music is silent.
 notice:The ASCII portraits and Hybrid sprites derive from the same image-generated source illustrations, made under human direction. The Hybrid conversion crops and samples those illustrations; it does not convert rendered ASCII glyphs and uses no new image generation. Conversion does not change the source provenance or separate asset terms.
 notice:The effects were produced with custom deterministic synthesis under human direction. The home theme was composed through Claude Compose and rendered using licensed virtual instruments in Ableton Live. Their production records distinguish those processes from image generation.
+notice:Full Tile adds 32x32 and 64x64 walls, woodland, village scenery, discovered traps and side-view cave artwork from additional OpenAI-generated source images under human direction, deterministically sampled. Shared pickup sprites include expedition equipment and fish. These sheets have the same separate asset terms. Floors can use quiet textures or coloured glyphs; cave air stays black. No AI runs during play.
 source:ASSET-LICENSE.md; lib/art/NOTICE.md; lib/tiles/NOTICE.md; lib/sounds/ammerow/NOTICE.md; packaging/runtime-art.txt; packaging/runtime-audio.txt
 end:
 

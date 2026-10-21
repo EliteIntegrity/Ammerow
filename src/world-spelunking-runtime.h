@@ -33,21 +33,57 @@
 #define WORLD_SPELUNK_PAYLOAD_VERSION_GEOLOGY 11
 #define WORLD_SPELUNK_PAYLOAD_VERSION_SWIMMING 12
 #define WORLD_SPELUNK_PAYLOAD_VERSION_DIRECTIONAL_STAMINA 13
+#define WORLD_SPELUNK_PAYLOAD_VERSION_DOORS 14
+#define WORLD_SPELUNK_PAYLOAD_VERSION_FIXTURES 15
+#define WORLD_SPELUNK_PAYLOAD_VERSION_ACTOR_EFFECTS 16
 #define WORLD_SPELUNK_PAYLOAD_VERSION \
-	WORLD_SPELUNK_PAYLOAD_VERSION_DIRECTIONAL_STAMINA
+	WORLD_SPELUNK_PAYLOAD_VERSION_ACTOR_EFFECTS
 #define WORLD_SPELUNK_WIDTH_MAX 198
 #define WORLD_SPELUNK_HEIGHT_MAX 132
 #define WORLD_SPELUNK_CELL_MAX \
 	(WORLD_SPELUNK_WIDTH_MAX * WORLD_SPELUNK_HEIGHT_MAX)
 #define WORLD_SPELUNK_ACTOR_MAX 16u
+#define WORLD_SPELUNK_DOOR_MAX 16u
+#define WORLD_SPELUNK_FIXTURE_MAX 16u
 #define WORLD_SPELUNK_PAYLOAD_MAX \
 	(80u + 2u * (WORLD_ID_LEN - 1u) + 18u * WORLD_SPELUNK_CELL_MAX + \
-	(11u + WORLD_ID_LEN - 1u) * WORLD_SPELUNK_ACTOR_MAX)
+	(27u + WORLD_ID_LEN - 1u) * WORLD_SPELUNK_ACTOR_MAX + \
+	1u + (8u + WORLD_ID_LEN - 1u) * WORLD_SPELUNK_DOOR_MAX + \
+	1u + (9u + WORLD_ID_LEN - 1u) * WORLD_SPELUNK_FIXTURE_MAX)
 #define WORLD_SPELUNK_OBJECT_MAX 1024u
 
 struct object;
 
+/** Fixed cave fixtures; loot itself belongs to the ordinary ground-object store. */
+struct world_spelunk_fixture {
+	char id[WORLD_ID_LEN];
+	int x, y;
+	uint8_t state, known, armed, trap_known;
+};
+
+enum world_spelunk_door_state {
+	WORLD_SPELUNK_DOOR_UNKNOWN = 0,
+	WORLD_SPELUNK_DOOR_CLOSED,
+	WORLD_SPELUNK_DOOR_OPEN,
+	WORLD_SPELUNK_DOOR_LOCKED
+};
+
+/** Definition ID plus fixed coordinates identify a door within its section. */
+struct world_spelunk_door {
+	char id[WORLD_ID_LEN];
+	int x, y;
+	uint8_t state, known;
+};
+
 /** Small side-view actors use stable data IDs, not file-order indices. */
+/* This order is serialized. Changing it requires a payload version/migration. */
+enum world_spelunk_actor_status {
+	WORLD_SPELUNK_STATUS_SLEEP, WORLD_SPELUNK_STATUS_HOLD,
+	WORLD_SPELUNK_STATUS_SLOW, WORLD_SPELUNK_STATUS_FAST,
+	WORLD_SPELUNK_STATUS_CONFUSED, WORLD_SPELUNK_STATUS_STUN,
+	WORLD_SPELUNK_STATUS_FEAR, WORLD_SPELUNK_STATUS_MAX
+};
+
 struct world_spelunk_actor {
 	char id[WORLD_ID_LEN];
 	int x;
@@ -55,6 +91,10 @@ struct world_spelunk_actor {
 	int hp;
 	int max_hp;
 	uint32_t energy;
+	/* Remaining shared scheduler ticks, not actor actions or UI redraws. */
+	uint16_t status[WORLD_SPELUNK_STATUS_MAX];
+	/* Summoned actors give no XP; polymorph cannot increase the original award. */
+	uint16_t reward;
 };
 
 enum world_spelunk_infrastructure_result {
@@ -78,6 +118,11 @@ struct world_spelunk_runtime {
 	uint8_t *ropes;
 	uint8_t *explored;
 	uint8_t *visible;
+	uint8_t *blocked;
+	struct world_spelunk_door doors[WORLD_SPELUNK_DOOR_MAX];
+	size_t door_count;
+	struct world_spelunk_fixture fixtures[WORLD_SPELUNK_FIXTURE_MAX];
+	size_t fixture_count;
 	/** Optional data-authored presentation layers for generated terrain. */
 	char geology_profile_id[WORLD_ID_LEN];
 	uint16_t geology_version;
@@ -126,6 +171,8 @@ bool world_spelunk_runtime_set_geology(
 		struct world_spelunk_runtime *runtime, const char *profile_id,
 		uint16_t version, const uint8_t *material_tags,
 		const uint8_t *decoration_tags);
+/** Remove decorative overlays whose floor, ceiling or rock face was cut away. */
+void world_spelunk_runtime_prune_decorations(struct world_spelunk_runtime *runtime);
 bool world_spelunk_runtime_has_piton(
 		const struct world_spelunk_runtime *runtime, int x, int y);
 bool world_spelunk_runtime_has_rope(

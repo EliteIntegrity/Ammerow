@@ -560,19 +560,15 @@ static int o_melee_damage(struct player *p, const struct monster *mon,
  *
  * Factor in damage dice, to-dam, multiplier and any brand or slay.
  */
-static int ranged_damage(struct player *p, const struct monster *mon,
+static int ranged_damage_modified(struct player *p,
 						 struct object *missile, struct object *launcher,
-						 int b, int s)
+						 int modifier)
 {
 	int dmg;
 	int mult = (launcher ? p->state.ammo_mult : 1);
 
 	/* If we have a slay or brand, modify the multiplier appropriately */
-	if (b) {
-		mult += get_monster_brand_multiplier(mon, &brands[b], false);
-	} else if (s) {
-		mult += slays[s].multiplier;
-	}
+	mult += modifier;
 
 	/* Apply damage: multiplier, slays, bonuses */
 	dmg = damroll(missile->dd, missile->ds);
@@ -596,9 +592,9 @@ static int ranged_damage(struct player *p, const struct monster *mon,
  * Deadliness, launcher multiplier and any brand or slay add extra sides to the
  * damage dice, criticals add extra dice.
  */
-static int o_ranged_damage(struct player *p, const struct monster *mon,
+static int o_ranged_damage_modified(struct player *p, const struct monster *mon,
 		struct object *missile, struct object *launcher,
-		int b, int s, uint32_t *msg_type)
+		int modifier, uint32_t *msg_type)
 {
 	int mult = (launcher ? p->state.ammo_mult : 1);
 	int dice = missile->dd;
@@ -612,14 +608,9 @@ static int o_ranged_damage(struct player *p, const struct monster *mon,
 	die_average *= mult;
 
 	/* Adjust the average for slays and brands. (10x inflation) */
-	if (b) {
-		int bmult = get_monster_brand_multiplier(mon, &brands[b], true);
-
-		die_average *= bmult;
-		add = bmult - 10;
-	} else if (s) {
-		die_average *= slays[s].o_multiplier;
-		add = slays[s].o_multiplier - 10;
+	if (modifier) {
+		die_average *= modifier;
+		add = modifier - 10;
 	} else {
 		die_average *= 10;
 	}
@@ -660,9 +651,25 @@ static int o_ranged_damage(struct player *p, const struct monster *mon,
 	return dmg;
 }
 
-bool player_resolve_ranged_attack_against_armour(struct player *p,
+static int ranged_damage(struct player *p, const struct monster *mon,
+		struct object *missile, struct object *launcher, int b, int s)
+{
+	int modifier = b ? get_monster_brand_multiplier(mon, &brands[b], false) :
+		s ? slays[s].multiplier : 0;
+	return ranged_damage_modified(p, missile, launcher, modifier);
+}
+
+static int o_ranged_damage(struct player *p, const struct monster *mon,
+		struct object *missile, struct object *launcher, int b, int s, uint32_t *msg_type)
+{
+	int modifier = b ? get_monster_brand_multiplier(mon, &brands[b], true) :
+		s ? slays[s].o_multiplier : 0;
+	return o_ranged_damage_modified(p, mon, missile, launcher, modifier, msg_type);
+}
+
+bool player_resolve_ranged_attack_with_modifier(struct player *p,
 		struct object *missile, struct object *launcher, int armour,
-		int distance_penalty, bool target_visible, int *damage,
+		int distance_penalty, bool target_visible, int modifier, int *damage,
 		uint32_t *message_type)
 {
 	int chance;
@@ -670,7 +677,7 @@ bool player_resolve_ranged_attack_against_armour(struct player *p,
 	if (damage) *damage = 0;
 	if (message_type) *message_type = MSG_SHOOT_HIT;
 	if (!p || !missile || !damage || !message_type ||
-			armour < 0 || distance_penalty < 0) {
+			armour < 0 || distance_penalty < 0 || modifier < 0) {
 		return false;
 	}
 	chance = chance_of_missile_hit_base(p, missile, launcher) -
@@ -678,21 +685,27 @@ bool player_resolve_ranged_attack_against_armour(struct player *p,
 	if (!target_visible) chance /= 2;
 	if (!test_hit(chance, armour)) return false;
 
-	/* Side-view actors currently author armour rather than native race flags.
-	 * The common launcher, ammunition, critical and combat-option arithmetic is
-	 * retained here; brand/slay modifiers remain zero until the actor schema
-	 * gains an explicit data-authored trait vocabulary. */
+	/* The caller resolves authored traits; shared damage/critical arithmetic
+	 * does not need a fabricated native monster or a native cave chunk. */
 	if (!OPT(p, birth_percent_damage)) {
-		*damage = ranged_damage(p, NULL, missile, launcher, 0, 0);
+		*damage = ranged_damage_modified(p, missile, launcher, modifier);
 		*damage = critical_shot(p, NULL, object_weight_one(missile),
 			object_to_hit(missile), *damage, launcher != NULL, message_type);
 	} else {
-		*damage = o_ranged_damage(p, NULL, missile, launcher, 0, 0,
+		*damage = o_ranged_damage_modified(p, NULL, missile, launcher, modifier,
 			message_type);
 	}
 	if (!launcher && of_has(missile->flags, OF_EXPLODE)) *damage *= 3;
 	if (launcher) missile_learn_on_ranged_attack(p, launcher);
 	return true;
+}
+
+bool player_resolve_ranged_attack_against_armour(struct player *p,
+		struct object *missile, struct object *launcher, int armour,
+		int distance_penalty, bool target_visible, int *damage, uint32_t *message_type)
+{
+	return player_resolve_ranged_attack_with_modifier(p, missile, launcher,
+		armour, distance_penalty, target_visible, 0, damage, message_type);
 }
 
 /**

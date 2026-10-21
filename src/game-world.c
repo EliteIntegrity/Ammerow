@@ -33,6 +33,7 @@
 #include "obj-curse.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
+#include "obj-ignore.h"
 #include "obj-knowledge.h"
 #include "obj-tval.h"
 #include "obj-util.h"
@@ -897,14 +898,17 @@ static void process_location_notice(enum world_turn_context context)
 			WORLD_MODE_CAP_NATIVE_CAVE)) {
 		notice_stuff(player);
 	} else if (world_turn_context_has_capability(context,
-			WORLD_MODE_CAP_SIDE_VIEW) &&
-			(player->upkeep->notice & PN_COMBINE)) {
-		/* Pack combination owns no map and is safe in every location. */
-		player->upkeep->notice &= ~PN_COMBINE;
-		combine_pack(player);
+			WORLD_MODE_CAP_SIDE_VIEW)) {
+		if (player->upkeep->notice & PN_IGNORE) {
+			player->upkeep->notice &= ~PN_IGNORE;
+			ignore_drop(player);
+		}
+		if (player->upkeep->notice & PN_COMBINE) {
+			player->upkeep->notice &= ~PN_COMBINE;
+			combine_pack(player);
+		}
 	}
-	/* Ignored-item floor drops and native monster-message batching still need
-	 * location adapters.  Leave those flags pending in side view. */
+	/* Native monster-message batching is not a side-view system. */
 }
 
 /** Apply updates and redraws without invoking another mode's presentation. */

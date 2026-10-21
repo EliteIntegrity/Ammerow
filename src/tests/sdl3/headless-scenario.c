@@ -52,6 +52,7 @@ static int test_defaults(void *state)
 		sizeof(error)));
 	require(streq(scenario.name, "minimal"));
 	eq(scenario.seed, 1U);
+	require(!scenario.has_overworld_seed);
 	require(streq(scenario.race, "Nearlander"));
 	require(streq(scenario.player_class, "Warrior"));
 	require(streq(scenario.location, "core.hub"));
@@ -276,7 +277,7 @@ static int test_capture_sequence_contract(void *state)
 
 static int test_hybrid_presentations(void *state)
 {
-	static const char *modes[] = { "hybrid", "hybrid-32", "hybrid-64" };
+	static const char *modes[] = { "hybrid", "hybrid-32", "hybrid-64", "full-32", "full-64" };
 	struct headless_scenario scenario;
 	char text[256], error[256];
 	size_t i;
@@ -292,9 +293,52 @@ static int test_hybrid_presentations(void *state)
 	ok;
 }
 
+static int test_overworld_layout_seed(void *state)
+{
+	struct headless_scenario scenario;
+	char error[256];
+	const char *invalid[] = { "-1", "4294967296", "abc", "0\noverworld-seed:1" };
+	char text[128];
+	int i;
+	(void)state;
+	require(write_scenario("name:gates\noverworld-seed:0\n"));
+	require(headless_scenario_load(test_path, &scenario, error, sizeof(error)));
+	require(scenario.has_overworld_seed);
+	eq(scenario.overworld_seed, 0U);
+	require(write_scenario("name:gates\noverworld-seed:4294967295\n"));
+	require(headless_scenario_load(test_path, &scenario, error, sizeof(error)));
+	eq(scenario.overworld_seed, UINT32_MAX);
+	for (i = 0; i < (int)N_ELEMENTS(invalid); i++) {
+		strnfmt(text, sizeof(text), "name:gates\noverworld-seed:%s\n", invalid[i]);
+		require(write_scenario(text));
+		require(!headless_scenario_load(test_path, &scenario, error, sizeof(error)));
+	}
+	ok;
+}
+
 const char *suite_name = "sdl3/headless-scenario";
+static int test_ascii_grid(void *state)
+{
+	struct headless_scenario scenario;
+	char error[256];
+	(void)state;
+	require(write_scenario("name:grid\n"));
+	require(headless_scenario_load(test_path, &scenario, error, sizeof(error)));
+	require(streq(scenario.ascii_grid, "classic"));
+	require(write_scenario("name:grid\nascii-grid:square\n"));
+	require(headless_scenario_load(test_path, &scenario, error, sizeof(error)));
+	require(streq(scenario.ascii_grid, "square"));
+	require(write_scenario("name:grid\nascii-grid:invalid\n"));
+	require(!headless_scenario_load(test_path, &scenario, error, sizeof(error)));
+	require(write_scenario("name:grid\nascii-grid:square\nascii-grid:classic\n"));
+	require(!headless_scenario_load(test_path, &scenario, error, sizeof(error)));
+	ok;
+}
+
 struct test tests[] = {
+	{ "ASCII grid validation", test_ascii_grid },
 	{ "defaults", test_defaults },
+	{ "overworld layout seed", test_overworld_layout_seed },
 	{ "hybrid presentations", test_hybrid_presentations },
 	{ "scripted contract", test_scripted_contract },
 	{ "unknown and duplicate fields",

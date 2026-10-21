@@ -48,6 +48,9 @@ enum sdl3_settings_row {
 	SDL3_SETTINGS_ITEM_RULES,
 	SDL3_SETTINGS_ALL_OPTIONS,
 	SDL3_SETTINGS_SAVE_GAME_DEFAULTS,
+	SDL3_SETTINGS_ASCII_GRID,
+	SDL3_SETTINGS_ASCII_ENHANCED,
+	SDL3_SETTINGS_ASCII_FLOORS,
 	SDL3_SETTINGS_ROW_COUNT
 };
 
@@ -72,10 +75,23 @@ enum sdl3_settings_hub_row {
 
 struct sdl3_settings_overlay {
 	bool visible;
+	bool enhanced_available;
+	bool floors_available;
 	enum sdl3_settings_page page;
 	int selected_hub_row;
 	int selected_row;
 };
+
+enum sdl3_settings_appearance {
+	SDL3_SETTINGS_APPEARANCE_BASIC = 0,
+	SDL3_SETTINGS_APPEARANCE_ENHANCED,
+	SDL3_SETTINGS_APPEARANCE_FULL
+};
+
+enum sdl3_settings_appearance sdl3_settings_appearance_mode(
+		const struct sdl3_settings_overlay *overlay);
+void sdl3_settings_set_floors_available(struct sdl3_settings_overlay *overlay,
+		bool available);
 
 /* Drawing and pointer input share the same height-aware geometry. */
 struct sdl3_settings_layout {
@@ -86,18 +102,23 @@ struct sdl3_settings_layout {
 };
 
 struct sdl3_settings_layout sdl3_settings_layout(
-		enum sdl3_settings_page page, int cols, int rows);
+		enum sdl3_settings_page page, enum sdl3_settings_appearance appearance,
+		int cols, int rows);
 bool sdl3_settings_select_at(struct sdl3_settings_overlay *overlay, int cols,
 		int rows, int col, int row);
 
 void sdl3_settings_init(struct sdl3_settings_overlay *overlay);
+void sdl3_settings_set_enhanced_available(struct sdl3_settings_overlay *overlay,
+		bool available);
 void sdl3_settings_open(struct sdl3_settings_overlay *overlay);
 void sdl3_settings_toggle(struct sdl3_settings_overlay *overlay);
 void sdl3_settings_move(struct sdl3_settings_overlay *overlay, int delta);
 bool sdl3_settings_activate(struct sdl3_settings_overlay *overlay);
 bool sdl3_settings_back(struct sdl3_settings_overlay *overlay);
-int sdl3_settings_page_row_count(enum sdl3_settings_page page);
-bool sdl3_settings_page_row_at(enum sdl3_settings_page page, int index,
+int sdl3_settings_page_row_count(enum sdl3_settings_page page,
+		enum sdl3_settings_appearance appearance);
+bool sdl3_settings_page_row_at(enum sdl3_settings_page page,
+		enum sdl3_settings_appearance appearance, int index,
 		enum sdl3_settings_row *row);
 
 #endif /* INCLUDED_SDL3_SETTINGS_MODEL_H */

@@ -601,6 +601,7 @@ static size_t obj_desc_aware(const struct object *obj, char *buf, size_t max,
  * ODESC_CAPITAL capitalises the object name.
  * ODESC_TERSE causes a terse name to be used.
  * ODESC_NOEGO omits ego names.
+ * ODESC_NOSEEN leaves kind/ego seen records unchanged without revealing lore.
  * ODESC_ALTNUM causes the high 16 bits of mode to be used as the number
  * of objects instead of using obj->number.  Note that using ODESC_ALTNUM
  * is not fully compatible with ODESC_EXTRA:  the display of number of rods
@@ -636,10 +637,10 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 				ignore_item_ok(p, obj) ? " {ignore}" : "");
 
 	/* Egos and kinds whose name we know are seen */
-	if (obj->known->ego && !spoil)
+	if (obj->known->ego && !spoil && !(mode & ODESC_NOSEEN))
 		obj->ego->everseen = true;
 
-	if (object_flavor_is_aware(obj) && !spoil)
+	if (object_flavor_is_aware(obj) && !spoil && !(mode & ODESC_NOSEEN))
 		obj->kind->everseen = true;
 
 	/** Construct the name **/

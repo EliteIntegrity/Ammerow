@@ -1,0 +1,10 @@
+# Full Tile: shared Hybrid sprites, solid scenery, optional quiet floors.
+atlas:pixel-64-001:pixel-64-001.png:pixel-001-index.txt:64:64
+atlas:pickups:pickups-64.png:pickups-index.txt:64:64
+atlas:terrain:terrain-64.png:terrain-index.txt:64:64
+atlas:vegetation:vegetation-64.png:vegetation-index.txt:64:64
+atlas:village:village-64.png:village-index.txt:64:64
+atlas:scenery:scenery-64.png:scenery-index.txt:64:64
+atlas:markers:markers-64.png:markers-index.txt:64:64
+atlas:expedition:expedition-64.png:expedition-index.txt:64:64
+atlas:caves:caves-64.png:caves-index.txt:64:64

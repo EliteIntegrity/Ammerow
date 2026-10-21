@@ -314,6 +314,77 @@ bool sdl3_screen_measure(const struct sdl3_screen *screen, int cols, int rows,
 	return true;
 }
 
+static int map_scale(int value, int minimum, int maximum, int start, int span)
+{
+	if (maximum <= minimum || span <= 0) return start + MAX(0, span) / 2;
+	return start + (int)(((int64_t)value - minimum) * span /
+		((int64_t)maximum - minimum));
+}
+
+bool sdl3_screen_map_measure(const struct sdl3_screen *screen, int cols,
+		int rows, struct sdl3_screen_map_layout *map)
+{
+	struct sdl3_screen_layout layout;
+	int min_x = INT_MAX, max_x = INT_MIN, min_y = INT_MAX, max_y = INT_MIN;
+	int horizontal = INT_MAX, vertical = INT_MAX;
+	int top = 7, bottom = rows - 10;
+	if (!map || !sdl3_screen_measure(screen, cols, rows, &layout) ||
+			(screen->kind != UI_SCREEN_WORLD_MAP && screen->kind != UI_SCREEN_CAVE_SURVEY) ||
+			screen->map_node_count <= 0 || screen->map_node_count > SDL3_SCREEN_MAP_NODE_CAPACITY ||
+			layout.width < 48 || bottom - top < 6) return false;
+	memset(map, 0, sizeof(*map));
+	map->detail_top = rows - 8;
+	map->stamp_width = UI_SCREEN_MAP_STAMP_WIDTH;
+	map->stamp_height = UI_SCREEN_MAP_STAMP_HEIGHT;
+	for (int i = 0; i < screen->map_node_count; i++) {
+		min_x = MIN(min_x, screen->map_nodes[i].x);
+		max_x = MAX(max_x, screen->map_nodes[i].x);
+		min_y = MIN(min_y, screen->map_nodes[i].y);
+		max_y = MAX(max_y, screen->map_nodes[i].y);
+	}
+	for (int i = 0; i < screen->map_node_count; i++) {
+		map->x[i] = map_scale(screen->map_nodes[i].x, min_x, max_x,
+			layout.left + UI_SCREEN_MAP_STAMP_WIDTH / 2 + 1,
+			MAX(0, layout.width - UI_SCREEN_MAP_STAMP_WIDTH - 2));
+		map->y[i] = map_scale(screen->map_nodes[i].y, min_y, max_y,
+			top + UI_SCREEN_MAP_STAMP_HEIGHT / 2,
+			MAX(0, bottom - top - UI_SCREEN_MAP_STAMP_HEIGHT));
+		for (int j = 0; j < i; j++) {
+			if (map->y[i] == map->y[j]) horizontal = MIN(horizontal, ABS(map->x[i] - map->x[j]));
+			if (map->x[i] == map->x[j]) vertical = MIN(vertical, ABS(map->y[i] - map->y[j]));
+		}
+	}
+	if (horizontal < UI_SCREEN_MAP_STAMP_WIDTH + 2 || vertical < UI_SCREEN_MAP_STAMP_HEIGHT + 2) {
+		map->stamp_width = 3;
+		map->stamp_height = 1;
+	}
+	if (horizontal < 4 || vertical < 2) {
+		map->stamp_width = map->stamp_height = 1;
+		/* Numbered cave sections must remain legible and individually clickable. */
+		if (screen->kind == UI_SCREEN_CAVE_SURVEY) return false;
+	}
+	return true;
+}
+
+bool sdl3_screen_map_node_at(const struct sdl3_screen *screen, int cols,
+		int rows, int col, int row, int *index)
+{
+	struct sdl3_screen_map_layout map;
+	if (!index || !screen || !screen->active ||
+			(screen->kind != UI_SCREEN_WORLD_MAP && screen->kind != UI_SCREEN_CAVE_SURVEY)) return false;
+	if (!sdl3_screen_map_measure(screen, cols, rows, &map))
+		return sdl3_screen_row_at(screen, cols, rows, col, row, index);
+	/* Reverse drawing order for overlapping stamps. Never select an edge. */
+	for (int i = screen->map_node_count - 1; i >= 0; i--) {
+		if (ABS(col - map.x[i]) <= map.stamp_width / 2 &&
+				ABS(row - map.y[i]) <= map.stamp_height / 2) {
+			*index = i;
+			return true;
+		}
+	}
+	return false;
+}
+
 bool sdl3_screen_row_at(const struct sdl3_screen *screen, int cols, int rows,
 		int col, int row, int *index)
 {
@@ -329,6 +400,27 @@ bool sdl3_screen_row_at(const struct sdl3_screen *screen, int cols, int rows,
 	visible_index = row - screen->content_row;
 	*index = layout.first_row + visible_index;
 	return *index >= 0 && *index < screen->row_count;
+}
+
+bool sdl3_screen_tab_at(const struct sdl3_screen *screen, int cols, int rows,
+		int col, int row, int *index)
+{
+	struct sdl3_screen_layout layout;
+	int x;
+	if (!index || !sdl3_screen_measure(screen, cols, rows, &layout) ||
+			row != layout.tab_row) return false;
+	x = layout.left;
+	for (int i = 0; i < screen->tab_count && i < SDL3_SCREEN_TAB_CAPACITY; i++) {
+		int width = MIN((int)strlen(screen->tabs[i].label) + 4,
+			layout.left + layout.width - x);
+		if (width <= 0) break;
+		if (col >= x && col < x + width) {
+			*index = i;
+			return true;
+		}
+		x += width + 1;
+	}
+	return false;
 }
 
 int sdl3_screen_action_menu_keys(const struct sdl3_screen *screen, int index,

@@ -87,6 +87,8 @@ struct world_spelunk_projectile_report {
 };
 
 const char *world_spelunk_actor_name(const char *actor_id);
+bool world_spelunk_actor_project(struct player *p,
+	struct world_spelunk_actor *actor, int power, int projection_type);
 
 /** Attack an actor occupying the adjacent requested movement cell. */
 enum world_spelunk_combat_result world_spelunk_player_bump_attack(
@@ -105,8 +107,7 @@ bool world_spelunk_process_actors(struct player *p,
 /**
  * Project a side-view ray through open cells.  A bolt stops at the first
  * actor; a beam continues through every actor.  The native projection type is
- * retained for messaging and frontend animation, while actor resistances stay
- * neutral until their data schema authors elemental traits.
+ * retained for messaging, animation, authored traits and persistent statuses.
  */
 bool world_spelunk_player_project_ray(struct player *p, int dx, int dy,
 		int range, int damage, int projection_type, bool stop_at_first_actor,

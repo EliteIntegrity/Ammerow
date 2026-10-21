@@ -1,0 +1,24 @@
+# Copyright (c) 2026 John Horton; SPDX-License-Identifier: GPL-2.0-only
+# Generated side-view bindings; artwork separately licensed.
+domain:feature
+cave-rock -> 0,0
+cave-limestone -> 1,0
+cave-shale -> 2,0
+cave-iron-stained -> 3,0
+cave-water-body -> 4,0
+cave-water-surface -> 5,0
+cave-stalactite -> 6,0
+cave-stalagmite -> 7,0
+cave-shale-rubble -> 0,1
+cave-pool-algae -> 1,1
+cave-calcite-seam -> 2,1
+cave-copper-seam -> 3,1
+cave-rope-middle -> 4,1
+cave-rope-end -> 5,1
+cave-piton-left -> 6,1
+cave-piton-right -> 7,1
+cave-exit -> 0,2
+cave-passage-up -> 0,2
+cave-passage-down -> 0,2
+domain:actor
+chasm-skitter -> 1,2

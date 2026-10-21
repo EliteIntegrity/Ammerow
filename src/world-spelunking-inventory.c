@@ -13,10 +13,12 @@
 #include "world-spelunking-inventory.h"
 
 #include "world-spelunking-adapter.h"
+#include "cmds.h"
 #include "game-event.h"
 #include "init.h"
 #include "message.h"
 #include "obj-gear.h"
+#include "obj-ignore.h"
 #include "obj-pile.h"
 #include "obj-tval.h"
 #include "obj-util.h"
@@ -154,31 +156,45 @@ static int pickup_gold(struct player *p, struct world_spelunk_runtime *runtime,
 	if (!world_spelunk_runtime_take_ground_object(runtime, obj)) return 0;
 	p->au += value;
 	p->upkeep->redraw |= PR_GOLD;
+	msgt(value < 200 ? MSG_MONEY1 : value < 600 ? MSG_MONEY2 : MSG_MONEY3,
+		"You collect %d gold pieces.", value);
 	delete_detached_object(&obj);
 	return 1;
 }
 
-static enum world_spelunk_local_result pickup_local_objects(
-		struct player *p, struct world_spelunk_local_report *report)
+enum world_spelunk_local_result world_spelunk_player_pickup(
+		struct player *p, struct object *selected, bool automatic,
+		struct world_spelunk_local_report *report)
 {
-	struct world_spelunk_runtime *runtime = p->spelunking;
-	struct object *obj = runtime->ground_objects;
+	struct world_spelunk_runtime *runtime;
+	struct object *obj;
 	bool found = false;
-	int picked = 0;
+	int picked = 0, gold = 0;
+
+	clear_local_report(report, WORLD_SPELUNK_LOCAL_PICKUP);
+	if (!p || !p->upkeep || p->is_dead || p->upkeep->energy_use != 0 ||
+			!world_spelunk_player_is_active(p) ||
+			p->spelunking->state.rules.action_energy > INT_MAX)
+		return local_reject(report, WORLD_SPELUNK_LOCAL_INVALID);
+	runtime = p->spelunking;
+	obj = runtime->ground_objects;
 
 	while (obj) {
 		struct object *next = obj->next;
 
 		if (obj->grid.x != runtime->state.x ||
-				obj->grid.y != runtime->state.y) {
+				obj->grid.y != runtime->state.y || (selected && selected != obj) ||
+				ignore_item_ok(p, obj)) {
 			obj = next;
 			continue;
 		}
 		found = true;
+		apply_autoinscription(p, obj);
 		if (tval_is_money(obj)) {
-			picked += pickup_gold(p, runtime, obj);
+			gold += pickup_gold(p, runtime, obj);
 		} else {
-			int amount = inven_carry_num(p, obj);
+			int amount = automatic ? auto_pickup_amount(p, obj) :
+				inven_carry_num(p, obj);
 
 			if (amount > 0) {
 				struct object *carried;
@@ -207,12 +223,22 @@ static enum world_spelunk_local_result pickup_local_objects(
 		}
 		obj = next;
 	}
-	if (!picked) {
+	if (!picked && !gold) {
 		return local_reject(report, found ? WORLD_SPELUNK_LOCAL_NO_ROOM :
 			WORLD_SPELUNK_LOCAL_NOTHING_HERE);
 	}
 	event_signal(EVENT_INVENTORY);
-	return finish_local(p, WORLD_SPELUNK_LOCAL_PICKUP, report, picked);
+	p->upkeep->redraw |= PR_ITEMLIST;
+	event_signal_point(EVENT_MAP, -1, -1);
+	/* Cave handling remains one action per batch (as for manual g), not one
+	 * action per stack. Automatic coin collection spends no extra time. */
+	if (picked || !automatic)
+		return finish_local(p, WORLD_SPELUNK_LOCAL_PICKUP, report, picked + gold);
+	if (report) {
+		report->result = WORLD_SPELUNK_LOCAL_TURN;
+		report->affected = gold;
+	}
+	return WORLD_SPELUNK_LOCAL_TURN;
 }
 
 enum world_spelunk_local_result world_spelunk_player_apply_local(
@@ -231,7 +257,7 @@ enum world_spelunk_local_result world_spelunk_player_apply_local(
 	case WORLD_SPELUNK_LOCAL_ROPE:
 		return place_tool(p, action, report);
 	case WORLD_SPELUNK_LOCAL_PICKUP:
-		return pickup_local_objects(p, report);
+		return world_spelunk_player_pickup(p, NULL, false, report);
 	case WORLD_SPELUNK_LOCAL_DROP:
 	default:
 		return local_reject(report, WORLD_SPELUNK_LOCAL_INVALID);

@@ -656,7 +656,7 @@ static int test_tile_mode_migration_and_round_trip(void *state)
 
 	require(write_test_config(
 		"version=19\n"
-		"tile_mode=2\n"));
+		"tile_mode=3\n"));
 	prepare_config(&loaded);
 	require(sdl3_config_load(&loaded));
 	require(!loaded.tile_mode);
@@ -665,11 +665,113 @@ static int test_tile_mode_migration_and_round_trip(void *state)
 	require(sdl3_config_load(&loaded));
 	eq(loaded.hybrid_tile_size, 64);
 	require(loaded.tile_mode);
+	/* Loading is independent of media; the frontend checks availability. */
+	loaded.tile_mode = SDL3_TILE_MODE_FULL;
+	require(sdl3_config_save(&loaded));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	eq(config.tile_mode, SDL3_TILE_MODE_FULL);
 	ok;
 }
 
 const char *suite_name = "sdl3/config";
+static int test_ascii_grid(void *state)
+{
+	struct sdl3_config config;
+	(void)state;
+	prepare_config(&config);
+	require(config.ascii_square);
+	require(write_test_config("version=24\ntile_mode=2\nhybrid_tile_size=32\n"));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(config.ascii_square);
+	/* An explicit Classic selection survives saving and reloading. */
+	config.ascii_square = false;
+	require(sdl3_config_save(&config));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(!config.ascii_square);
+	eq(config.tile_mode, SDL3_TILE_MODE_FULL);
+	eq(config.hybrid_tile_size, 32);
+	require(write_test_config("version=25\nascii_square=2\n"));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(config.ascii_square);
+	require(write_test_config("version=25\nascii_square=1\n"));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(config.ascii_square);
+	ok;
+}
+
+static int test_enhanced_square(void *state)
+{
+	struct sdl3_config config;
+	(void)state;
+	prepare_config(&config);
+	require(!config.ascii_enhanced);
+	require(write_test_config("version=25\nascii_square=1\n"));
+	require(sdl3_config_load(&config));
+	require(!config.ascii_enhanced);
+	config.ascii_enhanced = true;
+	/* Retain this preference even when another presentation hides it. */
+	config.ascii_square = false;
+	config.tile_mode = SDL3_TILE_MODE_FULL;
+	require(sdl3_config_save(&config));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(config.ascii_enhanced);
+	require(!config.ascii_square);
+	eq(config.tile_mode, SDL3_TILE_MODE_FULL);
+	config.ascii_enhanced = false;
+	require(sdl3_config_save(&config));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(!config.ascii_enhanced);
+	require(write_test_config("version=26\nascii_enhanced=2\n"));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(!config.ascii_enhanced);
+	ok;
+}
+
+static int test_ascii_floors(void *state)
+{
+	struct sdl3_config config;
+	(void)state;
+	prepare_config(&config);
+	require(!config.ascii_floors);
+	/* Existing Full Tile users keep the glyph floors they selected. */
+	require(write_test_config("version=26\ntile_mode=2\n"));
+	require(sdl3_config_load(&config));
+	require(config.ascii_floors);
+	config.ascii_floors = false;
+	require(sdl3_config_save(&config));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(!config.ascii_floors);
+	/* The hidden preference survives switching presentation modes. */
+	config.tile_mode = SDL3_TILE_MODE_HYBRID;
+	config.ascii_floors = true;
+	require(sdl3_config_save(&config));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(config.ascii_floors);
+	require(write_test_config("version=27\nascii_floors=2\n"));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(!config.ascii_floors);
+	require(write_test_config("version=26\ntile_mode=1\n"));
+	prepare_config(&config);
+	require(sdl3_config_load(&config));
+	require(!config.ascii_floors);
+	ok;
+}
+
 struct test tests[] = {
+	{ "ASCII floors default, migration and persistence", test_ascii_floors },
+	{ "Enhanced Square default and persistence", test_enhanced_square },
+	{ "ASCII grid defaults, validation and persistence", test_ascii_grid },
 	{ "fullscreen default and saved choice",
 		test_fullscreen_default_and_saved_choice },
 	{ "zoom bounds", test_zoom_bounds },

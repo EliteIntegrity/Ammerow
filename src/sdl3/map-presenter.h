@@ -32,6 +32,10 @@ struct sdl3_map_presenter_options {
 	bool animated_combat;
 	bool edge_warnings;
 	bool tile_mode;
+	bool ascii_square;
+	bool ascii_enhanced;
+	int cell_width;
+	int cell_height;
 	int zoom_percent;
 	enum sdl3_terrain_style terrain_style;
 	bool verbose;

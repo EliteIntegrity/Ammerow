@@ -1,0 +1,27 @@
+# Copyright (c) 2026 John Horton; SPDX-License-Identifier: GPL-2.0-only
+# Generated bindings; PNG artwork is separately licensed.
+domain:feature
+web -> 0,0
+trap-door -> 1,0
+pit -> 2,0
+dart-trap -> 3,0
+gas-trap -> 4,0
+discolored-spot -> 5,0
+strange-rune -> 6,0
+standing-mark -> 7,0
+alarm -> 0,1
+general-store -> 1,1
+armoury -> 1,1
+weapon-smiths -> 1,1
+bookstore -> 1,1
+alchemy-shop -> 1,1
+magic-shop -> 1,1
+black-market -> 1,1
+home -> 1,1
+fishing-shop -> 1,1
+relic-broker -> 1,1
+decoy -> 2,1
+explosion -> 3,1
+mind-blast-trap -> 4,1
+ancient-mechanism -> 5,1
+trap -> 6,1

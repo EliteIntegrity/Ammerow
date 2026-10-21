@@ -75,6 +75,24 @@ void world_spelunk_view_terrain_at(const struct world_spelunk_runtime *r,
 	/* Only the winning stable fixture occupies the foreground. Actors/items
 	 * cover it; their bitmap is supplied separately by the snapshot. */
 	switch (cell) {
+	case WORLD_SPELUNK_VIEW_TRAP:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_TRAP:
+		out->overlay_scope = "cave"; out->overlay = "trap"; break;
+	case WORLD_SPELUNK_VIEW_CHEST:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_CHEST:
+		out->overlay_scope = "map"; out->overlay = "chest"; break;
+	case WORLD_SPELUNK_VIEW_TRAP_SPENT:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_TRAP_SPENT:
+	case WORLD_SPELUNK_VIEW_CHEST_EMPTY:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_CHEST_EMPTY:
+		/* Quiet spent-mechanism/empty-chest glyphs, never a fresh loot icon. */
+		out->overlay = NULL; out->preserve_glyph = true; break;
+	case WORLD_SPELUNK_VIEW_DOOR_CLOSED:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_DOOR_CLOSED:
+		out->overlay_scope = "cave"; out->overlay = "door-closed"; break;
+	case WORLD_SPELUNK_VIEW_DOOR_OPEN:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_DOOR_OPEN:
+		out->overlay_scope = "cave"; out->overlay = "door-open"; break;
 	case WORLD_SPELUNK_VIEW_ROPE:
 		out->overlay_scope = "cave";
 		out->overlay = world_spelunk_visibility_is_explored(r, x, y + 1) &&

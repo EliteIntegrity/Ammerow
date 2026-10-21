@@ -38,6 +38,9 @@ static void set_defaults(struct sdl3_config *config)
 	config->animated_combat = true;
 	config->edge_warnings = true;
 	config->tile_mode = false;
+	config->ascii_square = true;
+	config->ascii_enhanced = false;
+	config->ascii_floors = false;
 	config->hybrid_tile_size = 64;
 	config->terrain_style = SDL3_TERRAIN_NATURAL;
 	config->weather_mode = SDL3_WEATHER_AUTO;
@@ -98,6 +101,7 @@ bool sdl3_config_load(struct sdl3_config *config)
 	int line_number = 0;
 	int version = 0;
 	bool saw_version = false;
+	bool saw_ascii_floors = false;
 
 	if (!config || !config->file_path[0]) return false;
 	file = file_open(config->file_path, MODE_READ, FTYPE_TEXT);
@@ -238,12 +242,34 @@ bool sdl3_config_load(struct sdl3_config *config)
 					line_number);
 			}
 		} else if (streq(key, "tile_mode")) {
-			if (parse_integer(value, 0, 1, &parsed)) {
-				candidate.tile_mode = parsed != 0;
+			if (parse_integer(value, SDL3_TILE_MODE_ASCII,
+					SDL3_TILE_MODE_FULL, &parsed)) {
+				candidate.tile_mode = (enum sdl3_tile_mode)parsed;
 			} else {
 				SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
 					"Ignoring invalid SDL3 tile-mode setting on line %d",
 					line_number);
+			}
+		} else if (streq(key, "ascii_floors")) {
+			if (parse_integer(value, 0, 1, &parsed)) {
+				candidate.ascii_floors = parsed != 0;
+				saw_ascii_floors = true;
+			} else {
+				SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+					"Ignoring invalid ASCII floors setting: %s", value);
+			}
+		} else if (streq(key, "ascii_enhanced")) {
+			if (parse_integer(value, 0, 1, &parsed))
+				candidate.ascii_enhanced = parsed != 0;
+			else
+				SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+					"Ignoring invalid Enhanced Square setting on line %d", line_number);
+		} else if (streq(key, "ascii_square")) {
+			if (parse_integer(value, 0, 1, &parsed)) {
+				candidate.ascii_square = parsed != 0;
+			} else {
+				SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+					"Ignoring invalid ASCII grid setting on line %d", line_number);
 			}
 		} else if (streq(key, "hybrid_tile_size")) {
 			if (parse_integer(value, 32, 64, &parsed) &&
@@ -440,6 +466,9 @@ bool sdl3_config_load(struct sdl3_config *config)
 		candidate.dock_placement = SDL3_DOCK_BOTTOM;
 	}
 	*config = candidate;
+	/* Existing Full Tile users keep the former glyph-ground presentation. */
+	if (version < 27 && !saw_ascii_floors &&
+			config->tile_mode == SDL3_TILE_MODE_FULL) config->ascii_floors = true;
 	return true;
 }
 
@@ -493,8 +522,11 @@ bool sdl3_config_save(const struct sdl3_config *config)
 			config->animated_combat ? 1 : 0) &&
 		file_putf(file, "edge_warnings=%d\n",
 			config->edge_warnings ? 1 : 0) &&
-		file_putf(file, "tile_mode=%d\n", config->tile_mode ? 1 : 0) &&
+		file_putf(file, "tile_mode=%d\n", (int)config->tile_mode) &&
 		file_putf(file, "hybrid_tile_size=%d\n", config->hybrid_tile_size) &&
+		file_putf(file, "ascii_square=%d\n", config->ascii_square ? 1 : 0) &&
+		file_putf(file, "ascii_enhanced=%d\n", config->ascii_enhanced ? 1 : 0) &&
+		file_putf(file, "ascii_floors=%d\n", config->ascii_floors ? 1 : 0) &&
 		file_putf(file, "terrain_style=%d\n",
 			(int)config->terrain_style) &&
 		file_putf(file, "weather_mode=%d\n",

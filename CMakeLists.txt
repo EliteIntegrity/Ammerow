@@ -321,9 +321,14 @@ add_library(OurCoreLib OBJECT
 		src/world-overworld.c
         src/world-spelunking.c
         src/world-spelunking-adapter.c
+        src/world-spelunking-door.c
+        src/world-spelunking-fixture.c
+        src/world-spelunking-terrain.c
+        src/world-spelunking-rest.c
         src/world-spelunking-actor-data.c
         src/world-spelunking-breath.c
 		src/world-spelunking-combat.c
+		src/world-spelunking-actor-effects.c
 		src/world-spelunking-codec.c
         src/world-spelunking-data-util.c
         src/world-spelunking-effects.c
@@ -479,6 +484,7 @@ add_library(OurCoreLib OBJECT
         src/ui-spoil.c
         src/ui-spelunking-appearance.c
         src/ui-spelunking.c
+        src/ui-spelunking-list.c
         src/ui-spelunking-input.c
         src/ui-spelunking-survey.c
         src/ui-store.c
@@ -1138,6 +1144,12 @@ set(ANGBAND_TEST_CASE_SOURCES
 	game/provisions.c
 	game/relic-broker.c
 	game/spelunking-combat.c
+	game/spelunking-actor-effects.c
+	game/spelunking-doors.c
+	game/spelunking-fixtures.c
+	game/spelunking-terrain.c
+	game/spelunking-convenience.c
+	game/spelunking-pickup.c
 	game/spelunking-items.c
 	game/spelunking-persistence.c
 	game/spelunking-transitions.c
@@ -1742,6 +1754,11 @@ if((NOT CMAKE_CROSSCOMPILING) AND SUPPORT_HEADLESS_FRONTEND)
     set(CAVE_DEATH_OUTPUT
         "$<TARGET_FILE_DIR:OurExecutable>/headless-cave-fatal-fall")
     add_custom_target(cave-lifecycle-acceptance
+        COMMAND "$<TARGET_FILE:unittest-game-spelunking-doors>"
+        COMMAND "$<TARGET_FILE:unittest-game-spelunking-fixtures>"
+        COMMAND "$<TARGET_FILE:unittest-game-spelunking-terrain>"
+        COMMAND "$<TARGET_FILE:unittest-game-spelunking-convenience>"
+        COMMAND "$<TARGET_FILE:unittest-game-spelunking-pickup>"
         COMMAND "$<TARGET_FILE:unittest-game-spelunking-codec>"
         COMMAND "$<TARGET_FILE:unittest-game-spelunking-movement>"
         COMMAND "$<TARGET_FILE:unittest-game-spelunking-visibility>"
@@ -1749,6 +1766,7 @@ if((NOT CMAKE_CROSSCOMPILING) AND SUPPORT_HEADLESS_FRONTEND)
         COMMAND "$<TARGET_FILE:unittest-game-spelunking-items>"
         COMMAND "$<TARGET_FILE:unittest-game-spelunking-transitions>"
         COMMAND "$<TARGET_FILE:unittest-game-spelunking-combat>"
+        COMMAND "$<TARGET_FILE:unittest-game-spelunking-actor-effects>"
         COMMAND "$<TARGET_FILE:unittest-sdl3-spelunking-presenter>"
         COMMAND "$<TARGET_FILE:unittest-ui-death>"
         COMMAND "${CMAKE_COMMAND}" -E make_directory
@@ -1764,6 +1782,11 @@ if((NOT CMAKE_CROSSCOMPILING) AND SUPPORT_HEADLESS_FRONTEND)
         WORKING_DIRECTORY "$<TARGET_FILE_DIR:OurExecutable>"
         VERBATIM)
     add_dependencies(cave-lifecycle-acceptance
+        unittest-game-spelunking-doors
+        unittest-game-spelunking-fixtures
+        unittest-game-spelunking-terrain
+        unittest-game-spelunking-convenience
+        unittest-game-spelunking-pickup
         headless-loop-acceptance
         unittest-game-spelunking-codec
         unittest-game-spelunking-movement
@@ -1772,6 +1795,7 @@ if((NOT CMAKE_CROSSCOMPILING) AND SUPPORT_HEADLESS_FRONTEND)
         unittest-game-spelunking-items
         unittest-game-spelunking-transitions
         unittest-game-spelunking-combat
+        unittest-game-spelunking-actor-effects
         unittest-sdl3-spelunking-presenter
         unittest-ui-death)
 else()

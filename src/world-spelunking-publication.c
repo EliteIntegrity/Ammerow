@@ -158,7 +158,7 @@ static bool runtime_matches_generated(
 		const struct world_spelunk_runtime *runtime,
 		const struct world_spelunk_generated_layout *generated)
 {
-	size_t cells;
+	size_t cells, i;
 
 	if (!runtime || !generated || !generated->cells ||
 			runtime->state.map.width != generated->width ||
@@ -174,13 +174,20 @@ static bool runtime_matches_generated(
 		return false;
 	}
 	cells = (size_t)generated->width * (size_t)generated->height;
-	return runtime->cells && runtime->material_tags &&
-		runtime->decoration_tags &&
-		memcmp(runtime->cells, generated->cells,
-			cells * sizeof(*generated->cells)) == 0 &&
-		memcmp(runtime->material_tags, generated->material_tags, cells) == 0 &&
-		memcmp(runtime->decoration_tags, generated->decoration_tags,
-			cells) == 0;
+	if (!runtime->cells || !runtime->material_tags || !runtime->decoration_tags) return false;
+	/* Retained terrain is authoritative. Excavation only removes rock and
+	 * now-unsupported decoration; it cannot create water, walls or new strata.
+	 * These layers already belong to the save payload, so no format bump or
+	 * regeneration of visited caves is needed. */
+	for (i = 0; i < cells; i++) {
+		bool cut = generated->cells[i] == WORLD_SPELUNK_ROCK &&
+			runtime->cells[i] == WORLD_SPELUNK_AIR;
+		if ((!cut && runtime->cells[i] != generated->cells[i]) ||
+			runtime->material_tags[i] != (cut ? 0 : generated->material_tags[i]) ||
+			(runtime->decoration_tags[i] &&
+			 runtime->decoration_tags[i] != generated->decoration_tags[i])) return false;
+	}
+	return true;
 }
 
 static bool persistent_endpoint_grid(

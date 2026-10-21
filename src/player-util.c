@@ -43,6 +43,7 @@
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "world-spelunking-rest.h"
 #include "player-explore.h"
 #include "project.h"
 #include "score.h"
@@ -1514,6 +1515,10 @@ void player_resting_complete_special(struct player *p)
 {
 	/* Complete resting */
 	if (!player_resting_is_special(p->upkeep->resting)) return;
+	if (world_player_mode_has_capability(p, WORLD_MODE_CAP_SIDE_VIEW)) {
+		if (world_spelunk_rest_is_complete(p, p->upkeep->resting)) disturb(p);
+		return;
+	}
 
 	if (p->upkeep->resting == REST_ALL_POINTS) {
 		if ((p->chp == p->mhp) && (p->csp == p->msp))

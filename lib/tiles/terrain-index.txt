@@ -1,0 +1,10 @@
+# Full Tile terrain bindings (GPL-2.0-only).
+domain:feature
+granite-wall -> 0,0
+meridian-wall -> 0,0
+cavewood-wall -> 0,0
+permanent-wall -> 1,0
+magma-vein -> 2,0
+quartz-vein -> 3,0
+magma-vein-with-treasure -> 4,0
+quartz-vein-with-treasure -> 5,0

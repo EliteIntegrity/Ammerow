@@ -57,6 +57,7 @@
 #include "ui-options.h"
 #include "ui-output.h"
 #include "ui-prefs.h"
+#include "world-turn.h"
 
 /**
  * ------------------------------------------------------------------------
@@ -1715,7 +1716,7 @@ void textui_cmd_ignore_menu(struct object *obj)
 	uint8_t value;
 	int type;
 
-	if (!obj)
+	if (!obj || !obj->known)
 		return;
 
 	m = menu_dynamic_new();
@@ -1794,6 +1795,10 @@ void textui_cmd_ignore_menu(struct object *obj)
 	selected = menu_dynamic_select(m);
 
 	screen_load();
+	if (selected < 0) {
+		menu_dynamic_free(m);
+		return;
+	}
 
 	if (selected == IGNORE_THIS_ITEM) {
 		obj->known->notice |= OBJ_NOTICE_IGNORE;
@@ -1815,6 +1820,7 @@ void textui_cmd_ignore_menu(struct object *obj)
 	}
 
 	player->upkeep->notice |= PN_IGNORE;
+	player->upkeep->redraw |= PR_MAP | PR_ITEMLIST;
 
 	menu_dynamic_free(m);
 }
@@ -1837,5 +1843,11 @@ void textui_cmd_toggle_ignore(void)
 {
 	player->unignoring = !player->unignoring;
 	player->upkeep->notice |= PN_IGNORE;
+	if (world_player_mode_has_capability(player, WORLD_MODE_CAP_SIDE_VIEW)) {
+		player->upkeep->redraw |= PR_MAP | PR_ITEMLIST;
+		msg(player->unignoring ? "Showing ignored items." : "Hiding ignored items.");
+		event_signal_point(EVENT_MAP, -1, -1);
+		return;
+	}
 	do_cmd_redraw();
 }

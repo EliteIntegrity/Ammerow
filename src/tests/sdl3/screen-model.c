@@ -697,6 +697,46 @@ static int test_modal_retains_owned_parent(void *state)
 	ok;
 }
 
+static int test_survey_diagram_hit_geometry(void *state)
+{
+	struct sdl3_screen screen = { 0 };
+	struct sdl3_screen_map_layout map;
+	int index = -1;
+	(void)state;
+	screen.active = true;
+	screen.kind = UI_SCREEN_CAVE_SURVEY;
+	screen.map_node_count = screen.row_count = 3;
+	screen.content_row = 8;
+	screen.content_rows = 10;
+	screen.map_nodes[1].x = -10;
+	screen.map_nodes[1].y = screen.map_nodes[2].y = 6;
+	screen.map_nodes[2].x = 10;
+	for (int size = 0; size < 2; size++) {
+		int cols = size ? 140 : 80, rows = size ? 42 : 24;
+		require(sdl3_screen_map_measure(&screen, cols, rows, &map));
+		for (int i = 0; i < 3; i++) {
+			require(sdl3_screen_map_node_at(&screen, cols, rows, map.x[i], map.y[i], &index));
+			eq(index, i);
+		}
+		require(!sdl3_screen_map_node_at(&screen, cols, rows, 0, 0, &index));
+		require(!sdl3_screen_map_node_at(&screen, cols, rows, map.x[0], map.detail_top, &index));
+	}
+	/* Compact layout is exactly the rendered list, including its scroll offset. */
+	require(!sdl3_screen_map_measure(&screen, 48, 20, &map));
+	screen.row_offset = 1;
+	require(sdl3_screen_map_node_at(&screen, 48, 20, 8, 8, &index));
+	eq(index, 1);
+	screen.tab_count = 2;
+	my_strcpy(screen.tabs[0].label, "Overview", sizeof(screen.tabs[0].label));
+	my_strcpy(screen.tabs[1].label, "Defences", sizeof(screen.tabs[1].label));
+	require(sdl3_screen_tab_at(&screen, 80, 24, 18, 6, &index));
+	eq(index, 1);
+	require(!sdl3_screen_tab_at(&screen, 80, 24, 18, 7, &index));
+	screen.tab_count = 0;
+	require(!sdl3_screen_tab_at(&screen, 80, 24, 18, 6, &index));
+	ok;
+}
+
 const char *suite_name = "sdl3/screen-model";
 struct test tests[] = {
 	{ "capture is owned", test_capture_is_owned },
@@ -728,5 +768,6 @@ struct test tests[] = {
 	{ "action menu pointer keys", test_action_menu_pointer_keys },
 	{ "advancement pointer and layout", test_advancement_pointer_and_layout },
 	{ "modal retains an owned parent", test_modal_retains_owned_parent },
+	{ "survey diagram and compact hit geometry", test_survey_diagram_hit_geometry },
 	{ NULL, NULL },
 };

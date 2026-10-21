@@ -65,6 +65,8 @@ static int test_spelunking_save_roundtrip(void *state)
 		WORLD_SPELUNK_CHASM_SKITTER_ID, 4, 4));
 	player->spelunking->actors[0].hp = 3;
 	player->spelunking->actors[0].energy = 37;
+	player->spelunking->actors[0].reward = 0;
+	player->spelunking->actors[0].status[WORLD_SPELUNK_STATUS_SLOW] = 135;
 	piton_kind = lookup_kind(tval_find_idx("tool"),
 		lookup_sval(tval_find_idx("tool"), "Piton"));
 	scuba_kind = lookup_kind(tval_find_idx("tool"),
@@ -276,6 +278,8 @@ static int test_spelunking_save_roundtrip(void *state)
 	eq(skitter->hp, 3);
 	eq(skitter->max_hp, 4);
 	eq(skitter->energy, 37U);
+	eq(skitter->reward, 0);
+	eq(skitter->status[WORLD_SPELUNK_STATUS_SLOW],135);
 	require(!world_spelunk_visibility_is_visible(player->spelunking, 0, 2));
 	require(world_spelunk_visibility_is_explored(player->spelunking, 0, 2));
 	eq(world_spelunk_runtime_ground_object_count(player->spelunking), 1);
@@ -1141,8 +1145,55 @@ static int test_spelunking_shared_inventory_boundary(void *state)
 	ok;
 }
 
+static int test_mixed_roster_save(void *unused)
+{
+	enum world_spelunk_tile cells[72];
+	int i;
+	int32_t experience;
+	(void)unused;
+	reset_before_load();
+	require(savefile_load("Test1", false));
+	for (i = 0; i < 72; i++) cells[i] = WORLD_SPELUNK_AIR;
+	for (i = 0; i < 12; i++) cells[5 * 12 + i] = WORLD_SPELUNK_ROCK;
+	require(install_spelunking_runtime(cells, 12, 6, 2, 4, 90));
+	player->spelunking->actor_roster_initialized = true;
+	for (i = 0; i < world_spelunk_actor_definition_count(); i++) {
+		const struct world_spelunk_actor_definition *kind = world_spelunk_actor_by_index(i);
+		require(world_spelunk_runtime_add_actor(player->spelunking, kind->id, 4 + i, 4));
+		player->spelunking->actors[i].hp = 2;
+		player->spelunking->actors[i].energy = 37 + i;
+	}
+	experience = player->exp;
+	require(savefile_save("TestSpelunk"));
+	reset_before_load();
+	require(savefile_load("TestSpelunk", false));
+	eq(player->spelunking->actor_count, 3);
+	for (i = 0; i < world_spelunk_actor_definition_count(); i++) {
+		const struct world_spelunk_actor *actor = world_spelunk_runtime_actor_at(player->spelunking, 4 + i, 4);
+		const struct world_spelunk_actor_definition *kind;
+		notnull(actor);
+		kind = world_spelunk_actor_by_id(actor->id);
+		notnull(kind);
+		eq(actor->hp, 2);
+		eq(actor->energy, 37 + i);
+		eq(actor->max_hp, kind->hitpoints);
+	}
+	/* A cleared saved roster remains cleared; loading does not repopulate it. */
+	while (player->spelunking->actor_count) {
+		require(world_spelunk_runtime_remove_actor(player->spelunking, &player->spelunking->actors[0]));
+	}
+	require(savefile_save("TestSpelunk"));
+	reset_before_load();
+	require(savefile_load("TestSpelunk", false));
+	eq(player->spelunking->actor_count, 0);
+	require(player->spelunking->actor_roster_initialized);
+	eq(player->exp, experience);
+	ok;
+}
+
 const char *suite_name = "game/spelunking-persistence";
 struct test tests[] = {
+	{ "mixed roster save", test_mixed_roster_save },
 	{ "save roundtrip", test_spelunking_save_roundtrip },
 	{ "player adapter", test_spelunking_player_adapter },
 	{ "inventory clock", test_spelunking_inventory_clock },

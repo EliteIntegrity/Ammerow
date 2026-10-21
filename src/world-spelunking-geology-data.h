@@ -37,6 +37,8 @@ struct world_spelunk_material_definition {
 	const char *name;
 	uint8_t tag;
 	uint16_t weight;
+	/** Digging skill threshold and multiplier, on the native 1600-point scale. */
+	uint16_t dig_threshold, dig_multiplier;
 };
 
 /** Stable, non-colliding presentation overlay. */

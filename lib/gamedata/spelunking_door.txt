@@ -1,0 +1,4 @@
+# Cave doors: stable ID, lock power (0 unlocked, 1-7 ordinary lock), name.
+# Old survey crews fitted these to dry crawlways; they are not water dams.
+door:core.spelunk.door.survey:0:survey door
+door:core.spelunk.door.store:2:survey store door

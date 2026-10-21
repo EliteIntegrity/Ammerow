@@ -11,6 +11,7 @@
 #include "angband.h"
 
 #include "cave.h"
+#include "map-visual-data.h"
 #include "obj-desc.h"
 #include "obj-knowledge.h"
 #include "obj-tval.h"
@@ -250,6 +251,16 @@ void sdl3_inspect_card_configure_spelunking(
 	my_strcpy(card->name, inspect.actor_definition->name,
 		sizeof(card->name));
 	my_strcpy(card->subtitle, "Cave creature", sizeof(card->subtitle));
+	if (inspect.knowledge == WORLD_SPELUNK_INSPECT_VISIBLE) {
+		const struct map_visual_binding *binding = map_visual_for(
+			"cave-actor", inspect.actor_definition->id);
+		if (binding && streq(binding->domain, "monster")) {
+			sdl3_ascii_art_make_key(card->asset_key, sizeof(card->asset_key),
+				SDL3_ASCII_ART_MONSTER, binding->art_id, NULL);
+		}
+		my_strcpy(card->flavor, inspect.actor_definition->description ?
+			inspect.actor_definition->description : "", sizeof(card->flavor));
+	}
 	strnfmt(card->status, sizeof(card->status), "Health: %d/%d",
 		inspect.actor->hp, inspect.actor->max_hp);
 	strnfmt(card->details[0], sizeof(card->details[0]), "Armour: %d",
@@ -257,6 +268,9 @@ void sdl3_inspect_card_configure_spelunking(
 	strnfmt(card->details[1], sizeof(card->details[1]), "Attack: %dd%d",
 		inspect.actor_definition->damage_dice,
 		inspect.actor_definition->damage_sides);
+	strnfmt(card->details[2], sizeof(card->details[2]), "Pace: %s; ground movement",
+		inspect.actor_definition->speed > 110 ? "quick" :
+		inspect.actor_definition->speed < 110 ? "slow" : "normal");
 	my_strcpy(card->footer, "Look: arrows move; Enter/Esc closes",
 		sizeof(card->footer));
 }

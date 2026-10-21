@@ -24,6 +24,7 @@ enum geology_field {
 struct geology_record {
 	struct world_spelunk_geology_profile profile;
 	unsigned int fields;
+	unsigned int digging_fields;
 	struct geology_record *next;
 };
 
@@ -209,7 +210,32 @@ static enum parser_error parse_material(struct parser *p)
 	material->weight = (uint16_t)weight;
 	material->visual_material_id = string_make(visual);
 	material->name = string_make(name);
+	/* Old/custom profiles retain granite-like difficulty until configured. */
+	material->dig_threshold = 40;
+	material->dig_multiplier = 1;
 	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_digging(struct parser *p)
+{
+	struct geology_parse_state *s = parser_priv(p);
+	int tag = parser_getint(p, "tag"), i;
+	int threshold = parser_getint(p, "threshold");
+	int multiplier = parser_getint(p, "multiplier");
+	if (!s->current) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (threshold < 0 || threshold > 1000 || multiplier < 1 || multiplier > 16)
+		return PARSE_ERROR_INVALID_VALUE;
+	for (i = 0; i < s->current->profile.material_count; i++) {
+		struct world_spelunk_material_definition *m = &s->current->profile.materials[i];
+		if (m->tag == tag) {
+			if (s->current->digging_fields & (1U << i)) return PARSE_ERROR_REPEATED_DIRECTIVE;
+			m->dig_threshold = (uint16_t)threshold;
+			m->dig_multiplier = (uint16_t)multiplier;
+			s->current->digging_fields |= 1U << i;
+			return PARSE_ERROR_NONE;
+		}
+	}
+	return PARSE_ERROR_INVALID_VALUE;
 }
 
 static enum parser_error parse_decoration(struct parser *p)
@@ -281,6 +307,7 @@ static struct parser *init_parse_geology(void)
 		parse_decoration_budget);
 	parser_reg(p, "material int tag sym id int weight sym visual str name",
 		parse_material);
+	parser_reg(p, "digging int tag int threshold int multiplier", parse_digging);
 	parser_reg(p, "decoration int tag sym id sym placement int weight int spacing char glyph sym attr str name",
 		parse_decoration);
 	return p;

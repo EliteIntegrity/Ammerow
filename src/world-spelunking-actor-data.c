@@ -83,6 +83,7 @@ static void free_actor_record(struct actor_record *record)
 	string_free((char *)record->actor.id);
 	string_free((char *)record->actor.name);
 	string_free((char *)record->actor.death_cause);
+	string_free((char *)record->actor.description);
 	mem_free(record);
 }
 
@@ -156,6 +157,18 @@ static enum parser_error parse_death_cause(struct parser *p)
 	if (!cause || !cause[0]) return PARSE_ERROR_INVALID_VALUE;
 	record->actor.death_cause = string_make(cause);
 	record->fields |= ACTOR_FIELD_DEATH_CAUSE;
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_description(struct parser *p)
+{
+	struct actor_parse_state *state = parser_priv(p);
+	struct actor_record *record = state->current_actor;
+	const char *text = parser_getstr(p, "text");
+	if (!record) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (record->actor.description) return PARSE_ERROR_REPEATED_DIRECTIVE;
+	if (!text || !text[0] || strlen(text) >= 1024) return PARSE_ERROR_INVALID_VALUE;
+	record->actor.description = string_make(text);
 	return PARSE_ERROR_NONE;
 }
 
@@ -300,6 +313,53 @@ static enum parser_error parse_candidate(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static const struct { const char *name; int flag; const char *description; } traits[] = {
+#define TRAIT(n, text) { #n, RF_##n, text }
+	TRAIT(ANIMAL,"animal"), TRAIT(EVIL,"evil"), TRAIT(UNDEAD,"undead"), TRAIT(DEMON,"demon"),
+	TRAIT(ORC,"orc"), TRAIT(TROLL,"troll"), TRAIT(GIANT,"giant"), TRAIT(DRAGON,"dragon"),
+	TRAIT(NONLIVING,"nonliving"), TRAIT(SPIRIT,"spirit"),
+	TRAIT(IM_ACID,"resists acid"), TRAIT(IM_ELEC,"resists lightning"), TRAIT(IM_FIRE,"resists fire"),
+	TRAIT(IM_COLD,"resists cold"), TRAIT(IM_POIS,"resists poison"), TRAIT(IM_NETHER,"resists nether"),
+	TRAIT(IM_WATER,"resists water"), TRAIT(IM_PLASMA,"resists plasma"), TRAIT(IM_NEXUS,"resists nexus"),
+	TRAIT(IM_DISEN,"resists disenchantment"), TRAIT(HURT_FIRE,"vulnerable to fire"),
+	TRAIT(HURT_COLD,"vulnerable to cold"), TRAIT(HURT_LIGHT,"vulnerable to light"),
+	TRAIT(NO_FEAR,"cannot be frightened"), TRAIT(NO_CONF,"cannot be confused"),
+	TRAIT(NO_SLEEP,"cannot be put to sleep"), TRAIT(NO_HOLD,"cannot be held"),
+	TRAIT(NO_SLOW,"cannot be slowed"), TRAIT(NO_STUN,"cannot be stunned")
+#undef TRAIT
+};
+
+void world_spelunk_actor_describe_traits(const struct world_spelunk_actor_definition *d,
+		char *text, size_t size)
+{
+	size_t i;
+	my_strcpy(text,"",size);
+	for (i = 0; i < N_ELEMENTS(traits); i++) {
+		if (!rf_has(d->flags,traits[i].flag)) continue;
+		if (text[0]) my_strcat(text,", ",size);
+		my_strcat(text,traits[i].description,size);
+	}
+	if (!text[0]) my_strcpy(text,"no special traits",size);
+}
+
+static enum parser_error parse_trait(struct parser *p)
+{
+	struct actor_parse_state *state = parser_priv(p);
+	struct actor_record *record = state->current_actor;
+	const char *name = parser_getsym(p, "name");
+	size_t i;
+	if (!record) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	for (i = 0; i < N_ELEMENTS(traits); i++) {
+		if (!streq(name, traits[i].name)) continue;
+		if (rf_has(record->actor.flags, traits[i].flag))
+			return PARSE_ERROR_REPEATED_DIRECTIVE;
+		rf_on(record->actor.flags, traits[i].flag);
+		return PARSE_ERROR_NONE;
+	}
+	/* In particular, flight, invisibility and unique behaviour aren't inferred. */
+	return PARSE_ERROR_INVALID_VALUE;
+}
+
 static struct parser *init_parse_actors(void)
 {
 	struct parser *p = parser_new();
@@ -308,7 +368,9 @@ static struct parser *init_parse_actors(void)
 	parser_setpriv(p, state);
 	parser_reg(p, "actor sym id str name", parse_actor);
 	parser_reg(p, "death-cause str cause", parse_death_cause);
+	parser_reg(p, "description str text", parse_description);
 	parser_reg(p, "appearance char glyph sym color", parse_appearance);
+	parser_reg(p, "trait sym name", parse_trait);
 	parser_reg(p, "combat int armour int to-hit int dice int sides",
 		parse_combat);
 	parser_reg(p, "vitals int hitpoints int speed int experience",
@@ -372,6 +434,7 @@ static void cleanup_actor_data(void)
 		string_free((char *)actor_definitions[i].id);
 		string_free((char *)actor_definitions[i].name);
 		string_free((char *)actor_definitions[i].death_cause);
+		string_free((char *)actor_definitions[i].description);
 	}
 	mem_free(actor_definitions);
 	actor_definitions = NULL;

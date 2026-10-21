@@ -45,6 +45,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-explore.h"
 #include "player-history.h"
 #include "player-quest.h"
 #include "player-timed.h"
@@ -456,6 +457,7 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 		if (!monster_is_in_view(mon)) {
 			/* Mark as easily visible */
 			mflag_on(mon->mflag, MFLAG_VIEW);
+			player_explore_notice_monster(player, mon);
 
 			/* Disturb on appearance */
 			if (OPT(player, disturb_near))
@@ -471,13 +473,18 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 			mflag_off(mon->mflag, MFLAG_VIEW);
 
 			/* Disturb on disappearance */
-			if (OPT(player, disturb_near) && !monster_is_camouflaged(mon))
+			if (OPT(player, disturb_near) && !monster_is_camouflaged(mon)) {
+				player_explore_cancel(player, "a creature left your view");
 				disturb(player);
+			}
 
 			/* Re-draw monster list window */
 			player->upkeep->redraw |= PR_MONLIST;
 		}
 	}
+	/* Detection outside normal sight also stops continuous exploration,
+	 * independently of the traditional disturb-near preference. */
+	player_explore_notice_monster(player, mon);
 }
 
 /**

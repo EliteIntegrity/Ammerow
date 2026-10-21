@@ -40,6 +40,12 @@ static bool map_is_solid(const struct world_spelunk_map *map, int x, int y)
 	return map->cells[y * map->stride + x] == WORLD_SPELUNK_ROCK;
 }
 
+bool world_spelunk_map_blocks(const struct world_spelunk_map *map, int x, int y)
+{
+	return map_is_solid(map, x, y) ||
+		(map->blocked && map->blocked[y * map->stride + x]);
+}
+
 static bool map_is_water(const struct world_spelunk_map *map, int x, int y)
 {
 	return map_in_bounds(map, x, y) &&
@@ -94,7 +100,7 @@ bool world_spelunk_state_init(struct world_spelunk_state *state,
 		const struct world_spelunk_rules *rules, int x, int y, int stamina)
 {
 	if (!state || !map_is_valid(map) || !rules ||
-		!map_in_bounds(map, x, y) || map_is_solid(map, x, y) ||
+		!map_in_bounds(map, x, y) || world_spelunk_map_blocks(map, x, y) ||
 		stamina <= 0 || rules->action_energy == 0 ||
 		rules->safe_fall_tiles < 0 || rules->fall_base_damage < 0 ||
 		rules->jump_stamina_cost < 0 ||
@@ -207,7 +213,7 @@ bool world_spelunk_state_is_valid(const struct world_spelunk_state *state)
 
 	if (!state || !map_is_valid(&state->map) ||
 			!map_in_bounds(&state->map, state->x, state->y) ||
-			map_is_solid(&state->map, state->x, state->y) ||
+			world_spelunk_map_blocks(&state->map, state->x, state->y) ||
 			state->rules.action_energy == 0 ||
 			state->rules.safe_fall_tiles < 0 ||
 			state->rules.fall_base_damage < 0 ||
@@ -444,6 +450,18 @@ static enum world_spelunk_action_event resolve_after_move(
 	return apply_gravity(state, damage);
 }
 
+bool world_spelunk_settle_terrain(struct world_spelunk_state *state,
+		struct world_spelunk_action_report *report)
+{
+	int old_y;
+	if (!state || !report || !map_is_valid(&state->map)) return false;
+	old_y = state->y;
+	memset(report, 0, sizeof(*report));
+	report->event = resolve_after_move(state, false, false, 0, &report->damage);
+	report->fall_tiles = state->y - old_y;
+	return world_spelunk_state_is_valid(state);
+}
+
 static enum world_spelunk_action_event apply_move(
 		struct world_spelunk_state *state, int dx, int dy, bool *accepted,
 		int *damage)
@@ -476,7 +494,7 @@ static enum world_spelunk_action_event apply_move(
 	if (state->movement == WORLD_SPELUNK_SWIMMING) {
 		nx = state->x + dx;
 		ny = state->y + dy;
-		if (map_is_solid(&state->map, nx, ny)) {
+		if (world_spelunk_map_blocks(&state->map, nx, ny)) {
 			return WORLD_SPELUNK_EVENT_NONE;
 		}
 		state->x = nx;
@@ -494,10 +512,10 @@ static enum world_spelunk_action_event apply_move(
 		step = dx > 0 ? 1 : -1;
 		x1 = state->x + step;
 		x2 = state->x + step * 2;
-		if (map_is_solid(&state->map, x1, state->y)) {
+		if (world_spelunk_map_blocks(&state->map, x1, state->y)) {
 			return WORLD_SPELUNK_EVENT_NONE;
 		}
-		state->x = map_is_solid(&state->map, x2, state->y) ? x1 : x2;
+		state->x = world_spelunk_map_blocks(&state->map, x2, state->y) ? x1 : x2;
 		state->fall_start_y = state->y;
 		state->jump_holding = false;
 		*accepted = true;
@@ -519,7 +537,7 @@ static enum world_spelunk_action_event apply_move(
 	if (state->movement == WORLD_SPELUNK_CLIMBING) {
 		nx = state->x + dx;
 		ny = state->y + dy;
-		if (map_is_solid(&state->map, nx, ny)) {
+		if (world_spelunk_map_blocks(&state->map, nx, ny)) {
 			return WORLD_SPELUNK_EVENT_NONE;
 		}
 		state->x = nx;
@@ -531,7 +549,7 @@ static enum world_spelunk_action_event apply_move(
 	if (state->movement == WORLD_SPELUNK_HANGING) {
 		nx = state->x + dx;
 		ny = state->y + dy;
-		if (map_is_solid(&state->map, nx, ny)) {
+		if (world_spelunk_map_blocks(&state->map, nx, ny)) {
 			return WORLD_SPELUNK_EVENT_NONE;
 		}
 		/* Step up off a rope onto an adjoining ledge/anchor, not into
@@ -559,7 +577,7 @@ static enum world_spelunk_action_event apply_move(
 	}
 	nx = state->x + dx;
 	ny = state->y + dy;
-	if (map_is_solid(&state->map, nx, ny)) {
+	if (world_spelunk_map_blocks(&state->map, nx, ny)) {
 		return WORLD_SPELUNK_EVENT_NONE;
 	}
 	if (dy < 0 && !map_has_rope(&state->map, nx, ny) &&

@@ -57,6 +57,7 @@
 #include "ui-target.h"
 #include "wizard.h"
 #include "world-entry.h"
+#include "world-turn.h"
 
 #define ADD_LABEL(text, cmd, valid) { \
 	cmdkey = cmd_lookup_key_unktrl((cmd), mode); \
@@ -661,6 +662,8 @@ int context_menu_object(struct object *obj)
 	region area = { 0, 0, 0, 0 };
 
 	bool allowed = true;
+	bool in_shop = world_player_mode_has_capability(player, WORLD_MODE_CAP_NATIVE_CAVE) &&
+		cave && square_isshop(cave, player->grid);
 	int mode = OPT(player, rogue_like_commands) ? KEYMAP_MODE_ROGUE : KEYMAP_MODE_ORIG;
 	unsigned char cmdkey;
 
@@ -729,7 +732,7 @@ int context_menu_object(struct object *obj)
 	}
 
 	if (object_is_carried(player, obj)) {
-		if (!square_isshop(cave, player->grid)) {
+		if (!in_shop) {
 			ADD_LABEL("Drop", CMD_DROP, MN_ROW_VALID);
 
 			if (obj->number > 1) {
@@ -825,7 +828,7 @@ int context_menu_object(struct object *obj)
 
 		case MENU_VALUE_DROP_ALL:
 			/* Drop entire stack without confirmation. */
-			if (square_isshop(cave, player->grid))
+			if (in_shop)
 				cmdq_push(CMD_STASH);
 			else
 				cmdq_push(CMD_DROP);
@@ -892,8 +895,7 @@ int context_menu_object(struct object *obj)
 		cmd_set_arg_item(cmdq_peek(), "item", obj);
 
 		/* If we're in a store, change the "drop" command to "stash". */
-		if (selected == CMD_DROP &&
-			square_isshop(cave, player->grid)) {
+		if (selected == CMD_DROP && in_shop) {
 			struct command *gc = cmdq_peek();
 			if (square(cave, player->grid)->feat == FEAT_HOME)
 				gc->code = CMD_STASH;

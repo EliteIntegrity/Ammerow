@@ -1575,6 +1575,8 @@ const char *square_apparent_name(struct chunk *c, struct loc grid) {
 	const struct feature *fp = f_info[actual].mimic ?
 		f_info[actual].mimic : &f_info[actual];
 	if (destination) return destination->name;
+	if (actual != FEAT_NONE && world_entry_is_edge_exit_grid(c, grid))
+		return "region crossing (step here to travel)";
 	if (square_iswater(c, grid)) return "deep water";
 	if (square_isroad(c, grid)) return "packed road";
 	if (square_iswood(c, grid)) return "tree";
@@ -1598,6 +1600,7 @@ const char *square_apparent_look_prefix(struct chunk *c, struct loc grid) {
 	if (world_entry_known_destination(c, grid)) {
 		return actual == FEAT_HOLE ? "a shaft into " : "an entrance to ";
 	}
+	if (actual != FEAT_NONE && world_entry_is_edge_exit_grid(c, grid)) return "a ";
 	if (square_iswater(c, grid)) return "some ";
 	if (square_isroad(c, grid)) return "a ";
 	if (square_iswood(c, grid)) return "a ";
@@ -1619,6 +1622,7 @@ const char *square_apparent_look_in_preposition(struct chunk *c, struct loc grid
 	const struct feature *fp = f_info[actual].mimic ?
 		f_info[actual].mimic : &f_info[actual];
 	if (world_entry_known_destination(c, grid)) return "at ";
+	if (actual != FEAT_NONE && world_entry_is_edge_exit_grid(c, grid)) return "at ";
 	if (square_iswater(c, grid)) return "beside ";
 	if (square_isroad(c, grid)) return "on ";
 	if (square_iswood(c, grid)) return "among ";

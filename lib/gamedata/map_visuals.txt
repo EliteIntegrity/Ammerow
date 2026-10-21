@@ -2,6 +2,22 @@
 # tile:<consumer scope>:<semantic identity>:<runtime namespace>:<art identity>
 # Missing bindings/assets retain ordinary glyphs. Player/peek/exit markers win.
 tile:map:visible-pile:object:loot-pile
+
+# Only the discovered trap's public category is used, never its hidden effect.
+tile:trap:standing-mark:feature:standing-mark
+tile:trap:decoy:feature:decoy
+tile:trap:web:feature:web
+tile:trap:trap-door:feature:trap-door
+tile:trap:pit:feature:pit
+tile:trap:strange-rune:feature:strange-rune
+tile:trap:discolored-spot:feature:discolored-spot
+tile:trap:dart-trap:feature:dart-trap
+tile:trap:gas-trap:feature:gas-trap
+tile:trap:alarm:feature:alarm
+tile:trap:explosion:feature:explosion
+tile:trap:mind-blast-trap:feature:mind-blast-trap
+tile:trap:ancient-mechanism:feature:ancient-mechanism
+tile:trap:trap:feature:trap
 tile:cave:rock:feature:cave-rock
 tile:cave-material:limestone:feature:cave-limestone
 tile:cave-material:shale:feature:cave-shale
@@ -19,6 +35,13 @@ tile:cave:rope-end:feature:cave-rope-end
 tile:cave:piton-left:feature:cave-piton-left
 tile:cave:piton-right:feature:cave-piton-right
 tile:cave:exit:feature:cave-exit
+tile:cave:door-closed:feature:door
+tile:cave:door-open:feature:open-door
+tile:cave:trap:feature:dart-trap
+tile:map:chest:object:chest
 tile:cave:passage-up:feature:cave-passage-up
 tile:cave:passage-down:feature:cave-passage-down
 tile:cave-actor:core.spelunk.actor.chasm-skitter:actor:chasm-skitter
+# Explicit art reuse only; cave combat remains in spelunking_actor.txt.
+tile:cave-actor:core.spelunk.actor.cave-rat:monster:giant-grey-rat
+tile:cave-actor:core.spelunk.actor.stone-beetle:monster:killer-brown-beetle

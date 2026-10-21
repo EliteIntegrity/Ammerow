@@ -31,6 +31,10 @@ struct sdl3_visual {
 	struct sdl3_monster_art_pool map_art;
 	struct sdl3_tile_registry tiles;
 	int hybrid_tile_size;
+	enum sdl3_tile_mode tile_mode;
+	bool ascii_square;
+	bool ascii_enhanced;
+	bool ascii_floors;
 	SDL_Texture *grid_texture;
 	SDL_Texture *zoom_out_texture;
 	const struct sdl3_grid *zoom_out_source;

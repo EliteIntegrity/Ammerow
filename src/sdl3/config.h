@@ -18,9 +18,10 @@
 #include "sdl3/audio.h"
 #include "sdl3/layout.h"
 #include "sdl3/terrain.h"
+#include "sdl3/tiles.h"
 #include "sdl3/weather.h"
 
-#define SDL3_CONFIG_VERSION 23
+#define SDL3_CONFIG_VERSION 27
 #define SDL3_CONFIG_FILE "ammerow.ini"
 #define SDL3_CONFIG_LEGACY_FILE "sdl3init.txt"
 #define SDL3_CONFIG_PATH_CAPACITY 1024
@@ -55,7 +56,10 @@ struct sdl3_config {
 	bool big_stat_cards;
 	bool animated_combat;
 	bool edge_warnings;
-	bool tile_mode;
+	enum sdl3_tile_mode tile_mode;
+	bool ascii_square;
+	bool ascii_enhanced;
+	bool ascii_floors;
 	int hybrid_tile_size;
 	bool writable;
 };

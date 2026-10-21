@@ -2,10 +2,30 @@
 # Stable IDs are save identities; file order is presentation only.
 
 actor:core.spelunk.actor.chasm-skitter:chasm skitter
+trait:ANIMAL
+description:A restless shelf-dweller that picks its way along dry rock. Its claws are better at finding a loose ration than crossing an open shaft.
 death-cause:a chasm skitter
 appearance:s:Light Red
 combat:4:24:1:2
 vitals:4:110:2
+
+actor:core.spelunk.actor.cave-rat:cave rat
+trait:ANIMAL
+description:A lean grey scavenger, quick along a shelf but unwilling to leap into the dark. Rope fibres and forgotten provisions are both worth a taste.
+death-cause:a cave rat
+appearance:r:Slate
+combat:3:22:1:2
+vitals:3:112:2
+
+actor:core.spelunk.actor.stone-beetle:stone beetle
+trait:ANIMAL
+trait:NO_CONF
+trait:IM_POIS
+description:A squat brown beetle with a heavy shell dusted in powdered stone. It advances slowly along dry ledges, testing the ground with its jaws.
+death-cause:a stone beetle
+appearance:K:Light Umber
+combat:9:25:1:3
+vitals:7:105:3
 
 # Candidate priority is explicit.  The first supported, unoccupied tile wins.
 spawn:core.spelunk.spawn.east.skitter:core.spelunk.east.001:core.spelunk.actor.chasm-skitter

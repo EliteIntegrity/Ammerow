@@ -104,8 +104,63 @@ static int test_auto_transition_and_rare_lightning(void *state)
 	ok;
 }
 
+static int test_ticks_coalesce_and_resume(void *state)
+{
+	struct sdl3_weather_state weather;
+	uint64_t next = 123;
+	(void)state;
+	sdl3_weather_reset(&weather, SDL3_WEATHER_RAIN, 42U);
+	require(!sdl3_weather_tick(&weather, 500, &next));
+	eq(next, 0);
+	sdl3_weather_set_visible(&weather, true);
+	require(!sdl3_weather_tick(&weather, 1000, &next));
+	eq(next, 1000 + SDL3_WEATHER_TICK_MS);
+	require(!sdl3_weather_tick(&weather, next - 1, &next));
+	require(sdl3_weather_tick(&weather, next, &next));
+	eq(weather.frame, 1);
+	/* A long stall advances one frame, never an unbounded catch-up loop. */
+	require(sdl3_weather_tick(&weather, 9000, &next));
+	eq(weather.frame, 2);
+	eq(next, 9000 + SDL3_WEATHER_TICK_MS);
+	require(!sdl3_weather_tick(&weather, 9000, &next));
+	sdl3_weather_set_visible(&weather, false);
+	require(!sdl3_weather_tick(&weather, 9500, &next));
+	eq(next, 0);
+	sdl3_weather_set_visible(&weather, true);
+	require(!sdl3_weather_tick(&weather, 9999, &next));
+	eq(weather.frame, 2);
+	require(!sdl3_weather_tick(NULL, 1, &next));
+	require(!sdl3_weather_tick(&weather, 1, NULL));
+	ok;
+}
+
+static int test_splashes_stay_small_across_zoom_and_dpi(void *state)
+{
+	(void)state;
+	for (int width = 2; width <= 512; width *= 2) {
+		for (int dpi = 1; dpi <= 3; dpi++) {
+			float previous = 0;
+			for (int frame = 0; frame <= 10; frame++) {
+				float half = sdl3_weather_splash_half_width((float)width,
+					frame / 10.0f, (float)dpi);
+				require(half >= previous && half <= 4.0f * dpi);
+				require(half <= width * 0.25f);
+				previous = half;
+			}
+		}
+	}
+	require(sdl3_weather_splash_half_width(64, 1, 1) ==
+		sdl3_weather_splash_half_width(256, 1, 1));
+	require(sdl3_weather_splash_half_width(0, 1, 1) == 0);
+	require(sdl3_weather_splash_half_width(64, -1, 0) == 1.5f);
+	require(sdl3_weather_splash_half_width(64, 2, 1) == 4.0f);
+	ok;
+}
+
 const char *suite_name = "sdl3/weather";
 struct test tests[] = {
+	{ "weather ticks coalesce and resume", test_ticks_coalesce_and_resume },
+	{ "splash size bounded across zoom and DPI", test_splashes_stay_small_across_zoom_and_dpi },
 	{ "mode names and navigation", test_mode_names_and_navigation },
 	{ "deterministic reset and forced modes",
 		test_reset_is_deterministic_and_forced_modes_hold },

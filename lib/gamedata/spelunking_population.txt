@@ -3,26 +3,40 @@
 # section seed and never advances gameplay randomness.
 
 profile:deepwell.upper-sparse:1
+trap:core.spelunk.trap.spring
+chest:core.spelunk.chest.supplies
+door:core.spelunk.door.survey
 name:Upper Reaches — Sparse Life
-description:A few chasm skitters inhabit the dry shelves, with modest emergency supplies left among the galleries.
+description:Chasm skitters and occasional cave rats inhabit the dry shelves, with modest emergency supplies left among the galleries.
 # Manhattan exclusion radii around the route origin, landmarks and endpoints.
 exclusion:5:3:4
 actor:core.spelunk.actor.chasm-skitter:1:2:24:86
+actor:core.spelunk.actor.cave-rat:0:1:24:86
 object:potion:1:2:20:88:Cure Light Wounds
 object:scroll:0:1:30:88:Magic Mapping
 
 profile:deepwell.gallery-sparse:1
+trap:core.spelunk.trap.spring
+chest:core.spelunk.chest.store
+door:core.spelunk.door.survey
 name:Broken Galleries — Sparse Life
-description:Small skitter groups patrol the wider shelves while useful supplies remain uncommon.
+description:Rats and skitters share the wider shelves with occasional stone beetles, while useful supplies remain uncommon.
 exclusion:5:3:4
-actor:core.spelunk.actor.chasm-skitter:2:3:18:92
+actor:core.spelunk.actor.chasm-skitter:1:2:18:92
+actor:core.spelunk.actor.cave-rat:1:1:18:92
+actor:core.spelunk.actor.stone-beetle:0:1:40:92
 object:potion:1:2:18:92:Cure Light Wounds
 object:scroll:0:1:28:92:Magic Mapping
 
 profile:deepwell.fault-sparse:1
+trap:core.spelunk.trap.stone
+chest:core.spelunk.chest.store
+door:core.spelunk.door.store
 name:Drowned Fault — Sparse Life
-description:The lower fault supports a denser skitter presence and a thin trail of expedition supplies.
+description:Stone beetles shelter on the lower dry ledges among rats, skitters and a thin trail of expedition supplies.
 exclusion:5:3:4
-actor:core.spelunk.actor.chasm-skitter:3:4:16:92
+actor:core.spelunk.actor.chasm-skitter:1:2:16:92
+actor:core.spelunk.actor.cave-rat:1:1:16:92
+actor:core.spelunk.actor.stone-beetle:1:2:40:92
 object:potion:1:2:18:92:Cure Light Wounds
 object:scroll:1:1:28:92:Magic Mapping

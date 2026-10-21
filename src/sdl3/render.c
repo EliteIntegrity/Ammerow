@@ -524,6 +524,10 @@ static SDL_Color terrain_foreground_color(SDL_Color fallback,
 		const struct sdl3_theme *theme)
 {
 	if (!variant) return fallback;
+	if (variant->active && variant->crossing) {
+		const struct terrain_visual_rgb amber = { 232, 174, 67 };
+		return terrain_recipe_color(amber, variant, theme);
+	}
 	if (!variant->active || !variant->recipe) {
 		return variant->in_view ? fallback :
 			(variant->remembered_brightness ?
@@ -532,6 +536,53 @@ static SDL_Color terrain_foreground_color(SDL_Color fallback,
 			 sdl3_theme_remembered_world_color(theme, fallback));
 	}
 	return terrain_recipe_color(variant->recipe->base, variant, theme);
+}
+
+/** A threshold on the interior-facing edge of the actual trigger cell.
+ * The arrow stays in its centre; actors and items are drawn above this strip. */
+static void draw_crossing_marker(SDL_Renderer *renderer,
+		const struct sdl3_terrain_variant *variant,
+		const struct sdl3_theme *theme, const SDL_FRect *rect)
+{
+	const struct terrain_visual_rgb amber = { 232, 174, 67 };
+	SDL_BlendMode old_blend;
+	SDL_FRect strip;
+	SDL_Color color;
+	float thickness, length, step;
+	bool horizontal;
+
+	if (!variant || !variant->crossing || rect->w < 2 || rect->h < 2) return;
+	horizontal = variant->crossing == GRID_SURFACE_EXIT_NORTH ||
+		variant->crossing == GRID_SURFACE_EXIT_SOUTH;
+	thickness = SDL_min(6.0f, SDL_max(2.0f, SDL_min(rect->w, rect->h) * 0.18f));
+	strip = *rect;
+	if (horizontal) {
+		strip.h = thickness;
+		if (variant->crossing == GRID_SURFACE_EXIT_NORTH)
+			strip.y += rect->h - thickness;
+	} else {
+		strip.w = thickness;
+		if (variant->crossing == GRID_SURFACE_EXIT_WEST)
+			strip.x += rect->w - thickness;
+	}
+	SDL_GetRenderDrawBlendMode(renderer, &old_blend);
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 190);
+	SDL_RenderFillRect(renderer, &strip);
+	color = terrain_recipe_color(amber, variant, theme);
+	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+	length = horizontal ? strip.w : strip.h;
+	step = thickness * 1.6f;
+	for (float pos = 0; pos < length - 1; pos += step) {
+		float span = SDL_min(thickness - 1, length - 1 - pos);
+		if (horizontal)
+			SDL_RenderLine(renderer, strip.x + pos, strip.y + thickness - 1,
+				strip.x + pos + span, strip.y + thickness - 1 - span);
+		else
+			SDL_RenderLine(renderer, strip.x, strip.y + pos + span,
+				strip.x + span, strip.y + pos);
+	}
+	SDL_SetRenderDrawBlendMode(renderer, old_blend);
 }
 
 static void draw_cell(struct sdl3_visual *visual, SDL_Renderer *renderer,
@@ -565,6 +616,7 @@ static void draw_cell(struct sdl3_visual *visual, SDL_Renderer *renderer,
 	SDL_SetRenderDrawColor(renderer, background.r, background.g,
 		background.b, background.a);
 	SDL_RenderFillRect(renderer, &rect);
+	draw_crossing_marker(renderer, variant, theme, &rect);
 	if (font) {
 		sdl3_font_draw(font, (uint32_t)cell->codepoint, foreground,
 			rect.x, rect.y, rect.w, rect.h);
@@ -710,6 +762,36 @@ static SDL_FRect map_viewport(const struct sdl3_visual *visual,
 	};
 }
 
+static bool draw_map_glyph(struct sdl3_font *font, SDL_Renderer *renderer,
+		const struct sdl3_map_view *view, uint32_t codepoint, SDL_Color color,
+		float x, float y, float width, float height)
+{
+	if (view->ascii_square && !view->tile_mode)
+		return sdl3_font_draw_square(font, renderer, codepoint, color,
+			x, y, width, height);
+	return sdl3_font_draw(font, codepoint, color, x, y, width, height);
+}
+
+static bool draw_map_terrain_glyph(struct sdl3_font *font, SDL_Renderer *renderer,
+		const struct sdl3_map_view *view, const struct sdl3_cell *cell,
+		const struct sdl3_terrain_variant *variant, SDL_Color color,
+		const SDL_FRect *rect)
+{
+	if (!view->tile_mode && variant &&
+			cell->codepoint == variant->codepoint &&
+			cell->foreground == variant->foreground) {
+		/* The actual crossing/arrow is inside the rim. Remove only its known
+		 * outer wall; neither the map nor movement rules are modified. */
+		if (variant->ascii_terrain == SDL3_ASCII_TERRAIN_OPENING) return true;
+		if (view->ascii_square && view->ascii_enhanced &&
+				variant->ascii_terrain == SDL3_ASCII_TERRAIN_WALL)
+			return sdl3_font_draw_square_wall(font, renderer, cell->codepoint,
+				color, rect->x, rect->y, rect->w, rect->h);
+	}
+	return draw_map_glyph(font, renderer, view, cell->codepoint, color,
+		rect->x, rect->y, rect->w, rect->h);
+}
+
 struct sdl3_map_camera {
 	SDL_FRect viewport;
 	float cell_width;
@@ -733,6 +815,10 @@ static struct sdl3_map_camera map_camera(const struct sdl3_visual *visual,
 			map_view->zoom_percent, 32);
 		result.cell_width = (float)side;
 		result.cell_height = (float)side;
+	} else if (map_view->ascii_square) {
+		int side = sdl3_zoom_square_size(visual->cell_width,
+			visual->cell_height, map_view->zoom_percent);
+		result.cell_width = result.cell_height = (float)side;
 	} else {
 		result.cell_width = (float)SDL_max(1,
 			(visual->cell_width * map_view->zoom_percent + 50) / 100);
@@ -907,10 +993,10 @@ static void draw_combat_effect(struct sdl3_visual *visual,
 		for (i = 0; number[i]; i++) {
 			SDL_Color shadow = { 0, 0, 0, color.a };
 
-			sdl3_font_draw(map_font, (uint32_t)number[i], shadow,
+			draw_map_glyph(map_font, renderer, map_view, (uint32_t)number[i], shadow,
 				x + i * glyph_width + 2.0f, y + 2.0f,
 				glyph_width, glyph_height);
-			sdl3_font_draw(map_font, (uint32_t)number[i], color,
+			draw_map_glyph(map_font, renderer, map_view, (uint32_t)number[i], color,
 				x + i * glyph_width, y, glyph_width, glyph_height);
 		}
 		SDL_SetRenderClipRect(renderer, NULL);
@@ -966,7 +1052,7 @@ static void draw_combat_effect(struct sdl3_visual *visual,
 					map_view, subject, cell, &moving_rect);
 			}
 			if (!subject_drawn) {
-				sdl3_font_draw(map_font, (uint32_t)cell->codepoint,
+				draw_map_glyph(map_font, renderer, map_view, (uint32_t)cell->codepoint,
 					foreground, moving_rect.x, moving_rect.y,
 					moving_rect.w, moving_rect.h);
 			}
@@ -984,7 +1070,7 @@ static void draw_combat_effect(struct sdl3_visual *visual,
 			SDL_SetRenderDrawColor(renderer, impact.r, impact.g, impact.b,
 				impact.a);
 			SDL_RenderRect(renderer, &pulse);
-			sdl3_font_draw(map_font,
+			draw_map_glyph(map_font, renderer, map_view,
 				effect->hit ? (uint32_t)'*' : (uint32_t)'/', impact,
 				target_rect.x, target_rect.y, target_rect.w, target_rect.h);
 		}
@@ -1013,7 +1099,7 @@ static void draw_combat_effect(struct sdl3_visual *visual,
 		SDL_RenderLine(renderer, sx, sy, x, y);
 		glyph_width = target_rect.w * 1.30f;
 		glyph_height = target_rect.h * 1.18f;
-		sdl3_font_draw(map_font,
+		draw_map_glyph(map_font, renderer, map_view,
 			effect->glyph ? (uint32_t)effect->glyph : (uint32_t)'*', color,
 			x - glyph_width * 0.5f, y - glyph_height * 0.5f,
 			glyph_width, glyph_height);
@@ -1073,7 +1159,7 @@ static void draw_player_vitality(struct sdl3_visual *visual,
 		(int)camera.viewport.w, (int)camera.viewport.h
 	};
 	SDL_SetRenderClipRect(renderer, &clip);
-	sdl3_font_draw(map_font, (uint32_t)'@', color, rect.x, rect.y,
+	draw_map_glyph(map_font, renderer, map_view, (uint32_t)'@', color, rect.x, rect.y,
 		rect.w, rect.h);
 	SDL_SetRenderClipRect(renderer, NULL);
 }
@@ -1204,6 +1290,8 @@ static void draw_weather(struct sdl3_visual *visual, SDL_Renderer *renderer,
 	bool had_clip;
 	int count;
 	int i;
+	SDL_Window *window;
+	float display_scale;
 
 	if (!visual || !renderer || !map_view || !map_view->active || !weather ||
 			!weather->visible || weather->kind == SDL3_WEATHER_KIND_NONE) {
@@ -1219,6 +1307,8 @@ static void draw_weather(struct sdl3_visual *visual, SDL_Renderer *renderer,
 	SDL_SetRenderClipRect(renderer, &clip);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	count = weather_particle_count(weather);
+	window = SDL_GetRenderWindow(renderer);
+	display_scale = window ? SDL_GetWindowDisplayScale(window) : 1.0f;
 
 	for (i = 0; i < count; i++) {
 		uint32_t seed = weather_particle_hash(weather->seed ^
@@ -1268,8 +1358,7 @@ static void draw_weather(struct sdl3_visual *visual, SDL_Renderer *renderer,
 				(float)(1000U - fall_limit);
 
 			if (weather->kind == SDL3_WEATHER_KIND_RAIN) {
-				float width = SDL_max(2.0f,
-					ground.w * (0.18f + settle * 0.16f));
+				float width = sdl3_weather_splash_half_width(ground.w, settle, display_scale);
 				uint8_t alpha = (uint8_t)(150.0f * (1.0f - settle));
 
 				SDL_SetRenderDrawColor(renderer, 164, 205, 232, alpha);
@@ -1429,8 +1518,9 @@ static bool update_zoom_out_texture(struct sdl3_visual *visual,
 			SDL_SetRenderDrawColor(renderer, background.r, background.g,
 				background.b, background.a);
 			SDL_RenderFillRect(renderer, &rect);
-			sdl3_font_draw(font, (uint32_t)cell->codepoint,
-				foreground, rect.x, rect.y, rect.w, rect.h);
+			draw_crossing_marker(renderer, variant, theme, &rect);
+			draw_map_terrain_glyph(font, renderer, map_view, cell, variant,
+				foreground, &rect);
 			(*updates)++;
 		}
 	}
@@ -1490,7 +1580,7 @@ static int draw_zoomed_subject_art(struct sdl3_visual *visual,
 		SDL_RenderFillRect(renderer, &rect);
 		if (!draw_map_subject_art(visual, renderer, map_view, subject, cell,
 				&rect)) {
-			sdl3_font_draw(&visual->map_font, (uint32_t)cell->codepoint,
+			draw_map_glyph(&visual->map_font, renderer, map_view, (uint32_t)cell->codepoint,
 				foreground, rect.x, rect.y, rect.w, rect.h);
 		}
 		updates++;
@@ -1522,6 +1612,7 @@ static bool draw_map_tile_cell(struct sdl3_visual *visual,
 	bool terrain_drawn = false;
 	bool subject_drawn = false;
 	bool terrain_only;
+	bool keep_ground;
 
 	if (!visual || !renderer || !theme || !map_view || !source_cell || !cell ||
 			!rect || !font) {
@@ -1540,7 +1631,26 @@ static bool draw_map_tile_cell(struct sdl3_visual *visual,
 	SDL_SetRenderDrawColor(renderer, background.r, background.g, background.b,
 		background.a);
 	SDL_RenderFillRect(renderer, rect);
-	if (variant && variant->tile_id && sdl3_tile_make_key(feature_key,
+	keep_ground = visual->tile_mode == SDL3_TILE_MODE_FULL && visual->ascii_floors;
+	if (variant && visual->tile_mode == SDL3_TILE_MODE_FULL && !keep_ground) {
+		const char *underlay = sdl3_terrain_underlay(variant->tile_id);
+		if (underlay && sdl3_tile_make_key(feature_key, sizeof(feature_key),
+				SDL3_TILE_FEATURE, underlay)) {
+			/* Do not count the underlay as a successfully drawn feature. */
+			(void)sdl3_tiles_draw(&visual->tiles, renderer, feature_key,
+				world_col, world_row, rect, brightness);
+		}
+	}
+	if (variant && visual->tile_mode == SDL3_TILE_MODE_FULL &&
+			variant->full_tile_id && sdl3_tile_make_key(feature_key,
+			sizeof(feature_key), SDL3_TILE_FEATURE, variant->full_tile_id)) {
+		terrain_drawn = sdl3_tiles_draw(&visual->tiles, renderer, feature_key,
+			world_col, world_row, rect, brightness);
+	}
+	/* Incomplete media still falls back to the normal feature/glyph. */
+	if (!terrain_drawn && variant && variant->tile_id &&
+			!(keep_ground && sdl3_terrain_plain_ground(variant->tile_id)) &&
+			sdl3_tile_make_key(feature_key,
 			sizeof(feature_key), SDL3_TILE_FEATURE, variant->tile_id)) {
 		terrain_drawn = sdl3_tiles_draw(&visual->tiles, renderer, feature_key,
 			world_col, world_row, rect, brightness);
@@ -1553,11 +1663,12 @@ static bool draw_map_tile_cell(struct sdl3_visual *visual,
 		terrain_drawn = sdl3_tiles_draw(&visual->tiles, renderer,
 			variant->tile_overlay_key, world_col, world_row, rect, brightness);
 	}
+	draw_crossing_marker(renderer, variant, theme, rect);
 	subject_drawn = sdl3_tiles_draw_subject(&visual->tiles, renderer, subject,
 		source_cell, world_col, world_row, rect, brightness);
 	if (!subject_drawn && ((variant && variant->tile_glyph_policy == SDL3_TILE_GLYPH_PRESERVE) ||
 			!(terrain_only && terrain_drawn))) {
-		sdl3_font_draw(font, (uint32_t)cell->codepoint, foreground,
+		draw_map_glyph(font, renderer, map_view, (uint32_t)cell->codepoint, foreground,
 			rect->x, rect->y, rect->w, rect->h);
 	}
 	return true;
@@ -1637,8 +1748,9 @@ static int draw_scaled_map(struct sdl3_visual *visual,
 				SDL_SetRenderDrawColor(renderer, background.r, background.g,
 					background.b, background.a);
 				SDL_RenderFillRect(renderer, &rect);
-				sdl3_font_draw(font, (uint32_t)cell->codepoint,
-					foreground, rect.x, rect.y, rect.w, rect.h);
+				draw_crossing_marker(renderer, variant, theme, &rect);
+				draw_map_terrain_glyph(font, renderer, map_view, cell, variant,
+					foreground, &rect);
 				updates++;
 			}
 		}
@@ -2059,16 +2171,30 @@ void sdl3_visual_render(struct sdl3_visual *visual, SDL_Renderer *renderer,
 	SDL_Color canvas = theme ? theme->canvas :
 		(SDL_Color){ 0, 0, 0, SDL_ALPHA_OPAQUE };
 	int tile_size = frame->tile_mode ? (frame->hybrid_tile_size == 32 ? 32 : 64) : 0;
-	if (visual->hybrid_tile_size != tile_size) {
+	bool ascii_square = frame->ascii_square && !frame->tile_mode;
+	bool ascii_enhanced = ascii_square && frame->ascii_enhanced;
+	bool ascii_floors = frame->tile_mode == SDL3_TILE_MODE_FULL && frame->ascii_floors;
+	if (visual->ascii_square != ascii_square ||
+			visual->ascii_enhanced != ascii_enhanced || visual->ascii_floors != ascii_floors) {
+		visual->ascii_square = ascii_square;
+		visual->ascii_enhanced = ascii_enhanced;
+		visual->ascii_floors = ascii_floors;
+		sdl3_visual_invalidate_grid_cache(visual);
+	}
+	if (visual->hybrid_tile_size != tile_size || visual->tile_mode != frame->tile_mode) {
 		char manifest[32];
 
 		sdl3_tiles_free(&visual->tiles);
 		visual->hybrid_tile_size = tile_size;
+		visual->tile_mode = frame->tile_mode;
 		if (tile_size) {
-			strnfmt(manifest, sizeof(manifest), "hybrid-%d.txt", tile_size);
+			strnfmt(manifest, sizeof(manifest), "%s-%d.txt",
+				frame->tile_mode == SDL3_TILE_MODE_FULL ? "full" : "hybrid",
+				tile_size);
 			if (!sdl3_tiles_init(&visual->tiles, renderer, manifest)) {
 				SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-					"Hybrid %dpx portraits unavailable; using ordinary glyphs", tile_size);
+					"%s %dpx assets unavailable; using ordinary glyphs",
+					sdl3_tile_mode_name(frame->tile_mode), tile_size);
 			}
 		}
 		sdl3_visual_invalidate_grid_cache(visual);
@@ -2149,7 +2275,7 @@ void sdl3_visual_render(struct sdl3_visual *visual, SDL_Renderer *renderer,
 		frame->visible_weather ? SDL3_WEATHER_AUTO : SDL3_WEATHER_OFF,
 		frame->fullscreen, frame->dock_visible, frame->hud_stats_visible,
 		frame->big_stat_cards, frame->animated_combat, frame->edge_warnings, frame->tile_mode,
-		frame->hybrid_tile_size,
+		frame->hybrid_tile_size, frame->ascii_square, frame->ascii_enhanced, frame->ascii_floors,
 		frame->dock_placement,
 		frame->dock_rows, frame->dock_cols, frame->audio,
 		frame->game_options, frame->playing);

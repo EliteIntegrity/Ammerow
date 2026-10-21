@@ -13,6 +13,7 @@
 #include "init.h"
 #include "monster.h"
 #include "mon-make.h"
+#include "mon-util.h"
 #include "obj-ignore.h"
 #include "obj-make.h"
 #include "obj-pile.h"
@@ -211,6 +212,69 @@ static int test_new_monster_before_pickup(void *state)
 	do_cmd_autopickup(&cmd);
 	require(!player_explore_active(player));
 	eq(player->upkeep->energy_use, 0);
+	ok;
+}
+
+static int test_detected_monster_message(void *state)
+{
+	struct monster *mon;
+	(void)state;
+	corridor();
+	start();
+	mon = t_add_monster(cave, loc(24, 3), "Kobold");
+	mflag_on(mon->mflag, MFLAG_MARK);
+	mflag_off(mon->mflag, MFLAG_VIEW);
+	update_mon(mon, cave, true);
+	player_explore_check(player);
+	require(!player_explore_active(player));
+	require(strstr(last_message, "detected beyond normal sight"));
+	eq(player->grid.x, 2);
+	ok;
+}
+
+static int test_generic_interrupt_does_not_guess(void *state)
+{
+	struct monster *mon;
+	(void)state;
+	corridor();
+	start();
+	mon = t_add_monster(cave, loc(24, 3), "Kobold");
+	mflag_on(mon->mflag, MFLAG_VISIBLE);
+	/* Another event interrupted us before the next danger check. A generic
+	 * disturbance must not invent which known condition caused that event. */
+	disturb(player);
+	require(!player_explore_active(player));
+	require(strstr(last_message, "Explore stopped: interrupted."));
+	ok;
+}
+
+static int test_perception_disturbance_and_camouflage(void *state)
+{
+	struct monster *mon;
+	bool was_dungeon = character_dungeon;
+	(void)state;
+	corridor();
+	start();
+	OPT(player, disturb_near) = true;
+	character_dungeon = true;
+	sqinfo_on(square(cave, loc(3, 3))->info, SQUARE_GLOW);
+	update_view(cave, player);
+	mon = t_add_monster(cave, loc(3, 3), "Kobold");
+	update_mon(mon, cave, true);
+	character_dungeon = was_dungeon;
+	require(!player_explore_active(player));
+	require(strstr(last_message, "in view (seen or sensed"));
+	corridor();
+	start();
+	mon = t_add_monster(cave, loc(24, 3), "Kobold");
+	mflag_on(mon->mflag, MFLAG_MARK);
+	mflag_on(mon->mflag, MFLAG_CAMOUFLAGE);
+	update_mon(mon, cave, true);
+	require(player_explore_active(player));
+	require(player_explore_check(player));
+	/* Deleting a perceived slot must not leave a phantom danger. */
+	delete_monster_idx(cave, mon->midx);
+	require(player_explore_check(player));
 	ok;
 }
 
@@ -527,6 +591,9 @@ struct test tests[] = {
 	{ "existing monster regardless of disturb option", test_existing_monster_prevents_start },
 	{ "hidden occupant is never attacked", test_hidden_monster_never_attacked },
 	{ "danger interrupts before queued pickup", test_new_monster_before_pickup },
+	{ "detected monster message explains nonvisual danger", test_detected_monster_message },
+	{ "generic interruption does not guess a monster cause", test_generic_interrupt_does_not_guess },
+	{ "perception interruption is explicit and camouflage stays hidden", test_perception_disturbance_and_camouflage },
 	{ "new loot stops at sight and restart acknowledges it", test_new_loot_stops_at_sight },
 	{ "old stack reduction is not discovery", test_old_loot_reduction_not_discovery },
 	{ "ignored loot respects existing rules", test_ignored_loot_does_not_stop },

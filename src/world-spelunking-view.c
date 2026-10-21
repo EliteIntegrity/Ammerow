@@ -11,14 +11,33 @@
  */
 
 #include "world-spelunking-view.h"
+#include "world-spelunking-door.h"
+#include "world-spelunking-fixture.h"
 #include "world-spelunking-actor-data.h"
 #include "world-spelunking-passage.h"
 #include "world-spelunking-transition.h"
 #include "world-spelunking-visibility.h"
 #include "object.h"
 #include "obj-tval.h"
+#include "obj-ignore.h"
+#include "player.h"
 
 #include <string.h>
+
+/** The active player's ignore filter affects presentation, never ownership.
+ * Detached runtime previews have no player policy. Search the whole pile so
+ * an ignored first object cannot conceal another, wanted object. */
+static struct object *view_object_at(const struct world_spelunk_runtime *runtime,
+		int x, int y)
+{
+	struct object *obj;
+	for (obj = runtime->ground_objects; obj; obj = obj->next) {
+		if (obj->grid.x == x && obj->grid.y == y &&
+				!(player && player->spelunking == runtime && ignore_item_ok(player, obj)))
+			return obj;
+	}
+	return NULL;
+}
 
 static uint32_t appearance_hash(int x, int y)
 {
@@ -155,6 +174,29 @@ bool world_spelunk_view_capture_at_system(
 			} else {
 				cell = visible_terrain_cell(runtime, tile, map_x, map_y);
 			}
+			{
+				const struct world_spelunk_door *d = world_spelunk_door_at(runtime, map_x, map_y);
+				if (explored && d && d->known) {
+					bool open = d->known == WORLD_SPELUNK_DOOR_OPEN;
+					cell = terrain_visible ? (open ? WORLD_SPELUNK_VIEW_DOOR_OPEN :
+						WORLD_SPELUNK_VIEW_DOOR_CLOSED) : (open ?
+						WORLD_SPELUNK_VIEW_REMEMBERED_DOOR_OPEN : WORLD_SPELUNK_VIEW_REMEMBERED_DOOR_CLOSED);
+				}
+			}
+			{
+				const struct world_spelunk_fixture *f = world_spelunk_fixture_at(runtime, map_x, map_y);
+				if (explored && f && f->known) {
+					const struct world_spelunk_fixture_definition *def = world_spelunk_fixture_by_id(f->id);
+					bool spent = f->known == SPELUNK_FIXTURE_SPENT;
+					if (def->kind == SPELUNK_CHEST) {
+						cell = terrain_visible ? (spent ? WORLD_SPELUNK_VIEW_CHEST_EMPTY : WORLD_SPELUNK_VIEW_CHEST) :
+							(spent ? WORLD_SPELUNK_VIEW_REMEMBERED_CHEST_EMPTY : WORLD_SPELUNK_VIEW_REMEMBERED_CHEST);
+					} else {
+						cell = terrain_visible ? (spent ? WORLD_SPELUNK_VIEW_TRAP_SPENT : WORLD_SPELUNK_VIEW_TRAP) :
+							(spent ? WORLD_SPELUNK_VIEW_REMEMBERED_TRAP_SPENT : WORLD_SPELUNK_VIEW_REMEMBERED_TRAP);
+					}
+				}
+			}
 			storage[(size_t)row * cols + col] = (uint8_t)cell;
 		}
 	}
@@ -214,7 +256,7 @@ bool world_spelunk_view_capture_at_system(
 			enum world_spelunk_view_cell cell =
 				(enum world_spelunk_view_cell)storage[(size_t)row * cols + col];
 			struct object *object = (visible || detected) ?
-				world_spelunk_runtime_ground_object_at(runtime, map_x,
+				view_object_at(runtime, map_x,
 					map_y) : NULL;
 			const struct world_spelunk_actor *actor = (visible || detected) ?
 				world_spelunk_runtime_actor_at(runtime, map_x, map_y) : NULL;
@@ -490,8 +532,29 @@ bool world_spelunk_view_inspect_system(
 	if (world_spelunk_runtime_has_piton(runtime, x, y)) {
 		inspect->kind = WORLD_SPELUNK_INSPECT_PITON;
 	}
+	{
+		const struct world_spelunk_door *d = world_spelunk_door_at(runtime, x, y);
+		if (d && d->known) {
+			const struct world_spelunk_door_definition *def = world_spelunk_door_by_id(d->id);
+			inspect->kind = WORLD_SPELUNK_INSPECT_DOOR;
+			inspect->door_state = d->known;
+			inspect->door_name = def ? def->name : "cave door";
+			inspect->decoration = NULL;
+		}
+	}
+	{
+		const struct world_spelunk_fixture *f = world_spelunk_fixture_at(runtime, x, y);
+		if (f && f->known) {
+			const struct world_spelunk_fixture_definition *def = world_spelunk_fixture_by_id(f->id);
+			inspect->kind = def->kind == SPELUNK_CHEST ? WORLD_SPELUNK_INSPECT_CHEST : WORLD_SPELUNK_INSPECT_TRAP;
+			inspect->fixture_state = f->known;
+			inspect->trap_known = f->trap_known;
+			inspect->fixture_name = def->name;
+			inspect->decoration = NULL;
+		}
+	}
 	if (visible || detected) {
-		inspect->object = world_spelunk_runtime_ground_object_at(runtime, x, y);
+		inspect->object = view_object_at(runtime, x, y);
 		if (inspect->object) {
 			inspect->kind = WORLD_SPELUNK_INSPECT_OBJECT;
 			if (!visible) {

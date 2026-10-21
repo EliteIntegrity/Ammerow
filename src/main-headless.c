@@ -40,7 +40,7 @@ errr init_headless(int argc, char **argv)
 	const char *scenario_path = NULL;
 	char size_option[64];
 	char zoom_option[32];
-	char *sdl_argv[16];
+	char *sdl_argv[20];
 	int sdl_argc = 1;
 	bool verbose = false;
 	char error[512];
@@ -106,6 +106,8 @@ errr init_headless(int argc, char **argv)
 			scenario.screen_width, scenario.screen_height);
 		sdl_argv[sdl_argc++] = size_option;
 	}
+	sdl_argv[sdl_argc++] = "--ascii-grid";
+	sdl_argv[sdl_argc++] = scenario.ascii_grid;
 	sdl_argv[sdl_argc] = NULL;
 
 	/* Never inherit an interactive save selection in a development run. */

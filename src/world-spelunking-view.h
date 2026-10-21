@@ -47,6 +47,18 @@ enum world_spelunk_view_cell {
 	WORLD_SPELUNK_VIEW_GRIP,
 	WORLD_SPELUNK_VIEW_PLAYER,
 	WORLD_SPELUNK_VIEW_WATER,
+	WORLD_SPELUNK_VIEW_DOOR_CLOSED,
+	WORLD_SPELUNK_VIEW_DOOR_OPEN,
+	WORLD_SPELUNK_VIEW_REMEMBERED_DOOR_CLOSED,
+	WORLD_SPELUNK_VIEW_REMEMBERED_DOOR_OPEN,
+	WORLD_SPELUNK_VIEW_TRAP,
+	WORLD_SPELUNK_VIEW_TRAP_SPENT,
+	WORLD_SPELUNK_VIEW_CHEST,
+	WORLD_SPELUNK_VIEW_CHEST_EMPTY,
+	WORLD_SPELUNK_VIEW_REMEMBERED_TRAP,
+	WORLD_SPELUNK_VIEW_REMEMBERED_TRAP_SPENT,
+	WORLD_SPELUNK_VIEW_REMEMBERED_CHEST,
+	WORLD_SPELUNK_VIEW_REMEMBERED_CHEST_EMPTY,
 	WORLD_SPELUNK_VIEW_PEEK
 };
 
@@ -121,6 +133,9 @@ enum world_spelunk_inspect_kind {
 	WORLD_SPELUNK_INSPECT_STALAGMITE,
 	WORLD_SPELUNK_INSPECT_ROCK,
 	WORLD_SPELUNK_INSPECT_WATER,
+	WORLD_SPELUNK_INSPECT_DOOR,
+	WORLD_SPELUNK_INSPECT_TRAP,
+	WORLD_SPELUNK_INSPECT_CHEST,
 	WORLD_SPELUNK_INSPECT_EXIT,
 	WORLD_SPELUNK_INSPECT_PASSAGE_UP,
 	WORLD_SPELUNK_INSPECT_PASSAGE_DOWN,
@@ -153,6 +168,12 @@ struct world_spelunk_inspect {
 	const struct world_spelunk_actor_definition *actor_definition;
 	const struct world_spelunk_material_definition *material;
 	const struct world_spelunk_decoration_definition *decoration;
+	/** Observed state, never the live hidden door record. */
+	uint8_t door_state;
+	const char *door_name;
+	uint8_t fixture_state;
+	uint8_t trap_known;
+	const char *fixture_name;
 };
 
 /**

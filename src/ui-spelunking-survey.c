@@ -50,14 +50,15 @@ bool ui_spelunk_survey_build(const struct world_spelunk_system *system,
 		level = source->runtime ?
 			level_by_id(source->runtime->location_id) : NULL;
 		fallback_name = level ? world_level_area_name(level) : NULL;
-		my_strcpy(model->labels[model->node_count],
-			recipe ? recipe->name : fallback_name ? fallback_name :
-				"Known cave section",
-			sizeof(model->labels[model->node_count]));
+		strnfmt(model->labels[model->node_count],
+			sizeof(model->labels[model->node_count]), "%d. %s",
+			model->node_count + 1, recipe ? recipe->name : fallback_name ? fallback_name :
+				"Known cave section");
 		strnfmt(model->details[model->node_count],
 			sizeof(model->details[model->node_count]),
-			"Survey depth %u | %s", source->depth,
-			source->runtime ? "visited" : "charted");
+			"Survey depth %u | %s%s", source->depth,
+			source->runtime ? "visited" : "charted",
+			streq(source->id, system->active_node_id) ? " | YOU ARE HERE" : "");
 		my_strcpy(model->descriptions[model->node_count], recipe ?
 			recipe->description :
 			"This known section predates the connected procedural survey.",
@@ -121,4 +122,55 @@ bool ui_spelunk_survey_build(const struct world_spelunk_system *system,
 		model->edge_count++;
 	}
 	return model->node_count > 0 && model->current_node >= 0;
+}
+
+bool ui_spelunk_survey_handle(const struct ui_spelunk_survey_model *model,
+		struct keypress key, int *cursor, bool *focused)
+{
+	int dx = 0, dy = 0, best, best_score = INT_MAX;
+	if (!model || !cursor || !focused || model->node_count <= 0) return false;
+	if (*cursor < 0 || *cursor >= model->node_count)
+		*cursor = MAX(0, model->current_node);
+	if (key.code >= KC_SURVEY_SELECT_FIRST &&
+			key.code < KC_SURVEY_SELECT_FIRST + model->node_count) {
+		*cursor = key.code - KC_SURVEY_SELECT_FIRST;
+		*focused = true;
+		return true;
+	}
+	if (key.code == KC_ENTER || key.code == '\r' || key.code == '\n') {
+		*focused = true;
+		return true;
+	}
+	if (!*focused) return false;
+	switch (key.code) {
+	case ESCAPE: *focused = false; return true;
+	case KC_HOME: *cursor = MAX(0, model->current_node); return true;
+	case KC_TAB: case '\t':
+		*cursor = (*cursor + model->node_count +
+			(key.mods & KC_MOD_SHIFT ? -1 : 1)) % model->node_count;
+		return true;
+	case ARROW_LEFT: case '4': case 'h': dx = -1; break;
+	case ARROW_RIGHT: case '6': case 'l': dx = 1; break;
+	case ARROW_UP: case '8': case 'k': dy = -1; break;
+	case ARROW_DOWN: case '2': case 'j': dy = 1; break;
+	default: return true; /* Focus owns input, not hidden character actions. */
+	}
+	best = *cursor;
+	for (int i = 0; i < model->node_count; i++) {
+		int x = model->nodes[i].x - model->nodes[*cursor].x;
+		int y = model->nodes[i].y - model->nodes[*cursor].y;
+		int forward = dx ? dx * x : dy * y;
+		int sideways = dx ? ABS(y) : ABS(x);
+		int score;
+		if (forward <= 0) continue;
+		/* Prefer a nearby section in the requested half-plane. A branch
+		 * remains reachable diagonally; Tab also reaches every known node. */
+		score = forward + 2 * sideways;
+		if (score < best_score) {
+			best_score = score;
+			best = i;
+		}
+	}
+	*cursor = best;
+	return true;
 }

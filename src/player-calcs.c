@@ -1652,9 +1652,33 @@ static void calc_light(struct player *p, struct player_state *state,
 }
 
 /**
- * Populates `chances` with the player's chance of digging through
- * the diggable terrain types in one turn out of 1600.
+ * Calculate digging skill using an eligible carried tool without equipping it
+ * permanently or changing the player's hit points, focus or inventory stacks.
  */
+int calc_digging_skill(struct player *p, bool *swapped)
+{
+	int slot = slot_by_name(p, "weapon");
+	struct object *weapon = slot_object(p, slot);
+	struct object *digger = player_best_digger(p, false);
+	struct player_state local = p->state;
+	int old_number = 1;
+	bool swap = digger != weapon && (!weapon || obj_can_takeoff(weapon));
+	if (swapped) *swapped = swap;
+	if (!swap) return p->state.skills[SKILL_DIGGING];
+	if (digger) {
+		old_number = digger->number;
+		digger->number = 1;
+	}
+	p->body.slots[slot].obj = digger;
+	/* Match ordinary tunnelling; avoid calc_bonuses' stat side effects. */
+	local.stat_ind[STAT_STR] = local.stat_ind[STAT_DEX] = 0;
+	calc_bonuses(p, &local, false, false);
+	p->body.slots[slot].obj = weapon;
+	if (digger) digger->number = old_number;
+	return local.skills[SKILL_DIGGING];
+}
+
+/** Populate per-terrain chances of digging successfully, each out of 1600. */
 void calc_digging_chances(struct player_state *state, int chances[DIGGING_MAX])
 {
 	int i;

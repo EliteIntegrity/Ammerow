@@ -161,7 +161,7 @@ bool grid_surface_as_text(enum grid_surface_type surface,
 			surface <= GRID_SURFACE_EXIT_WEST) {
 		static const wchar_t exit_glyphs[] = { L'^', L'>', L'v', L'<' };
 
-		*a = COLOUR_L_GREEN;
+		*a = COLOUR_YELLOW;
 		*c = exit_glyphs[surface - GRID_SURFACE_EXIT_NORTH];
 	} else {
 		return false;

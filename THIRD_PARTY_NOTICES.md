@@ -106,6 +106,20 @@ terms. Portrait source PNGs and the earlier code-drawn 16px map tiles are not
 installed. No optional image codec DLL is installed; the pinned SDL_image
 binary depends only on SDL3 and Windows system libraries.
 
+Full Tile also includes 32x32 and 64x64 scenery in `lib/tiles/terrain-*.png`,
+`vegetation-*.png`, `village-*.png` and `scenery-*.png`. These derive from additional
+OpenAI-generated source images under human direction, deterministically
+sampled into walls, woodland, quiet ground and common dungeon features.
+Keep floors ASCII restores ordinary ground glyphs; cave air stays black.
+Shared `pickups-*.png` sheets add generic equipment, ammunition, gold, books
+and supplies, also sampled from human-directed image-generated artwork.
+The `markers-*.png` and `expedition-*.png` supplements cover discovered traps,
+shop signs, fish and expedition equipment. `caves-*.png` supplies side-view rock,
+water, formations, rope, pitons, passages and the cave actor. These also derive
+from human-directed OpenAI-generated source images; the same separate asset
+terms apply. Shop labels and precise cave navigation markers remain glyphs.
+No live image generation runs during play.
+
 These Ammerow assets are separately licensed under `ASSET-LICENSE.md`, not
 under the GPL or the third-party component licences listed above. Their
 attribution and production notices are in `lib/art/NOTICE.md`,

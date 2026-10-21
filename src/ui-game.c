@@ -174,7 +174,7 @@ struct cmd_info cmd_item[] =
 struct cmd_info cmd_action[] =
 {
 	{ "Disarm a trap or chest", { 'D' }, CMD_DISARM, NULL, NULL, 0, NULL, NULL, NULL, 0 },
-	{ "Rest for a while", { 'R' }, CMD_NULL, textui_cmd_rest, NULL, 0, NULL, NULL, NULL, 0 },
+	{ "Rest for a while", { 'R' }, CMD_NULL, textui_cmd_rest, NULL, 0, NULL, NULL, NULL, 0, true },
 	{ "Look around", { 'l', 'x' }, CMD_NULL, do_cmd_look, NULL, 0, NULL, NULL, NULL, 0, true },
 	{ "Target monster or location", { '*' }, CMD_NULL, textui_target, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Target closest monster", { '\'' }, CMD_NULL, textui_target_closest, NULL, 0, NULL, NULL, NULL, 0 },
@@ -214,9 +214,9 @@ struct cmd_info cmd_info[] =
 	{ "Use learned magic", { 'm' }, CMD_CAST, NULL, player_can_cast_prereq, 0, NULL, NULL, NULL, 0 },
 	{ "Full dungeon map", { 'M' }, CMD_NULL, do_cmd_view_map, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Known world", { 0 }, CMD_NULL, do_cmd_world_map, NULL, 0, NULL, NULL, NULL, 0 },
-	{ "Toggle ignoring of items", { 'K', 'O' }, CMD_NULL, textui_cmd_toggle_ignore, NULL, 0, NULL, NULL, NULL, 0 },
-	{ "Display visible item list", { ']' }, CMD_NULL, do_cmd_itemlist, NULL, 0, NULL, NULL, NULL, 0 },
-	{ "Display visible monster list", { '[' }, CMD_NULL, do_cmd_monlist, NULL, 0, NULL, NULL, NULL, 0 },
+	{ "Toggle ignoring of items", { 'K', 'O' }, CMD_NULL, textui_cmd_toggle_ignore, NULL, 0, NULL, NULL, NULL, 0, true },
+	{ "Display visible item list", { ']' }, CMD_NULL, do_cmd_itemlist, NULL, 0, NULL, NULL, NULL, 0, true },
+	{ "Display visible monster list", { '[' }, CMD_NULL, do_cmd_monlist, NULL, 0, NULL, NULL, NULL, 0, true },
 	{ "Locate player on map", { 'L', 'W' }, CMD_NULL, do_cmd_locate, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Help", { '?' }, CMD_NULL, do_cmd_help, NULL, 0, NULL, NULL, NULL, 0, true },
 	{ "Identify symbol", { '/' }, CMD_NULL, do_cmd_query_symbol, NULL, 0, NULL, NULL, NULL, 0 },
@@ -802,7 +802,8 @@ errr textui_get_cmd(cmd_context context)
 /**
  * Allow for user abort during repeated commands, running and resting.
  *
- * This will only check during every 128th game turn while resting.
+ * Native rest checks every 128th game turn; cave rest checks each input
+ * boundary so even a short recovery can be cancelled promptly.
  */
 void check_for_player_interrupt(game_event_type type, game_event_data *data,
 								void *user)
@@ -810,7 +811,8 @@ void check_for_player_interrupt(game_event_type type, game_event_data *data,
 	/* Check for "player abort" */
 	if (player->upkeep->running ||
 	    cmd_get_nrepeats() > 0 ||
-	    (player_is_resting(player) && !(turn & 0x7F))) {
+	    (player_is_resting(player) && (world_player_mode_has_capability(player,
+		 WORLD_MODE_CAP_SIDE_VIEW) || !(turn & 0x7F)))) {
 		ui_event e;
 
 		/* Do not wait */

@@ -1,5 +1,42 @@
 # Ammerow release notes
 
+## 0.1.3 (2026-10-21)
+
+- Full Tile joins ASCII and Hybrid, with 32x32 and 64x64 artwork for walls,
+  quiet floors, vegetation, features and pickups, plus dedicated cave scenery.
+  Keep floors ASCII is available within Full Tile; cave air stays black and
+  shop numbers remain readable.
+- ASCII offers Classic and Square cells, with Square the new default. An
+  optional Enhanced Square toggle widens wall glyphs only and is off by default.
+  Hybrid and Full Tile retain their own cell geometry.
+- Surface movement is more responsive: map preparation avoids unnecessary
+  border-route checks, and queued input takes priority over cosmetic redraws.
+  Rain keeps animating during movement, with smaller zoom-independent splashes.
+- Amber hatching and directional arrows mark the actual border-crossing tiles
+  in every presentation. Look explains that stepping there triggers travel.
+- Continuous exploration distinguishes seen or detected creatures from a
+  generic interruption instead of guessing that every stop was a monster.
+- Cave Survey separates character-tab navigation from selecting charted cave
+  sections: Enter/click focuses the survey, arrows select spatially, Tab cycles,
+  Home selects the current section, and Escape returns to the tabs.
+- Newly generated cave sections gain sparse creature variety, doors, physical
+  traps and supply chests. Opening, closing, searching, detection, disarming
+  and one-time chest loot use persistent cave-owned state.
+- Cave tunnelling and supported rock-removal magic update footing, sight,
+  loose objects and creatures while protecting pools, anchors and return routes.
+- Cave combat gains data-defined traits/resistances, persistent creature status
+  effects and additional supported spatial magic. Unsupported effect chains
+  reject before spending resources; broad destruction and fluid simulation
+  remain outside the supported cave mechanics.
+- Safe cave Rest, nearby creature/item lists, automatic pickup and ignore use
+  cave geometry and existing knowledge, inventory and inscription rules.
+  Combat remains manual; automatic cave navigation is not included.
+
+Back up saves before updating. Older Ammerow saves are intended to load;
+already visited cave sections retain their saved contents rather than being
+repopulated. New saves use newer cave-state data: do not reopen them in older
+releases. Keep the original save if you may want to go back.
+
 ## 0.1.2 (2026-10-11)
 
 - Inspecting an item keeps inventory or equipment behind the details panel,

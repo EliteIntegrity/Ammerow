@@ -14,7 +14,9 @@
 
 #include "game-world.h"
 #include "obj-desc.h"
+#include "option.h"
 #include "player-resource.h"
+#include "player-timed.h"
 #include "ui-input.h"
 #include "ui-spelunking.h"
 #include "ui-spelunking-appearance.h"
@@ -24,7 +26,9 @@
 #include "world-fishing.h"
 #include "world-spelunking-adapter.h"
 #include "world-spelunking-actor-data.h"
+#include "world-spelunking-actor-effects.h"
 #include "world-spelunking-breath.h"
+#include "world-spelunking-fixture.h"
 #include "world-spelunking-recipe-data.h"
 #include "world-spelunking-system.h"
 #include "world-spelunking-view.h"
@@ -205,9 +209,31 @@ bool textui_spelunking_describe(const struct player *p, int x, int y,
 		} else {
 			strnfmt(description, capacity, "%scave rock.", memory);
 		}
+		my_strcat(description, format(" %s: tunnel (%d stamina/attempt).",
+			OPT(p, rogue_like_commands) ? "Ctrl+T" : "T",
+			z_info->stamina_dig_cost ? z_info->stamina_dig_cost : 5), capacity);
 		break;
 	case WORLD_SPELUNK_INSPECT_WATER:
 		strnfmt(description, capacity, "%scave water.", memory);
+		break;
+	case WORLD_SPELUNK_INSPECT_TRAP:
+		strnfmt(description, capacity, "%s%s (%s).%s", memory, inspect.fixture_name,
+			inspect.fixture_state == SPELUNK_FIXTURE_SPENT ? "spent, harmless" : "armed",
+			inspect.fixture_state == SPELUNK_FIXTURE_SPENT ? "" : " Use D to disarm.");
+		break;
+	case WORLD_SPELUNK_INSPECT_CHEST:
+		strnfmt(description, capacity, "%s%s (%s%s).%s", memory, inspect.fixture_name,
+			inspect.fixture_state == SPELUNK_FIXTURE_SPENT ? "open, empty" :
+			inspect.fixture_state == SPELUNK_FIXTURE_LOCKED ? "locked" : "closed",
+			inspect.trap_known == SPELUNK_TRAP_ARMED ? ", trapped" : "",
+			inspect.fixture_state == SPELUNK_FIXTURE_SPENT ? "" :
+			inspect.trap_known == SPELUNK_TRAP_ARMED ? " Use D to disarm, o to open." : " Use o to open.");
+		break;
+	case WORLD_SPELUNK_INSPECT_DOOR:
+		strnfmt(description, capacity, "%s%s (%s). Use o to open, c to close.",
+			memory, inspect.door_name,
+			inspect.door_state == WORLD_SPELUNK_DOOR_OPEN ? "open" :
+			inspect.door_state == WORLD_SPELUNK_DOOR_LOCKED ? "locked" : "closed");
 		break;
 	case WORLD_SPELUNK_INSPECT_EXIT:
 		strnfmt(description, capacity, "%sthe way out of the cave.", memory);
@@ -243,6 +269,15 @@ bool textui_spelunking_describe(const struct player *p, int x, int y,
 				inspect.knowledge == WORLD_SPELUNK_INSPECT_DETECTED ?
 				"You sense" : "You see", inspect.actor_definition->name,
 				inspect.actor->hp, inspect.actor->max_hp);
+			if (inspect.knowledge != WORLD_SPELUNK_INSPECT_DETECTED &&
+				!player->timed[TMD_BLIND] && !player->timed[TMD_IMAGE]) {
+				char status[128];
+				world_spelunk_actor_status_text(inspect.actor,status,sizeof(status));
+				if (status[0]) {
+					my_strcat(description," ",capacity);
+					my_strcat(description,status,capacity);
+				}
+			}
 		}
 		break;
 	case WORLD_SPELUNK_INSPECT_GRIP:

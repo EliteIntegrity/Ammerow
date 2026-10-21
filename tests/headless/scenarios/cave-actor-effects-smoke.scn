@@ -1,0 +1,23 @@
+# Use a real inventory wand and inspect its persistent creature status.
+# Compare state hashes across ASCII, Hybrid 32/64 and Full Tile 32/64.
+name:cave-actor-effects-smoke
+seed:424242
+race:Nearlander
+class:Mage
+player:Cave Effects Reviewer
+location:core.cave.east.001
+entry:shaft.spelunk
+enter-route:core.route.spelunk.east.in
+encounter:core.spelunk.actor.cave-rat
+inventory:wand:Slow Monster
+bot:scripted
+capture:both
+expect:complete
+map-presentation:full-64
+map-zoom:250
+screen-width:1280
+screen-height:720
+action:inspect:refresh
+action:aim-wand:east:Slow Monster
+action:inspect:cave-creatures
+action:inspect:cave-creatures

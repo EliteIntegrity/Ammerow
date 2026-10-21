@@ -307,13 +307,32 @@ void sdl3_frontend_change_selected_setting(struct sdl3_app *app, int delta)
 		change_map_font(app, delta);
 		break;
 	case SDL3_SETTINGS_TILE_MODE:
-		app->config.tile_mode = !app->config.tile_mode;
+		app->config.tile_mode = sdl3_tile_mode_change(app->config.tile_mode,
+			delta, sdl3_tiles_full_available());
 		sdl3_map_presenter_invalidate_terrain(&app->map_presenter);
 		sdl3_presenter_invalidate_grid_cache(app->presenter);
 		sdl3_grid_mark_all_dirty(&app->grid);
 		break;
 	case SDL3_SETTINGS_HYBRID_DETAIL:
 		app->config.hybrid_tile_size = app->config.hybrid_tile_size == 64 ? 32 : 64;
+		sdl3_presenter_invalidate_grid_cache(app->presenter);
+		sdl3_grid_mark_all_dirty(&app->grid);
+		break;
+	case SDL3_SETTINGS_ASCII_FLOORS:
+		if (app->config.tile_mode != SDL3_TILE_MODE_FULL) break;
+		app->config.ascii_floors = !app->config.ascii_floors;
+		sdl3_presenter_invalidate_grid_cache(app->presenter);
+		sdl3_grid_mark_all_dirty(&app->grid);
+		break;
+	case SDL3_SETTINGS_ASCII_GRID:
+		app->config.ascii_square = !app->config.ascii_square;
+		sdl3_presenter_invalidate_grid_cache(app->presenter);
+		sdl3_grid_mark_all_dirty(&app->grid);
+		break;
+	case SDL3_SETTINGS_ASCII_ENHANCED:
+		if (!app->config.ascii_square || app->config.tile_mode != SDL3_TILE_MODE_ASCII)
+			break;
+		app->config.ascii_enhanced = !app->config.ascii_enhanced;
 		sdl3_presenter_invalidate_grid_cache(app->presenter);
 		sdl3_grid_mark_all_dirty(&app->grid);
 		break;

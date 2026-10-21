@@ -85,6 +85,8 @@
 #include "world-story-data.h"
 #include "world-objective-data.h"
 #include "world-spelunking-actor-data.h"
+#include "world-spelunking-door.h"
+#include "world-spelunking-fixture.h"
 #include "world-spelunking-geology-data.h"
 #include "world-spelunking-layout-data.h"
 #include "world-spelunking-population-data.h"
@@ -4380,6 +4382,8 @@ static struct {
 } pl[] = {
 	{ "story scenes", &story_parser },
 	{ "world", &world_parser },
+	{ "spelunking doors", &spelunking_door_parser },
+	{ "spelunking fixtures", &spelunking_fixture_parser },
 	{ "spelunking actors", &spelunking_actor_parser },
 	{ "spelunking layouts", &spelunking_layout_parser },
 	{ "spelunking geology", &spelunking_geology_parser },

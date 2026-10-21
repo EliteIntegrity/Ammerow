@@ -47,13 +47,28 @@ Level feelings
 
 Ctrl+Alt+S
   Open settings.  Appearance controls theme, map font, ASCII treatment, and
-  the ASCII/Hybrid playfield choice. Hybrid uses portrait sprites at 32 x 32
+  the ASCII/Hybrid/Full Tile playfield choice. Hybrid uses portrait sprites at 32 x 32
   or 64 x 64 detail, with ordinary ASCII terrain and fallback glyphs. Detail
   changes do not change map scale. Cards and shopkeepers remain coloured
   ASCII illustrations. Interface controls the non-map font,
   density, statistics and message overlays.  Sound and display/performance
   have their own pages. Controls & Convenience brings together exploration,
   walking to stairs, existing pickup rules, item ignoring and all options (=).
+
+  ASCII grid: Square (default) uses equal width and height at approximately
+  the same cell area, with centred glyphs.
+  It changes only the ASCII map, including side-view caves, not menus or
+  cards. It shows fewer columns and more rows at the same zoom; adjust map
+  zoom to taste. Classic keeps rectangular cells; saved choices are kept.
+  Enhanced Square appears below Square and is off by default. It widens only
+  rock and masonry glyphs by 20%, without changing their height. Hybrid and
+  Full Tile keep their own square geometry regardless of this option.
+  Full Tile adds solid walls, woodland, doors, stairs, water and quiet ground
+  textures, in both 32 and 64 detail. Its indented Keep floors ASCII option
+  restores coloured dots/commas on black for ordinary ground only; water,
+  lava and other features stay tiled. Side-view cave air always stays black.
+  Missing scenery/items retain their glyphs. Existing Full Tile preferences
+  keep ASCII floors until you choose otherwise; fresh settings use textures.
 
 Controls & Convenience
   Explore mode (p): Off, Traditional (Angband), or Continuous (Ammerow).
@@ -68,6 +83,9 @@ Controls & Convenience
   Starting again acknowledges the loot you already know about. Exploration
   does not chase loot; passing over an acknowledged pile uses your normal
   pickup settings. A stop message reports why, steps taken and gold collected.
+  Perceived creatures include detection/telepathy beyond normal sight or the
+  visible screen: check the monster list. An unspecified interruption says
+  "interrupted" rather than guessing its cause. It never reveals hidden foes.
   Walk to stairs (< / >) is independent of Explore mode: walk to the nearest
   known stair, then press again to use it. On the surface, < still opens the
   world map. Save gameplay defaults makes these choices apply to future

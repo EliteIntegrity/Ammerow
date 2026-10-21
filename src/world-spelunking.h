@@ -82,7 +82,12 @@ struct world_spelunk_map {
 	const uint8_t *pitons;
 	const uint8_t *ropes;
 	int infrastructure_stride;
+	/** Optional runtime-owned obstruction overlay, indexed with stride. */
+	const uint8_t *blocked;
 };
+
+/** Rock or a closed fixture; outside the map is blocked. Not a rock anchor. */
+bool world_spelunk_map_blocks(const struct world_spelunk_map *map, int x, int y);
 
 /** Integer rules keep simulation deterministic and cheap to serialize. */
 struct world_spelunk_rules {
@@ -155,6 +160,9 @@ bool world_spelunk_has_stable_floor(const struct world_spelunk_state *state);
 bool world_spelunk_is_submerged(const struct world_spelunk_state *state);
 /** True only while the selected hold remains reachable and usable. */
 bool world_spelunk_has_active_grip(const struct world_spelunk_state *state);
+/** Settle after a validated terrain edit, without spending a second turn. */
+bool world_spelunk_settle_terrain(struct world_spelunk_state *state,
+		struct world_spelunk_action_report *report);
 enum world_spelunk_action_outcome world_spelunk_apply_command(
 		struct world_spelunk_state *state,
 		const struct world_spelunk_command *command,

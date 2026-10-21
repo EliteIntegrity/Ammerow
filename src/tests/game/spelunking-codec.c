@@ -53,7 +53,52 @@ static int test_cave_survey_respects_discovery(void *state)
 	require(!survey.edges[0].ready);
 	require(strstr(survey.rows[1].detail, "charted") != NULL);
 	require(strstr(survey.rows[0].detail, "visited") != NULL);
+	require(strstr(survey.rows[0].detail, "YOU ARE HERE") != NULL);
+	require(!streq(survey.rows[0].label, survey.rows[1].label));
+	require(!strstr(survey.rows[1].detail, "YOU ARE HERE"));
 	world_spelunk_system_free(system);
+	ok;
+}
+
+static int test_survey_spatial_focus(void *state)
+{
+	struct ui_spelunk_survey_model model = { 0 };
+	int cursor = -1;
+	bool focused = false;
+	const keycode_t keys[] = { KC_ENTER, ARROW_DOWN, ARROW_RIGHT,
+		ARROW_LEFT, ARROW_UP, ARROW_LEFT, KC_TAB, KC_HOME, ESCAPE };
+	const int expected[] = { 0, 1, 2, 1, 0, 1, 2, 0, 0 };
+	(void)state;
+	model.node_count = 3;
+	model.current_node = 0;
+	model.nodes[1].x = -10;
+	model.nodes[1].y = model.nodes[2].y = 6;
+	model.nodes[2].x = 10;
+	require(!ui_spelunk_survey_handle(&model,
+		(struct keypress){ EVT_KBRD, ARROW_LEFT, 0 }, &cursor, &focused));
+	for (size_t i = 0; i < N_ELEMENTS(keys); i++) {
+		require(ui_spelunk_survey_handle(&model,
+			(struct keypress){ EVT_KBRD, keys[i], 0 }, &cursor, &focused));
+		eq(cursor, expected[i]);
+		eq(focused, i + 1 < N_ELEMENTS(keys));
+	}
+	require(!ui_spelunk_survey_handle(&model,
+		(struct keypress){ EVT_KBRD, ESCAPE, 0 }, &cursor, &focused));
+	require(ui_spelunk_survey_handle(&model,
+		(struct keypress){ EVT_KBRD, KC_SURVEY_SELECT_FIRST + 2, 0 }, &cursor, &focused));
+	eq(cursor, 2);
+	require(focused);
+	require(ui_spelunk_survey_handle(&model,
+		(struct keypress){ EVT_KBRD, KC_TAB, KC_MOD_SHIFT }, &cursor, &focused));
+	eq(cursor, 1);
+	/* One section has no directional neighbour; empty maps cannot take focus. */
+	model.node_count = 1;
+	require(ui_spelunk_survey_handle(&model,
+		(struct keypress){ EVT_KBRD, ARROW_DOWN, 0 }, &cursor, &focused));
+	eq(cursor, 0);
+	model.node_count = 0;
+	require(!ui_spelunk_survey_handle(&model,
+		(struct keypress){ EVT_KBRD, KC_ENTER, 0 }, &cursor, &focused));
 	ok;
 }
 
@@ -70,6 +115,20 @@ static size_t payload_without_layout_revision(uint8_t *target,
 	/* These legacy helpers operate on fixtures without generated geology.
 	 * Versions twelve and thirteen append balance fields after version
 	 * eleven's explicit false geology byte. */
+	if (source[4] >= WORLD_SPELUNK_PAYLOAD_VERSION_ACTOR_EFFECTS) {
+		struct world_spelunk_runtime *r = NULL;
+		if (world_spelunk_runtime_decode(source, length, &r) != WORLD_SPELUNK_CODEC_OK) return 0;
+		length -= 16u * r->actor_count;
+		world_spelunk_runtime_free(r);
+	}
+	if (source[4] >= WORLD_SPELUNK_PAYLOAD_VERSION_FIXTURES) {
+		if (!length || source[length - 1u] != 0) return 0;
+		length--;
+	}
+	if (source[4] >= WORLD_SPELUNK_PAYLOAD_VERSION_DOORS) {
+		if (!length || source[length - 1u] != 0) return 0;
+		length--;
+	}
 	if (source[4] >=
 			WORLD_SPELUNK_PAYLOAD_VERSION_DIRECTIONAL_STAMINA) {
 		if (length < 8u) return 0;
@@ -587,12 +646,13 @@ static int test_runtime_payload_rejects_corruption(void *unused)
 	eq(world_spelunk_runtime_decode(payload, written - 1, &decoded),
 		WORLD_SPELUNK_CODEC_TRUNCATED);
 	null(decoded);
-	saved = payload[written - 11];
-	payload[written - 11] = 99;
+	/* False geology flag precedes ten balance bytes and both fixture counts. */
+	saved = payload[written - 13];
+	payload[written - 13] = 99;
 	eq(world_spelunk_runtime_decode(payload, written, &decoded),
 		WORLD_SPELUNK_CODEC_CORRUPT);
 	null(decoded);
-	payload[written - 11] = saved;
+	payload[written - 13] = saved;
 
 	world_spelunk_runtime_free(runtime);
 	ok;
@@ -701,6 +761,7 @@ static int test_infrastructure_rules_and_persistence(void *unused)
 const char *suite_name = "game/spelunking-codec";
 struct test tests[] = {
 	{ "cave survey respects discovery", test_cave_survey_respects_discovery },
+	{ "survey separates spatial focus from tabs", test_survey_spatial_focus },
 	{ "runtime actor persistence and view",
 		test_runtime_actor_persistence_and_view },
 	{ "Look inspection respects knowledge",

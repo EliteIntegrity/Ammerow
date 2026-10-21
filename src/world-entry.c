@@ -410,6 +410,10 @@ bool world_entry_is_edge_exit_grid(const struct chunk *c, struct loc grid)
 			grid.y >= c->height - 1) {
 		return false;
 	}
+	/* Map preparation asks about every known cell. Only the one-cell-inset
+	 * perimeter can be a trigger: do not scan world routes for its interior. */
+	if (grid.x > 1 && grid.y > 1 && grid.x < c->width - 2 &&
+			grid.y < c->height - 2) return false;
 	level = world_chunk_level(c);
 	if (!level || !streq(c->location_id, level->id)) return false;
 	for (entry = level->entries; entry; entry = entry->next) {

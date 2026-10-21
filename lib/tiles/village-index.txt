@@ -1,0 +1,8 @@
+# Full Tile terrain bindings (GPL-2.0-only).
+domain:feature
+village-rock-bank -> 0,0
+village-wall -> 0,0
+ruins-wall -> 0,0
+village-masonry -> 1,0
+meridian-marker-stone -> 2,0
+travel-opening -> 3,0

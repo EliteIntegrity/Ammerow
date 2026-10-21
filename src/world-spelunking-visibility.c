@@ -11,6 +11,8 @@
  */
 
 #include "world-spelunking-visibility.h"
+#include "world-spelunking-door.h"
+#include "world-spelunking-fixture.h"
 
 #include "h-basic.h"
 #include "world-spelunking-runtime.h"
@@ -26,10 +28,10 @@ static bool in_bounds(const struct world_spelunk_runtime *runtime, int x,
 		y < runtime->state.map.height;
 }
 
-static bool is_rock(const struct world_spelunk_runtime *runtime, int x, int y)
+static bool is_opaque(const struct world_spelunk_runtime *runtime, int x, int y)
 {
 	return in_bounds(runtime, x, y) &&
-		runtime->cells[y * runtime->state.map.width + x] == WORLD_SPELUNK_ROCK;
+		world_spelunk_map_blocks(&runtime->state.map, x, y);
 }
 
 static bool is_directly_visible(
@@ -47,13 +49,13 @@ bool world_spelunk_visibility_is_surface_visible(
 	};
 	int i;
 
-	if (!is_rock(runtime, x, y)) return false;
+	if (!is_opaque(runtime, x, y)) return false;
 	for (i = 0; i < 4; i++) {
 		int open_x = x + offsets[i][0];
 		int open_y = y + offsets[i][1];
 
 		if (is_directly_visible(runtime, open_x, open_y) &&
-				!is_rock(runtime, open_x, open_y)) {
+				!is_opaque(runtime, open_x, open_y)) {
 			return true;
 		}
 	}
@@ -93,8 +95,8 @@ bool world_spelunk_visibility_line_is_clear(
 		if (across_x == across_y) {
 			/* The ray crosses a grid corner.  Neither touching wall may be
 			 * looked around, even when the diagonal destination is open. */
-			if (is_rock(runtime, x + sx, y) ||
-					is_rock(runtime, x, y + sy)) {
+			if (is_opaque(runtime, x + sx, y) ||
+					is_opaque(runtime, x, y + sy)) {
 				return false;
 			}
 			x += sx;
@@ -109,7 +111,7 @@ bool world_spelunk_visibility_line_is_clear(
 			iy++;
 		}
 		if (x == x1 && y == y1) return true;
-		if (is_rock(runtime, x, y)) return false;
+		if (is_opaque(runtime, x, y)) return false;
 	}
 	return true;
 }
@@ -154,7 +156,7 @@ static bool normal_line_is_clear(
 	if (y > origin_y && dx != 0) {
 		int lip_x = origin_x + (dx > 0 ? 1 : -1);
 
-		return !is_rock(runtime, lip_x, origin_y) &&
+		return !is_opaque(runtime, lip_x, origin_y) &&
 			world_spelunk_visibility_line_is_clear(runtime, lip_x, origin_y,
 				x, y);
 	}
@@ -264,6 +266,8 @@ static void compute_from(struct world_spelunk_runtime *runtime, int origin_x,
 			}
 		}
 	}
+	world_spelunk_doors_observe(runtime);
+	world_spelunk_fixtures_observe(runtime);
 }
 
 bool world_spelunk_visibility_is_valid(
@@ -287,7 +291,7 @@ bool world_spelunk_visibility_is_valid(
 	}
 	return !runtime->peeking ||
 		(in_bounds(runtime, runtime->peek_x, runtime->peek_y) &&
-		!is_rock(runtime, runtime->peek_x, runtime->peek_y));
+		!is_opaque(runtime, runtime->peek_x, runtime->peek_y));
 }
 
 void world_spelunk_visibility_follow_player(
@@ -310,11 +314,9 @@ void world_spelunk_visibility_follow_player(
 void world_spelunk_visibility_reveal_layout(
 		struct world_spelunk_runtime *runtime)
 {
-	size_t count;
-
 	if (!runtime || !runtime->explored) return;
-	count = (size_t)runtime->state.map.width * runtime->state.map.height;
-	memset(runtime->explored, 1, count * sizeof(*runtime->explored));
+	world_spelunk_visibility_reveal_area(runtime, runtime->state.map.height,
+		runtime->state.map.width);
 }
 
 void world_spelunk_visibility_reveal_area(
@@ -327,6 +329,7 @@ void world_spelunk_visibility_reveal_area(
 	int max_y;
 	int x;
 	int y;
+	size_t i;
 
 	if (!runtime || !runtime->explored || vertical_reach < 0 ||
 			horizontal_reach < 0) {
@@ -342,6 +345,13 @@ void world_spelunk_visibility_reveal_area(
 		for (x = min_x; x <= max_x; x++) {
 			runtime->explored[(size_t)y * runtime->state.map.width + x] = 1;
 		}
+	}
+	/* Mapping learns fixture outlines, not locks or occupants. */
+	for (i = 0; i < runtime->door_count; i++) {
+		struct world_spelunk_door *d = &runtime->doors[i];
+		if (d->x < min_x || d->x > max_x || d->y < min_y || d->y > max_y) continue;
+		if (d->state == WORLD_SPELUNK_DOOR_OPEN) d->known = WORLD_SPELUNK_DOOR_OPEN;
+		else if (d->known != WORLD_SPELUNK_DOOR_LOCKED) d->known = WORLD_SPELUNK_DOOR_CLOSED;
 	}
 }
 
@@ -392,7 +402,7 @@ bool world_spelunk_visibility_move_peek(
 	}
 	x = runtime->state.x + dx;
 	y = runtime->state.y + dy;
-	if (!in_bounds(runtime, x, y) || is_rock(runtime, x, y)) return false;
+	if (!in_bounds(runtime, x, y) || is_opaque(runtime, x, y)) return false;
 	runtime->peek_x = x;
 	runtime->peek_y = y;
 	compute_from(runtime, x, y);

@@ -142,6 +142,18 @@ struct sdl3_screen_layout {
 	int context_width;
 };
 
+/* Cell geometry shared by diagram drawing and pointer hit testing. */
+struct sdl3_screen_map_layout {
+	int x[SDL3_SCREEN_MAP_NODE_CAPACITY];
+	int y[SDL3_SCREEN_MAP_NODE_CAPACITY];
+	int stamp_width, stamp_height, detail_top;
+};
+
+bool sdl3_screen_map_measure(const struct sdl3_screen *screen, int cols,
+		int rows, struct sdl3_screen_map_layout *map);
+bool sdl3_screen_map_node_at(const struct sdl3_screen *screen, int cols,
+		int rows, int col, int row, int *index);
+
 void sdl3_screen_clear(struct sdl3_screen *screen);
 void sdl3_screen_capture(struct sdl3_screen *screen,
 		const struct ui_screen *source);
@@ -151,6 +163,8 @@ void sdl3_screen_present(struct sdl3_screen *screen,
 bool sdl3_screen_measure(const struct sdl3_screen *screen, int cols, int rows,
 		struct sdl3_screen_layout *layout);
 bool sdl3_screen_row_at(const struct sdl3_screen *screen, int cols, int rows,
+		int col, int row, int *index);
+bool sdl3_screen_tab_at(const struct sdl3_screen *screen, int cols, int rows,
 		int col, int row, int *index);
 
 /* Translate an action-menu pointer selection into controller navigation.

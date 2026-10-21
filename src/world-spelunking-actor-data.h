@@ -14,6 +14,7 @@
 #define WORLD_SPELUNKING_ACTOR_DATA_H
 
 #include "h-basic.h"
+#include "monster.h"
 #include "world-location.h"
 
 #define WORLD_SPELUNK_ACTOR_DEFINITION_MAX 32
@@ -30,6 +31,7 @@ struct world_spelunk_actor_definition {
 	const char *id;
 	const char *name;
 	const char *death_cause;
+	const char *description;
 	wchar_t glyph;
 	uint8_t attr;
 	int hitpoints;
@@ -39,6 +41,8 @@ struct world_spelunk_actor_definition {
 	int damage_sides;
 	int speed;
 	int experience;
+	/* Only the explicitly implemented trait vocabulary is accepted by the parser. */
+	bitflag flags[RF_SIZE];
 };
 
 /** One explicitly ordered fallback position for an authored spawn. */
@@ -62,6 +66,8 @@ struct world_spelunk_spawn_definition {
 extern struct file_parser spelunking_actor_parser;
 
 int world_spelunk_actor_definition_count(void);
+void world_spelunk_actor_describe_traits(const struct world_spelunk_actor_definition *d,
+	char *text, size_t size);
 const struct world_spelunk_actor_definition *world_spelunk_actor_by_index(
 		int index);
 const struct world_spelunk_actor_definition *world_spelunk_actor_by_id(

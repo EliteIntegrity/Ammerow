@@ -76,7 +76,8 @@ enum textui_spelunking_binding_kind textui_spelunking_translate_key(
 	/* Preserve Angband's uppercase G for studying.  Cave pickup uses the
 	 * ordinary lowercase g mnemonic. */
 	bool pickup = key.code == 'g';
-	bool drop = key.code == 'd' || key.code == 'D';
+	/* Uppercase D remains the shared Disarm command. */
+	bool drop = key.code == 'd' && !(key.mods & KC_MOD_SHIFT);
 	bool passage = key.code == '<' || key.code == '>';
 	/* Printable input normally encodes Shift in the character, but some
 	 * frontends send a lowercase character plus KC_MOD_SHIFT.  H/J are owned

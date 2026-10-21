@@ -52,6 +52,7 @@ HEADERS = \
 	ui-world.h \
 	ui-world-intro.h \
 	ui-spelunking.h \
+	ui-spelunking-list.h \
 	ui-spelunking-input.h \
 	ui-spelunking-survey.h \
 	wizard.h \
@@ -73,9 +74,14 @@ HEADERS = \
 	world-overworld.h \
 	world-spelunking.h \
 	world-spelunking-adapter.h \
+	world-spelunking-door.h \
+	world-spelunking-fixture.h \
+	world-spelunking-terrain.h \
+	world-spelunking-rest.h \
 	world-spelunking-actor-data.h \
 	world-spelunking-breath.h \
 	world-spelunking-combat.h \
+	world-spelunking-actor-effects.h \
 	world-spelunking-data-util.h \
 	world-spelunking-effects.h \
 	world-spelunking-inventory.h \
@@ -236,9 +242,14 @@ ANGFILES0 = \
 	world-overworld.o \
 	world-spelunking.o \
 	world-spelunking-adapter.o \
+	world-spelunking-door.o \
+	world-spelunking-fixture.o \
+	world-spelunking-terrain.o \
+	world-spelunking-rest.o \
 	world-spelunking-actor-data.o \
 	world-spelunking-breath.o \
 	world-spelunking-combat.o \
+	world-spelunking-actor-effects.o \
 	world-spelunking-codec.o \
 	world-spelunking-data-util.o \
 	world-spelunking-effects.o \
@@ -393,6 +404,7 @@ ANGFILES0 = \
 	ui-spoil.o \
 	ui-spelunking-appearance.o \
 	ui-spelunking.o \
+	ui-spelunking-list.o \
 	ui-spelunking-input.o \
 	ui-spelunking-survey.o \
 	ui-store.o \

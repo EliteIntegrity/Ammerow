@@ -5,7 +5,7 @@ dungeon, side-view caves, climbing and fishing.
 
 This source release builds a playable Windows SDL3 game using ASCII glyphs
 and synthesised effects. Official downloads additionally contain separately
-licensed ASCII illustrations, Hybrid 32x32/64x64 sprites and audio.
+licensed ASCII illustrations, Hybrid/Full Tile 32x32/64x64 artwork and audio.
 
 ## Build and play
 

@@ -29,6 +29,11 @@ bool cmd_mode_policy_allows(enum world_turn_context turn_context,
 		 * Retirement changes only shared player lifecycle state. */
 		switch (code) {
 		case CMD_SPELUNK_ACTION:
+		case CMD_OPEN:
+		case CMD_CLOSE:
+		case CMD_DISARM:
+		case CMD_TUNNEL:
+		case CMD_REST:
 		case CMD_SPELUNK_LOCAL:
 		case CMD_SPELUNK_PEEK:
 		case CMD_SPELUNK_PASSAGE:
@@ -38,6 +43,9 @@ bool cmd_mode_policy_allows(enum world_turn_context turn_context,
 		case CMD_WIELD:
 		case CMD_TAKEOFF:
 		case CMD_DROP:
+		case CMD_PICKUP:
+		case CMD_AUTOPICKUP:
+		case CMD_IGNORE:
 		case CMD_REFILL:
 		case CMD_EAT:
 		case CMD_QUAFF:

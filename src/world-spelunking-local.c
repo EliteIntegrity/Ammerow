@@ -11,6 +11,7 @@
  */
 
 #include "world-spelunking-local.h"
+#include "world-spelunking-door.h"
 
 #include "obj-pile.h"
 #include "object.h"
@@ -127,6 +128,9 @@ static enum world_spelunk_infrastructure_result piton_placement_result(
 		return WORLD_SPELUNK_INFRASTRUCTURE_INVALID;
 	}
 	state = &runtime->state;
+	if (world_spelunk_door_at(runtime, state->x, state->y)) {
+		return WORLD_SPELUNK_INFRASTRUCTURE_NO_BRACE;
+	}
 	if (state->movement == WORLD_SPELUNK_FALLING ||
 			state->movement == WORLD_SPELUNK_JUMP_APEX) {
 		return WORLD_SPELUNK_INFRASTRUCTURE_UNSTABLE;
@@ -202,7 +206,7 @@ static enum world_spelunk_infrastructure_result rope_deployment_result(
 			count < available_segments; y++) {
 		size_t index = runtime_index(runtime, state->x, y);
 
-		if (runtime->cells[index] == WORLD_SPELUNK_ROCK ||
+		if (world_spelunk_map_blocks(&runtime->state.map, state->x, y) ||
 				runtime->ropes[index] || runtime->pitons[index]) {
 			break;
 		}
@@ -270,7 +274,8 @@ bool world_spelunk_runtime_can_add_ground_object_at(
 		world_spelunk_runtime_ground_object_count(runtime) <
 			WORLD_SPELUNK_OBJECT_MAX &&
 		runtime_in_bounds(runtime, x, y) &&
-		runtime->cells[runtime_index(runtime, x, y)] == WORLD_SPELUNK_AIR;
+		runtime->cells[runtime_index(runtime, x, y)] == WORLD_SPELUNK_AIR &&
+		!world_spelunk_map_blocks(&runtime->state.map, x, y);
 }
 
 bool world_spelunk_runtime_add_ground_object(

@@ -14,6 +14,8 @@
 #include "effect-handler.h"
 #include "effects.h"
 #include "game-world.h"
+#include "game-input.h"
+#include "mon-summon.h"
 #include "init.h"
 #include "message.h"
 #include "obj-gear.h"
@@ -27,7 +29,13 @@
 #include "project.h"
 #include "world-spelunking-adapter.h"
 #include "world-spelunking-combat.h"
+#include "world-spelunking-actor-effects.h"
 #include "world-spelunking-effects.h"
+#include "world-spelunking-door.h"
+#include "world-spelunking-fixture.h"
+#include "world-spelunking-terrain.h"
+#include "world-spelunking-passage.h"
+#include "world-spelunking-transition.h"
 #include "world-spelunking-runtime.h"
 #include "world-spelunking-visibility.h"
 #include "z-rand.h"
@@ -65,6 +73,9 @@ static bool effect_index_is_player_local(int index)
 	case EF_DETECT_ORE:
 	case EF_DETECT_GOLD:
 	case EF_DETECT_OBJECTS:
+	case EF_DETECT_TRAPS:
+	case EF_DETECT_DOORS:
+	case EF_DETECT_STAIRS:
 	case EF_DETECT_INVISIBLE_MONSTERS:
 	case EF_DETECT_VISIBLE_MONSTERS:
 	case EF_BREATH:
@@ -98,10 +109,49 @@ static bool effect_index_has_side_view_adapter(int index)
 	case EF_BOLT:
 	case EF_BEAM:
 	case EF_BOLT_OR_BEAM:
+	case EF_LINE:
+	case EF_ALTER:
+	case EF_BOLT_STATUS:
+	case EF_BOLT_STATUS_DAM:
+	case EF_BOLT_AWARE:
+	case EF_PROJECT_LOS:
+	case EF_PROJECT_LOS_AWARE:
+	case EF_DETECT_LIVING_MONSTERS:
+	case EF_DETECT_FEARFUL_MONSTERS:
+	case EF_DETECT_EVIL:
+	case EF_DETECT_SOUL:
+	case EF_PROBE:
+	case EF_WAKE:
+	case EF_SUMMON:
 		return true;
 	default:
 		return false;
 	}
+}
+
+static bool is_actor_projection(int index)
+{
+	switch (index) {
+	case EF_BALL: case EF_BREATH: case EF_ARC: case EF_SHORT_BEAM:
+	case EF_SWARM: case EF_STAR: case EF_STAR_BALL: case EF_BOLT:
+	case EF_BEAM: case EF_BOLT_OR_BEAM: case EF_LINE: case EF_ALTER:
+	case EF_BOLT_STATUS: case EF_BOLT_STATUS_DAM: case EF_BOLT_AWARE:
+	case EF_PROJECT_LOS: case EF_PROJECT_LOS_AWARE: return true;
+	default: return false;
+	}
+}
+
+static bool summon_type_supported(int type)
+{
+	return type >= 0 && (type == summon_name_to_idx("ANY") || type == summon_name_to_idx("MONSTER") ||
+		type == summon_name_to_idx("MONSTERS") || type == summon_name_to_idx("ANIMAL"));
+}
+
+static bool subtype_supported(const struct effect *e)
+{
+	if (is_actor_projection(e->index)) return world_spelunk_actor_projection_supported(e->subtype);
+	if (e->index == EF_SUMMON) return summon_type_supported(e->subtype);
+	return true;
 }
 
 static const struct player_shape *shape_by_index_without_message(int index)
@@ -119,6 +169,7 @@ static bool effect_chain_is_safe(const struct effect *effect, int depth)
 	if (!effect || depth > 16) return false;
 	for (; effect; effect = effect->next) {
 		if (!effect_index_is_player_local(effect->index)) return false;
+		if (!subtype_supported(effect)) return false;
 		if (effect->index == EF_SHAPECHANGE) {
 			const struct player_shape *shape =
 				shape_by_index_without_message(effect->subtype);
@@ -144,9 +195,18 @@ static bool effect_chain_is_supported(const struct effect *effect, int depth)
 {
 	if (!effect || depth > 16) return false;
 	for (; effect; effect = effect->next) {
+		/* Wall removal can move or kill the caster. It must not be followed
+		 * by another effect running against stale coordinates/state. */
+		if ((effect->index == EF_BOLT || effect->index == EF_BEAM ||
+			effect->index == EF_BOLT_OR_BEAM || effect->index == EF_BALL ||
+			effect->index == EF_BREATH || effect->index == EF_ARC ||
+			effect->index == EF_SHORT_BEAM || effect->index == EF_SWARM ||
+			effect->index == EF_STAR || effect->index == EF_STAR_BALL) &&
+			effect->subtype == PROJ_KILL_WALL) return false;
 		if (!effect_index_has_side_view_adapter(effect->index)) {
 			return false;
 		}
+		if (!subtype_supported(effect)) return false;
 		if (effect->index == EF_SHAPECHANGE) {
 			const struct player_shape *shape =
 				shape_by_index_without_message(effect->subtype);
@@ -162,10 +222,15 @@ static bool effect_chain_is_supported(const struct effect *effect, int depth)
 
 bool world_spelunk_effect_chain_is_supported(const struct effect *effect)
 {
+	if (effect && !effect->next && effect->subtype == PROJ_KILL_WALL &&
+		(effect->index == EF_LINE || effect->index == EF_SHORT_BEAM)) return true;
 	/* Recall is intentionally not player-local: it commits an authored
 	 * cross-mode transition when its countdown expires.  Permit only the
 	 * standalone effect so a data chain cannot run after changing worlds. */
 	if (effect && effect->index == EF_RECALL && !effect->next) return true;
+	/* Banishment has a prompt and self-damage; do not allow later effects to
+	 * run after cancellation or death. */
+	if (effect && !effect->next && (effect->index == EF_BANISH || effect->index == EF_MASS_BANISH)) return true;
 	return effect_chain_is_supported(effect, 0);
 }
 
@@ -194,12 +259,62 @@ static bool in_detection_area(const struct world_spelunk_runtime *runtime,
 		abs(y - runtime->state.y) <= y_reach;
 }
 
+static bool detect_fixtures(effect_handler_context_t *context)
+{
+	struct world_spelunk_runtime *r = player->spelunking;
+	struct loc grid;
+	enum world_spelunk_passage_direction direction;
+	size_t i = 0;
+	bool found = false;
+	const char *subject;
+	if (context->effect == EF_DETECT_TRAPS) {
+		found = world_spelunk_fixture_detect(r,
+			context->y > 0 ? context->y : r->state.map.height,
+			context->x > 0 ? context->x : r->state.map.width, true);
+		subject = "cave traps";
+	} else if (context->effect == EF_DETECT_DOORS) {
+		for (i = 0; i < r->door_count; i++) {
+			struct world_spelunk_door *d = &r->doors[i];
+			if (!in_detection_area(r, context, d->x, d->y)) continue;
+			/* Detection finds a door's outline, not its concealed lock. */
+			if (d->known != WORLD_SPELUNK_DOOR_LOCKED || d->state != WORLD_SPELUNK_DOOR_LOCKED)
+				d->known = d->state == WORLD_SPELUNK_DOOR_OPEN ? WORLD_SPELUNK_DOOR_OPEN : WORLD_SPELUNK_DOOR_CLOSED;
+			r->explored[d->y*r->state.map.width+d->x] = 1;
+			found = true;
+		}
+		subject = "cave doors";
+	} else {
+		/* Existing endpoints only: no generation, travel or hidden-node reveal. */
+		while (world_spelunking_exit_grid_at(player->spelunking_system, r, i++, &grid)) {
+			if (!in_detection_area(r, context, grid.x, grid.y)) continue;
+			r->explored[grid.y*r->state.map.width+grid.x] = 1;
+			found = true;
+		}
+		i = 0;
+		while (world_spelunk_system_passage_grid_at(player->spelunking_system, r, i++, &grid, &direction)) {
+			if (!in_detection_area(r, context, grid.x, grid.y)) continue;
+			r->explored[grid.y*r->state.map.width+grid.x] = 1;
+			found = true;
+		}
+		subject = "cave passages";
+	}
+	msg(found ? "You sense the presence of %s!" : "You sense no %s.", subject);
+	context->ident = true;
+	player->upkeep->redraw |= PR_MAP;
+	return true;
+}
+
 static bool detect_objects(effect_handler_context_t *context, bool gold,
 		bool sense)
 {
 	struct world_spelunk_runtime *runtime = player->spelunking;
 	struct object *obj;
 	bool found = false;
+	if (!gold) {
+		found = world_spelunk_fixture_detect(runtime,
+			context->y > 0 ? context->y : runtime->state.map.height,
+			context->x > 0 ? context->x : runtime->state.map.width, false);
+	}
 
 	for (obj = runtime->ground_objects; obj; obj = obj->next) {
 		if (!in_detection_area(runtime, context, obj->grid.x, obj->grid.y) ||
@@ -230,18 +345,23 @@ static bool detect_objects(effect_handler_context_t *context, bool gold,
 	return true;
 }
 
-static bool detect_actors(effect_handler_context_t *context, bool invisible)
+static bool detect_actors(effect_handler_context_t *context)
 {
 	struct world_spelunk_runtime *runtime = player->spelunking;
 	bool found = false;
 	size_t i;
 
-	/* Side-view actor definitions currently have no invisible trait.  Keeping
-	 * that fact here makes DETECT_INVISIBLE fail honestly and leaves one clear
-	 * extension point if actor traits become data-driven later. */
-	if (!invisible) {
+	/* Invisibility remains excluded from the authored vocabulary until its
+	 * perception and movement rules exist. All supported filters are explicit. */
+	if (context->effect != EF_DETECT_INVISIBLE_MONSTERS) {
 		for (i = 0; i < runtime->actor_count; i++) {
 			const struct world_spelunk_actor *actor = &runtime->actors[i];
+			const struct world_spelunk_actor_definition *d = world_spelunk_actor_by_id(actor->id);
+			if (!d) continue;
+			if (context->effect == EF_DETECT_LIVING_MONSTERS && !world_spelunk_actor_is_living(d)) continue;
+			if (context->effect == EF_DETECT_FEARFUL_MONSTERS && rf_has(d->flags,RF_NO_FEAR)) continue;
+			if (context->effect == EF_DETECT_EVIL && !rf_has(d->flags,RF_EVIL)) continue;
+			if (context->effect == EF_DETECT_SOUL && !rf_has(d->flags,RF_SPIRIT)) continue;
 
 			if (!in_detection_area(runtime, context, actor->x, actor->y)) {
 				continue;
@@ -252,11 +372,9 @@ static bool detect_actors(effect_handler_context_t *context, bool invisible)
 		}
 	}
 	if (found) {
-		msg(invisible ? "You sense the presence of invisible creatures!" :
-			"You sense the presence of monsters!");
+		msg("You sense creatures matching the detection.");
 	} else if (context->aware) {
-		msg(invisible ? "You sense no invisible creatures." :
-			"You sense no monsters.");
+		msg("You sense no creatures matching the detection.");
 	}
 	context->ident = true;
 	player->upkeep->redraw |= PR_MAP | PR_MONLIST;
@@ -268,8 +386,7 @@ static bool teleport_destination_is_valid(
 {
 	return x >= 0 && y >= 0 && x < runtime->state.map.width &&
 		y < runtime->state.map.height &&
-		runtime->cells[(size_t)y * runtime->state.map.width + x] !=
-			WORLD_SPELUNK_ROCK &&
+		!world_spelunk_map_blocks(&runtime->state.map, x, y) &&
 		!world_spelunk_runtime_actor_at(runtime, x, y);
 }
 
@@ -364,6 +481,8 @@ static bool teleport_player(effect_handler_context_t *context)
 		return false;
 	}
 	world_spelunk_visibility_follow_player(runtime);
+	world_spelunk_fixture_step(player);
+	world_spelunk_fixture_notice(player);
 	player->upkeep->redraw |= PR_MAP | PR_STATUS;
 	return true;
 }
@@ -497,6 +616,119 @@ static bool radial_damage(effect_handler_context_t *context, bool balls)
 	return true;
 }
 
+static bool affect_visible_actors(effect_handler_context_t *context)
+{
+	struct world_spelunk_runtime *r = player->spelunking;
+	size_t i;
+	int power = effect_calculate_value(context, true);
+	bool found = false;
+	for (i = r->actor_count; i > 0; i--) {
+		struct world_spelunk_actor *a = &r->actors[i-1];
+		const struct world_spelunk_actor_definition *d = world_spelunk_actor_by_id(a->id);
+		if (!world_spelunk_visibility_is_visible(r,a->x,a->y)) continue;
+		if (context->effect == EF_PROBE &&
+			(player->timed[TMD_BLIND] || player->timed[TMD_IMAGE])) continue;
+		found = true;
+		if (context->effect == EF_PROBE) {
+			char status[128];
+			char traits[768];
+			world_spelunk_actor_status_text(a,status,sizeof(status));
+			msg("%s: %d/%d HP, armour %d, speed %d%s%s.", d->name, a->hp,a->max_hp,
+				d->armour,d->speed,status[0] ? "; " : "",status);
+			if (d->description) msg("%s", d->description);
+			world_spelunk_actor_describe_traits(d,traits,sizeof(traits));
+			msg("Traits: %s.", traits);
+		} else if (context->effect == EF_WAKE) {
+			a->status[WORLD_SPELUNK_STATUS_SLEEP] = 0;
+		} else if (!world_spelunk_actor_project(player,a,power,context->subtype)) return false;
+	}
+	if (!found && context->effect == EF_PROBE) msg("No cave creatures are in sight to probe.");
+	context->ident = true;
+	player->upkeep->redraw |= PR_MAP | PR_MONLIST;
+	return true;
+}
+
+static bool summon_actors(effect_handler_context_t *context)
+{
+	struct world_spelunk_runtime *r = player->spelunking;
+	int count = MIN(WORLD_SPELUNK_ACTOR_MAX, MAX(0,effect_calculate_value(context,false)));
+	int spawned = 0, attempt;
+	if (!summon_type_supported(context->subtype)) return false;
+	for (attempt = 0; attempt < count && r->actor_count < WORLD_SPELUNK_ACTOR_MAX; attempt++) {
+		const struct world_spelunk_actor_definition *d = NULL;
+		int choices = 0, cells = 0, tx = 0, ty = 0, i, x, y;
+		for (i = 0; i < world_spelunk_actor_definition_count(); i++) {
+			const struct world_spelunk_actor_definition *candidate = world_spelunk_actor_by_index(i);
+			if (context->subtype == summon_name_to_idx("ANIMAL") && !rf_has(candidate->flags,RF_ANIMAL)) continue;
+			if (randint0(++choices) == 0) d = candidate;
+		}
+		if (!d) break;
+		for (y = r->state.y-2; y <= r->state.y+2; y++) for (x = r->state.x-2; x <= r->state.x+2; x++) {
+			if (!world_spelunk_actor_destination(r,x,y) ||
+				!world_spelunk_visibility_line_is_clear(r,r->state.x,r->state.y,x,y)) continue;
+			if (randint0(++cells) == 0) { tx = x; ty = y; }
+		}
+		if (!cells || !world_spelunk_runtime_add_actor(r,d->id,tx,ty)) break;
+		r->actors[r->actor_count-1].reward = 0;
+		spawned++;
+	}
+	msg(spawned ? "Hostile cave creatures answer the summons." : "Nothing answers the summons.");
+	context->ident = true;
+	player->upkeep->redraw |= PR_MAP | PR_MONLIST;
+	return true;
+}
+
+static bool banish_actors(effect_handler_context_t *context)
+{
+	struct world_spelunk_runtime *r = player->spelunking;
+	char symbol = 0;
+	int strain = 0, radius = context->radius ? context->radius : z_info->max_sight;
+	size_t i;
+	bool mass = context->effect == EF_MASS_BANISH;
+	if (!mass && !get_com("Choose a cave creature symbol to banish: ", &symbol)) return false;
+	for (i = r->actor_count; i > 0; i--) {
+		struct world_spelunk_actor *a = &r->actors[i-1];
+		const struct world_spelunk_actor_definition *d = world_spelunk_actor_by_id(a->id);
+		if (mass ? distance(loc(r->state.x,r->state.y),loc(a->x,a->y)) > radius : d->glyph != (wchar_t)(unsigned char)symbol) continue;
+		r->detected[a->y*r->state.map.width+a->x] = 0;
+		(void)world_spelunk_runtime_remove_actor(r,a);
+		strain += randint1(mass ? 3 : 4);
+	}
+	/* No kill XP and no loot. Preserve the shared spell's physical strain. */
+	if (strain) take_hit(player,player_apply_damage_reduction(player,strain),"the strain of banishment");
+	msg(strain ? "The banishment strains you." : "No cave creatures match the banishment.");
+	context->ident = true;
+	player->upkeep->redraw |= PR_MAP | PR_MONLIST;
+	return true;
+}
+
+static bool cut_rock_ray(effect_handler_context_t *context)
+{
+	struct world_spelunk_runtime *r = player->spelunking;
+	int x = r->state.x, y = r->state.y, step;
+	int range = z_info->max_range;
+	if (context->dir < 1 || context->dir > 9 || context->dir == DIR_TARGET) return false;
+	if (context->effect == EF_SHORT_BEAM) {
+		range = context->radius + ((context->origin.what == SRC_PLAYER && context->other > 0) ?
+			player->lev/context->other : 0);
+	}
+	for (step = 0; step < range; step++) {
+		x += ddgrid[context->dir].x;
+		y += ddgrid[context->dir].y;
+		if (x < 0 || y < 0 || x >= r->state.map.width || y >= r->state.map.height) break;
+		if (r->cells[y*r->state.map.width+x] == WORLD_SPELUNK_ROCK) {
+			enum world_spelunk_cut_result result = world_spelunk_cut_rock(player,x,y);
+			msg("%s", result == SPELUNK_CUT_OK ? "The cave rock crumbles away." : world_spelunk_cut_reason(result));
+			context->ident = true;
+			return true;
+		}
+		if (world_spelunk_map_blocks(&r->state.map,x,y)) break;
+	}
+	msg("The spell finds no exposed cave rock in that direction.");
+	context->ident = true;
+	return true;
+}
+
 enum world_spelunk_effect_dispatch world_spelunk_effect_dispatch(
 		effect_handler_context_t *context)
 {
@@ -504,11 +736,30 @@ enum world_spelunk_effect_dispatch world_spelunk_effect_dispatch(
 			!world_spelunk_player_is_active(player)) {
 		return WORLD_SPELUNK_EFFECT_UNHANDLED;
 	}
+	if (context->subtype == PROJ_KILL_WALL &&
+		(context->effect == EF_LINE || context->effect == EF_SHORT_BEAM)) {
+		return cut_rock_ray(context) ? WORLD_SPELUNK_EFFECT_COMPLETED : WORLD_SPELUNK_EFFECT_FAILED;
+	}
 	switch (context->effect) {
+	case EF_PROJECT_LOS: case EF_PROJECT_LOS_AWARE: case EF_PROBE: case EF_WAKE:
+		return affect_visible_actors(context) ? WORLD_SPELUNK_EFFECT_COMPLETED : WORLD_SPELUNK_EFFECT_FAILED;
+	case EF_SUMMON:
+		return summon_actors(context) ? WORLD_SPELUNK_EFFECT_COMPLETED : WORLD_SPELUNK_EFFECT_FAILED;
+	case EF_BANISH: case EF_MASS_BANISH:
+		return banish_actors(context) ? WORLD_SPELUNK_EFFECT_COMPLETED : WORLD_SPELUNK_EFFECT_FAILED;
+	case EF_DETECT_TRAPS:
+	case EF_DETECT_DOORS:
+	case EF_DETECT_STAIRS:
+		return detect_fixtures(context) ? WORLD_SPELUNK_EFFECT_COMPLETED : WORLD_SPELUNK_EFFECT_FAILED;
 	case EF_BOLT:
+	case EF_BOLT_STATUS:
+	case EF_BOLT_STATUS_DAM:
+	case EF_BOLT_AWARE:
 		return aimed_damage_ray(context, false) ?
 			WORLD_SPELUNK_EFFECT_COMPLETED : WORLD_SPELUNK_EFFECT_FAILED;
 	case EF_BEAM:
+	case EF_LINE:
+	case EF_ALTER:
 		return aimed_damage_ray(context, true) ?
 			WORLD_SPELUNK_EFFECT_COMPLETED : WORLD_SPELUNK_EFFECT_FAILED;
 	case EF_BOLT_OR_BEAM:
@@ -543,10 +794,12 @@ enum world_spelunk_effect_dispatch world_spelunk_effect_dispatch(
 		return detect_objects(context, false, true) ?
 			WORLD_SPELUNK_EFFECT_COMPLETED : WORLD_SPELUNK_EFFECT_FAILED;
 	case EF_DETECT_INVISIBLE_MONSTERS:
-		return detect_actors(context, true) ?
-			WORLD_SPELUNK_EFFECT_COMPLETED : WORLD_SPELUNK_EFFECT_FAILED;
 	case EF_DETECT_VISIBLE_MONSTERS:
-		return detect_actors(context, false) ?
+	case EF_DETECT_LIVING_MONSTERS:
+	case EF_DETECT_FEARFUL_MONSTERS:
+	case EF_DETECT_EVIL:
+	case EF_DETECT_SOUL:
+		return detect_actors(context) ?
 			WORLD_SPELUNK_EFFECT_COMPLETED : WORLD_SPELUNK_EFFECT_FAILED;
 	case EF_TELEPORT:
 		return teleport_player(context) ? WORLD_SPELUNK_EFFECT_COMPLETED :

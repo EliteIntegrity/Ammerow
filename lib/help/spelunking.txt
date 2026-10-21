@@ -15,6 +15,8 @@ Movement and safety
 
 Arrows or keypad    move, climb, descend, swim, or choose jump direction
 Space / . / KP5     wait one turn
+R                   rest on dry, stable ground; any key stops
+[ / ]               list nearby creatures / items (no time passes)
 H                   cycle or set an adjacent grip target (free)
 J                   begin the multi-stage jump
 Down after J        abandon the reach and drop straight down
@@ -22,6 +24,10 @@ Hold P + direction  peek one tile from a safe offset viewpoint
 '                   hammer a piton at the current position
 ;                   deploy rope downward from the current piton
 g                   pick up local objects
+o                   open a nearby door or survey supply chest
+c                   close an adjacent cave door
+D                   disarm a discovered trap (d still drops an item)
+T / Ctrl+T          tunnel (original / roguelike keyset), then choose direction
 <                   use the exit under the player
 Escape              open the normal in-game menu
 
@@ -45,8 +51,150 @@ rock faces.  Visible passages retain their continuous floors and ceilings, but
 rock still blocks creatures, objects and open space around corners.  Focus loss,
 menus and Escape clear Peek.
 
+Survey doors
+------------
+
+Occasional dry passages contain old survey doors. Stand beside one on stable
+ground and use o to open or c to close it. A sole suitable adjacent door is
+selected automatically; otherwise choose its direction. Each attempt is manual.
+Locked store doors use your ordinary physical disarming skill. Opening, closing
+or failing to pick a lock spends a normal turn; invalid attempts spend none.
+There is no lock-picking XP, and a closed, unlocked door stays unlocked.
+
+Closed doors block movement, sight and shots. Cave creatures cannot open them.
+A creature or loose item in the doorway prevents closing it. Look distinguishes
+open, closed and discovered locked doors; remembered doors show their last known
+state. Mapping reveals doors but not their locks or hidden occupants.
+
+Traps and survey chests
+----------------------
+
+New cave sections can contain a sparse spring-spike or stone-release trap
+and an old supply chest on dry ground, away from the guaranteed route.
+Searching happens as you move or wait: sufficient searching skill reveals a
+nearby trap. Looking or peeking does not grant free searching attempts.
+Trap-detection magic also reveals traps; object detection finds chests but
+does not tell you whether they are trapped. Mapping alone reveals neither.
+
+Use D to disarm a known trap. Stand beside it on stable ground, or on its
+square. With more than one candidate, choose left/right or keypad 5 for the
+current square. Each attempt is manual and costs one normal turn; failure
+can spring the trap. Successful disarming awards 1 XP, once only. Blindness,
+confusion and hallucination make disarming harder. These physical mechanisms
+strike once; walking, landing or teleporting onto an armed floor trap fires it.
+Spent traps are harmless and marked with a dim ^.
+
+Use o beside or on a chest. Picking its lock uses ordinary disarming skill.
+Opening a trapped chest springs the mechanism first; open it again to retrieve
+the supplies if you survive. Disarming a chest trap does not pick its lock.
+Supplies are placed on the ground for g to pick up. An empty chest is marked _;
+it cannot be closed, reset or looted again. Existing saves retain their explored
+sections unchanged; new fixtures appear only in newly generated sections.
+
+Tunnelling and terrain
+----------------------
+
+Stand on a stable rock floor and use T (Ctrl+T with roguelike keys), then
+choose any adjacent direction. Each attempt takes one turn and the ordinary
+digging stamina cost, shown in Look and in the digging message. Attempts do
+not automatically repeat. Your best carried digger is used temporarily unless
+your weapon cannot be removed. Strength, digging skill and equipment matter:
+shale is easier than limestone; iron-stained stone is hardest. An unsuitable
+tool, exhaustion or an unsafe cut spends no turn or stamina.
+
+A finished tunnel removes one rock cell, not the whole stratum. It immediately
+updates sight and removes formations that lost their support. Cutting out your
+floor can cause a damaging or fatal fall; loose items and ground creatures also
+fall when their supporting rock is removed. An anchored rope can catch you if
+you still have stamina. Tunnelling itself cannot be done while hanging.
+
+Outer bedrock, pool-retaining rock, fixture foundations, a piton's last brace
+and rock securing the established return route cannot be excavated. Cuts that
+would leave loose loot underwater or occupants colliding are also refused.
+There is no fluid-flow or whole-cavern collapse simulation. Very old authored
+caves without a certified return route remain protected against excavation.
+
+Standalone Stone to Mud and short wall-removal rays use the same safety rules
+and remove the first exposed rock in range. Magic retains its normal costs;
+a protected rock resists it. Earthquakes, destruction and chained wall-removal
+effects remain unavailable here. Excavated terrain and fallen items persist
+when you leave the section or save/reload; visited caves are never regenerated.
+
 Shared equipment and survival
 -----------------------------
+
+Rest (R) accepts a turn count, ! for full HP or focus, * for full HP, focus,
+stamina and held air, or & for those resources plus recovery from harmful
+conditions. A class without focus uses HP for !. Rest does not refill scuba.
+The ordinary world clock, hunger, healing, status decay and hazards continue.
+Stamina recovers at the same rate as deliberate one-turn waiting, not twice.
+
+Automated Rest needs dry, stable ground. It stops for sighted or detected
+creatures, hunger, damage, unsafe footing or your input. It will not start on
+a known armed trap or while magical travel is pending; wait manually instead.
+Unseen, undetected traps and creatures are not revealed by the safety check.
+
+The [ creature and ] item lists show only occupants in sight or detected in
+this section. They distinguish the two and give above/below/left/right offsets,
+not safe walking routes. Items in the same pile are listed separately, unknown
+flavours stay unknown and ignored items are omitted. Arrows scroll, PgUp/PgDn
+turn pages and Escape returns. These are read-only lists, not automatic travel
+or pickup. While hallucinating you cannot distinguish nearby occupants.
+
+Pickup and ignoring
+-------------------
+
+Stepping onto loose objects uses your ordinary automatic-pickup settings.
+"Always pickup items" takes precedence; otherwise !g prevents pickup, =g
+requests it, and =gN limits the number carried. "Always pickup items matching
+inventory" also honours the first matching pack stack's inscriptions.
+A full pack only takes what will fit in existing stacks; the rest stays here.
+No items are taken from neighbouring tiles, and this does not add automatic
+cave travel or fighting.
+
+Use g for manual pickup, or Ctrl+G to apply automatic-pickup rules here.
+Handling a batch of cave items takes one normal action, just like manual g;
+automatic collection of gold alone takes no extra time. Hazards and creatures
+continue during handling. Waiting or dropping does not trigger auto-pickup.
+Chest contents stay on their square until you pick them up or step onto them.
+
+Use k (Ctrl+D with roguelike keys), or Ignore in an item's inventory menu,
+to ignore an individual item or an offered known category. Ignored items
+disappear from the cave map, Look and nearby lists; they are not destroyed.
+K (O with roguelike keys) shows them again so you can unignore or recover them.
+Ignored carried gear is dropped here when safe. !d and !* protect against
+auto-drop; equipped items need confirmation and stuck items cannot be removed.
+If the cell cannot hold dropped objects, or cave storage is full, you keep them.
+
+Dry shelves are home to chasm skitters, quick but fragile cave rats and slower,
+hard-shelled stone beetles. These ground creatures cannot follow you across an
+open shaft or through a pool. Look at a visible creature for its health and
+description. Bump attacks need stable footing; fire, throw or use an adapted
+spell when appropriate. Cleared cave sections do not replenish their creatures.
+
+Cave creatures have explicit traits. All current kinds are animals; stone
+beetles resist poison and cannot be confused. Effective weapon brands and
+slays work in melee and ranged attacks. Sleep, hold, slow, haste, confusion,
+stun and fear now affect cave creatures; visible Look and creature lists
+show their current conditions. Damage wakes a sleeping creature.
+
+Creature teleportation needs an empty dry shelf. Polymorph changes creatures
+within the cave roster, not into an arbitrary dungeon monster. Supported
+summons are hostile, need nearby space, and give no kill XP. Polymorph cannot
+increase a creature's original XP award. These conditions survive saving.
+Probing and sight-wide magic require sight; detection alone does not let a
+spell hit through rock. Banishment gives no XP and still strains your health.
+
+Cave Survey (Shift+C, then the Cave Survey tab)
+  Left/Right changes character tabs. Press Enter, or click a section, to
+  explore the survey. All four arrows now select sections in the diagram;
+  Tab / Shift+Tab cycles through every known section, and Home selects here.
+  Escape (or right click) returns to the tabs; Escape again closes the screen.
+  The @ marks your actual location, not the highlighted selection. Inspecting
+  a section never moves you or spends a turn. The diagram shows connections
+  and survey depths, not compass directions or exact entrance positions.
+  Only discovered sections/passages appear. Section numbers are references
+  within the current chart; the chart may rescale/renumber as you discover more.
 
 i / e / I / C / S / ~    inventory, equipment, examine, character, abilities,
                          and knowledge
@@ -69,6 +217,6 @@ the gear.
 
 Commands which still need side-view spatial rules are blocked rather than
 silently using a top-down target.  These include conventional targeting,
-opening, closing, tunnelling, disarming, the ordinary dungeon-map view, nearby
-monster/item lists, and multi-turn Rest.  Cave Survey and cave-native Look are
+the ordinary dungeon-map view and automatic cave navigation.
+Cave Survey and cave-native Look are
 the deliberate side-view alternatives to the two map screens.

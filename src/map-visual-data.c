@@ -48,16 +48,18 @@ static enum parser_error parse_binding(struct parser *p)
 
 	if (!(streq(scope, "map") || streq(scope, "cave") ||
 			streq(scope, "cave-material") || streq(scope, "cave-decoration") ||
-			streq(scope, "cave-actor")) || !semantic_valid(semantic) ||
+			streq(scope, "cave-actor") || streq(scope, "trap")) || !semantic_valid(semantic) ||
 			!datafile_art_id_is_valid(id) ||
 			!(streq(domain, "object") || streq(domain, "feature") ||
-			  streq(domain, "actor")) ||
+			  streq(domain, "actor") || streq(domain, "monster")) ||
 			strlen(domain) + strlen(id) + 2 > sizeof(node->value.key)) {
 		return PARSE_ERROR_INVALID_VALUE;
 	}
-	/* Keep each consumer in its own namespace. */
+	/* Cave creatures may explicitly reuse monster artwork without inheriting
+	 * that monster's gameplay definition. Terrain/items retain their namespaces. */
 	if ((streq(scope, "map") && !streq(domain, "object")) ||
-			(streq(scope, "cave-actor") && !streq(domain, "actor")) ||
+			(streq(scope, "cave-actor") && !streq(domain, "actor") &&
+			 !streq(domain, "monster")) ||
 			(!streq(scope, "map") && !streq(scope, "cave-actor") &&
 			 !streq(domain, "feature"))) return PARSE_ERROR_INVALID_VALUE;
 	for (node = head; node; node = node->next) {

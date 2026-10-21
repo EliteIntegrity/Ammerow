@@ -20,6 +20,7 @@
 #include "sdl3/map-view.h"
 #include "sdl3/store-art.h"
 #include "sdl3/terrain.h"
+#include "sdl3/tiles.h"
 #include "sdl3/term.h"
 #include "sdl3/weather.h"
 
@@ -65,8 +66,11 @@ struct sdl3_presentation_frame {
 	bool big_stat_cards;
 	bool animated_combat;
 	bool edge_warnings;
-	bool tile_mode;
+	enum sdl3_tile_mode tile_mode;
 	int hybrid_tile_size;
+	bool ascii_square;
+	bool ascii_enhanced;
+	bool ascii_floors;
 	enum sdl3_dock_placement dock_placement;
 	int dock_rows;
 	int dock_cols;

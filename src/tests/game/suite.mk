@@ -10,6 +10,12 @@ TESTPROGS += game/advancement \
 	game/provisions \
 	game/relic-broker \
 	game/spelunking-combat \
+	game/spelunking-actor-effects \
+	game/spelunking-doors \
+	game/spelunking-fixtures \
+	game/spelunking-terrain \
+	game/spelunking-convenience \
+	game/spelunking-pickup \
 	game/spelunking-items \
 	game/spelunking-persistence \
 	game/spelunking-transitions \

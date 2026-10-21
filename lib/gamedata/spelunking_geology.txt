@@ -4,6 +4,7 @@
 # strata:<minimum band height>:<maximum band height>
 # decoration-budget:<minimum count>:<maximum count>
 # material:<stable tag>:<id>:<weight>:<terrain visual material>:<Look name>
+# digging:<material tag>:<skill threshold>:<multiplier> (chance out of 1600)
 # decoration:<stable tag>:<id>:<placement>:<weight>:<minimum spacing>:<glyph>:<colour>:<Look name>
 
 profile:deepwell.limestone-shale:1
@@ -12,6 +13,9 @@ decoration-budget:9:18
 material:1:limestone:55:limestone:Weathered limestone
 material:2:shale:35:shale:Blue-grey shale
 material:3:iron-stained:10:iron-stained:Iron-stained stone
+digging:1:20:2
+digging:2:10:4
+digging:3:40:1
 decoration:1:calcite-seam:rock-face:30:4:%:Light White:Calcite seam
 decoration:2:stalactite:ceiling:25:5:v:Light Slate:Calcite stalactite
 decoration:3:stalagmite:floor:20:5:^:Slate:Calcite stalagmite

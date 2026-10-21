@@ -1050,6 +1050,17 @@ static bool generated_node_population_is_valid(
 		return false;
 	}
 	for (i = 0; i < population->actor_entry_count; i++) {
+		const struct world_spelunk_population_actor_entry *entry = &population->actors[i];
+		size_t a;
+		unsigned count = 0;
+		for (a = 0; a < node->runtime->actor_count; a++) {
+			const struct world_spelunk_actor *actor = &node->runtime->actors[a];
+			int depth = actor->y * 100 / (node->runtime->state.map.height - 1);
+			if (!streq(actor->id, entry->actor_id)) continue;
+			if (depth < entry->minimum_depth_percent || depth > entry->maximum_depth_percent) return false;
+			count++;
+		}
+		if (count < entry->minimum_count || count > entry->maximum_count) return false;
 		actor_minimum += population->actors[i].minimum_count;
 		actor_maximum += population->actors[i].maximum_count;
 	}
@@ -1206,8 +1217,7 @@ static int test_procedural_candidate_publication(void *state)
 	require(world_spelunk_runtime_ground_object_count(root->runtime) >= 2 &&
 		world_spelunk_runtime_ground_object_count(root->runtime) <= 4);
 	require(root->runtime->actor_roster_initialized);
-	require(root->runtime->actor_count >= 1 &&
-		root->runtime->actor_count <= 2);
+	require(generated_node_population_is_valid(root));
 	{
 		const struct world_spelunk_system_node *duplicate_root;
 
@@ -1400,6 +1410,97 @@ static int test_procedural_candidate_publication(void *state)
 	ok;
 }
 
+/* A bounded production-data audit, not a simulated winning playthrough. Sight
+ * is sampled at certified route stations; shelf contact ignores other actors.
+ * These counts let population changes be compared without changing game RNG. */
+static int test_population_seed_audit(void *unused)
+{
+	const struct world_spelunk_system_profile *profile;
+	struct randomizer_state before, after;
+	unsigned sections = 0, actors = 0, hp = 0, xp = 0, visible = 0, contact = 0;
+	unsigned supplies = 0;
+	uint32_t seed;
+	(void)unused;
+	reset_before_load();
+	require(savefile_load("Test1", false));
+	profile = world_spelunk_system_profile_by_id("deepwell");
+	notnull(profile);
+	Rand_state_export(&before);
+	for (seed = 0; seed < 16; seed++) {
+		struct world_spelunk_system *system = NULL;
+		size_t n, i;
+		eq(world_spelunk_publish_system_candidate(profile, seed, 100,
+			"shaft.surface", &system), WORLD_SPELUNK_PUBLICATION_OK);
+		for (i = 0; i < system->edge_count; i++) {
+			const struct world_spelunk_system_edge *edge = &system->edges[i];
+			eq(world_spelunk_materialize_node_candidate(system, edge->node_b_id,
+				100, edge->endpoint_b_id), WORLD_SPELUNK_PUBLICATION_OK);
+			require(world_spelunk_system_discover_edge(system, edge->id));
+		}
+		for (n = 0; n < system->node_count; n++) {
+			struct world_spelunk_system_node *node = &system->nodes[n];
+			struct world_spelunk_runtime *runtime = node->runtime;
+			struct world_spelunk_generated_layout layout;
+			const struct world_spelunk_population_profile *population;
+			struct world_spelunk_state saved = runtime->state;
+			require(generated_node_population_is_valid(node));
+			eq(world_spelunk_reconstruct_node_candidate(system, node->id, 100,
+				&layout), WORLD_SPELUNK_RECONSTRUCTION_OK);
+			population = world_spelunk_population_profile_by_id(layout.population_profile_id);
+			notnull(population);
+			sections++;
+			supplies += (unsigned)world_spelunk_runtime_ground_object_count(runtime);
+			for (i = 0; i < runtime->actor_count; i++) {
+				const struct world_spelunk_actor *actor = &runtime->actors[i];
+				const struct world_spelunk_actor_definition *kind = world_spelunk_actor_by_id(actor->id);
+				bool seen = false, met = false;
+				int s;
+				notnull(kind);
+				actors++; hp += actor->hp; xp += kind->experience;
+				require(ABS(actor->x - saved.x) + ABS(actor->y - saved.y) > 4);
+				require(ABS(actor->x - layout.entrance_x) + ABS(actor->y - layout.entrance_y) >
+					population->entrance_exclusion_radius);
+				for (s = 0; s < layout.landmark_count; s++) {
+					require(ABS(actor->x - layout.landmarks[s].x) + ABS(actor->y - layout.landmarks[s].y) >
+						population->landmark_exclusion_radius);
+				}
+				for (s = 0; s < layout.route_visit_count; s++) {
+					require(ABS(actor->x - layout.route_visits[s].x) + ABS(actor->y - layout.route_visits[s].y) >
+						population->endpoint_exclusion_radius);
+				}
+				for (s = 0; s < layout.route_station_count; s++) {
+					int x, left, right;
+					bool supported = true;
+					runtime->state.x = layout.route_stations[s].x;
+					runtime->state.y = layout.route_stations[s].y;
+					world_spelunk_visibility_follow_player(runtime);
+					seen |= world_spelunk_visibility_is_visible(runtime, actor->x, actor->y);
+					if (runtime->state.y != actor->y) continue;
+					left = MIN(runtime->state.x, actor->x);
+					right = MAX(runtime->state.x, actor->x);
+					for (x = left; x <= right; x++) {
+						if (runtime->cells[actor->y * layout.width + x] != WORLD_SPELUNK_AIR ||
+							runtime->cells[(actor->y + 1) * layout.width + x] != WORLD_SPELUNK_ROCK) supported = false;
+					}
+					met |= supported;
+				}
+				visible += seen; contact += met;
+			}
+			runtime->state = saved;
+			world_spelunk_visibility_follow_player(runtime);
+			world_spelunk_generated_layout_dispose(&layout);
+		}
+		world_spelunk_system_free(system);
+	}
+	Rand_state_export(&after);
+	require(memcmp(&before, &after, sizeof(before)) == 0);
+	require(visible > 0 && contact > 0);
+	if (verbose) printf("\n16 seeds: %u sections, %u actors, %u HP, %u XP, %u supplies; "
+		"%u visible / %u shelf-contact from route stations\n",
+		sections, actors, hp, xp, supplies, visible, contact);
+	ok;
+}
+
 const char *suite_name = "game/spelunking-transitions";
 struct test tests[] = {
 	{ "cave status snapshot", test_cave_status_snapshot },
@@ -1408,5 +1509,6 @@ struct test tests[] = {
 	{ "generated player passages", test_generated_player_passages },
 	{ "fishing site", test_spelunking_fishing_site },
 	{ "procedural candidate publication", test_procedural_candidate_publication },
+	{ "population seed audit", test_population_seed_audit },
 	{ NULL, NULL }
 };

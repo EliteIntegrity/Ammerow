@@ -212,6 +212,8 @@ void textui_cmd_rest(void)
 	const char *p = "Rest (0-9999, '!' for HP or focus, '*' for both, '&' as needed): ";
 
 	char out_val[5] = "& ";
+	if (world_player_mode_has_capability(player, WORLD_MODE_CAP_SIDE_VIEW))
+		p = "Rest (1-9999, ! HP/focus, * HP/focus/stamina/air, & as needed): ";
 
 	/* Ask for duration */
 	if (!get_string(p, out_val, sizeof(out_val))) return;

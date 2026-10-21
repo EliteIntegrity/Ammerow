@@ -56,6 +56,7 @@
 #include "ui-history.h"
 #include "ui-history-screen.h"
 #include "ui-knowledge.h"
+#include "ui-spelunking-list.h"
 #include "ui-knowledge-screen.h"
 #include "ui-menu.h"
 #include "ui-nearby-screen.h"
@@ -4741,7 +4742,9 @@ void do_cmd_monlist(void)
 	/* Save the screen and display the list */
 	screen_save();
 
-    monster_list_show_interactive(Term->hgt, Term->wid);
+	if (world_player_mode_has_capability(player, WORLD_MODE_CAP_SIDE_VIEW))
+		textui_spelunking_list(player, false);
+	else monster_list_show_interactive(Term->hgt, Term->wid);
 
 	/* Return */
 	screen_load();
@@ -4756,7 +4759,9 @@ void do_cmd_itemlist(void)
 	/* Save the screen and display the list */
 	screen_save();
 
-    object_list_show_interactive(Term->hgt, Term->wid);
+	if (world_player_mode_has_capability(player, WORLD_MODE_CAP_SIDE_VIEW))
+		textui_spelunking_list(player, true);
+	else object_list_show_interactive(Term->hgt, Term->wid);
 
 	/* Return */
 	screen_load();

@@ -101,7 +101,7 @@ static int test_spelunking_consumables(void *state)
 	require(world_spelunk_item_effect_is_safe(seam_step_kind->effect));
 	require(world_spelunk_item_effect_is_safe(mapping_kind->effect));
 	require(world_spelunk_item_effect_is_safe(recall_kind->effect));
-	require(!world_spelunk_item_effect_is_safe(summon_kind->effect));
+	require(world_spelunk_item_effect_is_safe(summon_kind->effect));
 
 	/* Eating is inventory-only in side view and applies player-local effects
 	 * without the retained top-down chunk being present. */
@@ -244,8 +244,7 @@ static int test_spelunking_consumables(void *state)
 	eq(player->upkeep->energy_use, z_info->move_energy);
 	player->word_recall = 0;
 
-	/* A scroll needing a top-down-only summon owner is rejected before it can
-	 * consume the object or commit energy. */
+	/* Summoning now uses supported cave shelves and the cave-owned roster. */
 	obj = make_test_object(summon_kind, 1);
 	notnull(obj);
 	inven_carry(player, obj, true, false);
@@ -258,8 +257,10 @@ static int test_spelunking_consumables(void *state)
 	cave = NULL;
 	require(cmdq_pop(CTX_GAME));
 	cave = top_down_cave;
-	eq(carried_kind_count(player, summon_kind), count_before);
-	eq(player->upkeep->energy_use, 0);
+	eq(carried_kind_count(player, summon_kind), count_before - 1);
+	eq(player->upkeep->energy_use, z_info->move_energy);
+	for (i = 0; i < (int)player->spelunking->actor_count; i++)
+		eq(player->spelunking->actors[i].reward, 0);
 
 	reset_before_load();
 	require(savefile_load("Test1", false));
@@ -320,7 +321,7 @@ static int test_spelunking_magic_devices(void *state)
 	require(world_spelunk_item_effect_is_safe(rod_kind->effect));
 	require(world_spelunk_item_effect_is_safe(wand_kind->effect));
 	require(world_spelunk_item_effect_is_safe(ring_kind->effect));
-	require(!world_spelunk_item_effect_is_safe(status_wand_kind->effect));
+	require(world_spelunk_item_effect_is_safe(status_wand_kind->effect));
 
 	/* Shared device skill, charge, knowledge, energy, and healing rules run
 	 * without a native cave.  Generic Use dispatches through the same path. */
@@ -430,8 +431,7 @@ static int test_spelunking_magic_devices(void *state)
 	require(player->timed[TMD_OPP_FIRE] > 0);
 	eq(player->upkeep->energy_use, z_info->move_energy);
 
-	/* Effects whose semantics need unauthored actor statuses remain
-	 * transactional: no charge, sound, energy, or actor mutation. */
+	/* A real slowing wand now changes cadence rather than dealing damage. */
 	require(world_spelunk_runtime_add_actor(player->spelunking,
 		WORLD_SPELUNK_CHASM_SKITTER_ID, 4, 6));
 	status_wand = make_test_object(status_wand_kind, 1);
@@ -447,11 +447,15 @@ static int test_spelunking_magic_devices(void *state)
 	cmd_set_arg_item(cmdq_peek(), "item", status_wand);
 	cmd_set_arg_target(cmdq_peek(), "target", 6);
 	cave = NULL;
+	rand_fix(100);
 	require(cmdq_pop(CTX_GAME));
+	rand_unfix();
 	cave = top_down_cave;
-	eq(status_wand->pval, status_charges);
-	eq(player->upkeep->energy_use, 0);
+	eq(status_wand->pval, status_charges - 1);
+	eq(player->upkeep->energy_use, z_info->move_energy);
 	eq(player->spelunking->actor_count, 1);
+	eq(player->spelunking->actors[0].hp,4);
+	require(player->spelunking->actors[0].status[WORLD_SPELUNK_STATUS_SLOW] > 0);
 
 	reset_before_load();
 	require(savefile_load("Test1", false));

@@ -1,0 +1,30 @@
+# Copyright (c) 2026 John Horton; SPDX-License-Identifier: GPL-2.0-only
+# Generated binding data; the PNG artwork is separately licensed.
+domain:feature
+open-floor -> 0,0
+meridian-floor -> 0,0
+cavewood-floor -> 0,0
+ruins-floor -> 0,0
+dirt -> 1,0
+lake-margin -> 1,0
+marsh-ground -> 1,0
+patch-of-grass -> 2,0
+pine-wood-floor -> 2,0
+heath-ground -> 2,0
+meadow-ground -> 2,0
+scrub-ground -> 2,0
+shallow-water -> 3,0
+village-restored-water -> 3,0
+marsh-water -> 3,0
+deep-water -> 4,0
+lava -> 5,0
+shallow-lava -> 5,0
+deep-lava -> 6,0
+door -> 7,0
+open-door -> 0,1
+broken-door -> 1,1
+up-staircase -> 2,1
+down-staircase -> 3,1
+rubble -> 4,1
+passable-rubble -> 4,1
+dark-pit -> 5,1

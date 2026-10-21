@@ -409,6 +409,7 @@ desc:Rods, lines, rope, anchors, and breathing equipment are fitted here for
 desc: work on the water and below the village.
 
 code:STORE_BROKER
+art:relic-broker
 name:Relic Broker
 graphics:B:y
 priority:20

@@ -12,6 +12,7 @@
 #define UI_SPELUNKING_SURVEY_H
 
 #include "ui-screen.h"
+#include "ui-event.h"
 #include "world-spelunking-system.h"
 
 #include <stdbool.h>
@@ -19,6 +20,9 @@
 #define UI_SPELUNK_SURVEY_LABEL_MAX 160
 #define UI_SPELUNK_SURVEY_DETAIL_MAX 80
 #define UI_SPELUNK_SURVEY_DESCRIPTION_MAX 256
+
+/* Frontend-generated selections, never physical key bindings. */
+#define KC_SURVEY_SELECT_FIRST 0xE100
 
 struct ui_spelunk_survey_model {
 	struct ui_screen_row rows[WORLD_SPELUNK_SYSTEM_NODE_MAX];
@@ -35,5 +39,8 @@ struct ui_spelunk_survey_model {
 
 bool ui_spelunk_survey_build(const struct world_spelunk_system *system,
 		struct ui_spelunk_survey_model *model);
+/* False leaves the event to the character-page controller. */
+bool ui_spelunk_survey_handle(const struct ui_spelunk_survey_model *model,
+		struct keypress key, int *cursor, bool *focused);
 
 #endif /* !UI_SPELUNKING_SURVEY_H */

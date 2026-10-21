@@ -27,6 +27,7 @@
 #include "project.h"
 #include "world-spelunking-adapter.h"
 #include "world-spelunking-actor-data.h"
+#include "world-spelunking-actor-effects.h"
 #include "world-spelunking-visibility.h"
 #include "z-rand.h"
 #include "z-util.h"
@@ -43,7 +44,7 @@ const char *world_spelunk_actor_name(const char *actor_id)
 	return definition ? definition->name : "unknown creature";
 }
 
-static int roll_player_damage(struct player *p, const struct object *weapon)
+static int roll_player_damage(struct player *p, const struct object *weapon, int modifier)
 {
 	int dice = weapon ? weapon->dd : 1;
 	int sides = weapon ? weapon->ds : 1;
@@ -55,15 +56,15 @@ static int roll_player_damage(struct player *p, const struct object *weapon)
 			(weapon ? object_to_dam(weapon) : 0);
 		bool extra;
 
-		die_average *= 10;
+		die_average *= modifier ? modifier : 10;
 		apply_deadliness(&die_average, MIN(deadliness, 150));
 		sides = (2 * die_average) - 10000;
 		extra = randint0(10000) < (sides % 10000);
 		sides /= 10000;
 		sides += extra ? 1 : 0;
-		damage = damroll(dice, MAX(1, sides));
+		damage = damroll(dice, MAX(1, sides)) + (modifier ? modifier - 10 : 0);
 	} else {
-		damage = damroll(dice, sides);
+		damage = damroll(dice, sides) * MAX(1, modifier);
 		if (weapon) damage += object_to_dam(weapon);
 		damage += p->state.to_d;
 	}
@@ -91,16 +92,17 @@ static enum world_spelunk_combat_result finish_kill(struct player *p,
 {
 	const struct world_spelunk_actor_definition *definition =
 		world_spelunk_actor_by_id(actor->id);
+	int reward = definition ? MIN(actor->reward, definition->experience) : 0;
 
 	report->killed = true;
 	if (!world_spelunk_runtime_remove_actor(p->spelunking, actor)) {
 		return WORLD_SPELUNK_COMBAT_INVALID;
 	}
-	if (!p->is_dead && definition) player_exp_gain(p, definition->experience);
+	if (!p->is_dead && reward) player_exp_gain(p, reward);
 	return WORLD_SPELUNK_COMBAT_KILLED;
 }
 
-static bool apply_projection_damage(struct player *p,
+bool world_spelunk_actor_project(struct player *p,
 		struct world_spelunk_actor *actor, int damage, int projection_type)
 {
 	struct world_spelunk_combat_report report;
@@ -108,13 +110,14 @@ static bool apply_projection_damage(struct player *p,
 	bool visible;
 
 	if (!p || !actor || damage < 0 || projection_type < 0 ||
-			projection_type >= z_info->projection_max) {
+			!world_spelunk_actor_projection_supported(projection_type)) {
 		return false;
 	}
 	prepare_combat_report(&report, actor);
 	name = world_spelunk_actor_name(report.actor_id);
 	visible = world_spelunk_visibility_is_visible(p->spelunking,
 		actor->x, actor->y);
+	damage = world_spelunk_actor_effect(p, actor, projection_type, damage);
 	report.hit = true;
 	report.damage = damage;
 	actor->hp = MAX(0, actor->hp - damage);
@@ -169,10 +172,17 @@ enum world_spelunk_combat_result world_spelunk_player_bump_attack(
 	weapon = equipped_item_by_slot_name(p, "weapon");
 	p->upkeep->energy_use =
 		(int)p->spelunking->state.rules.action_energy;
+	actor->status[WORLD_SPELUNK_STATUS_SLEEP] = 0;
 	report->hit = test_hit(chance_of_melee_hit_base(p, weapon),
 		definition->armour);
 	if (!report->hit) return WORLD_SPELUNK_COMBAT_TURN;
-	report->damage = roll_player_damage(p, weapon);
+	report->damage = roll_player_damage(p, weapon,
+		world_spelunk_attack_modifier(p, definition, weapon, NULL, true,
+			world_spelunk_visibility_is_visible(p->spelunking,actor->x,actor->y)));
+	if (p->timed[TMD_ATT_CONF]) {
+		player_clear_timed(p, TMD_ATT_CONF, true, false);
+		(void)world_spelunk_actor_effect(p, actor, PROJ_MON_CONF, 10);
+	}
 	actor->hp = MAX(0, actor->hp - report->damage);
 	if (actor->hp == 0) return finish_kill(p, actor, report);
 	return WORLD_SPELUNK_COMBAT_TURN;
@@ -209,12 +219,13 @@ bool world_spelunk_player_project_ray(struct player *p, int dx, int dy,
 	int previous_x;
 	int previous_y;
 	int step;
+	bool targets[WORLD_SPELUNK_ACTOR_MAX] = { false };
 
 	if (hits) *hits = 0;
 	if (!p || !hits || !world_spelunk_player_is_active(p) ||
 			dx < -1 || dx > 1 || dy < -1 || dy > 1 ||
 			(!dx && !dy) || range <= 0 || damage < 0 ||
-			projection_type < 0 || projection_type >= z_info->projection_max) {
+			!world_spelunk_actor_projection_supported(projection_type)) {
 		return false;
 	}
 	runtime = p->spelunking;
@@ -230,8 +241,7 @@ bool world_spelunk_player_project_ray(struct player *p, int dx, int dy,
 		y += dy;
 		if (x < 0 || y < 0 || x >= runtime->state.map.width ||
 				y >= runtime->state.map.height ||
-				runtime->cells[(size_t)y * runtime->state.map.width + x] ==
-					WORLD_SPELUNK_ROCK) {
+				world_spelunk_map_blocks(&runtime->state.map, x, y)) {
 			break;
 		}
 		seen = world_spelunk_visibility_is_visible(runtime, x, y);
@@ -241,11 +251,14 @@ bool world_spelunk_player_project_ray(struct player *p, int dx, int dy,
 		previous_y = y;
 		actor = world_spelunk_runtime_actor_at_mutable(runtime, x, y);
 		if (!actor) continue;
-		if (!apply_projection_damage(p, actor, damage, projection_type)) {
-			return false;
-		}
+		targets[actor - runtime->actors] = true;
 		(*hits)++;
 		if (stop_at_first_actor) break;
+	}
+	/* Snapshot targets before mutations; teleport cannot be hit again further
+	 * down the beam, and removing an actor cannot invalidate another index. */
+	for (step = (int)runtime->actor_count - 1; step >= 0; step--) {
+		if (targets[step] && !world_spelunk_actor_project(p, &runtime->actors[step], damage, projection_type)) return false;
 	}
 	return world_spelunk_runtime_is_valid(runtime);
 }
@@ -259,13 +272,13 @@ bool world_spelunk_player_project_ball(struct player *p, int dx, int dy,
 	int previous_x;
 	int previous_y;
 	int step;
-	size_t i = 0;
+	size_t i;
 
 	if (hits) *hits = 0;
 	if (!p || !hits || !world_spelunk_player_is_active(p) ||
 			dx < -1 || dx > 1 || dy < -1 || dy > 1 || (!dx && !dy) ||
 			range <= 0 || radius < 0 || damage < 0 || projection_type < 0 ||
-			projection_type >= z_info->projection_max) {
+			!world_spelunk_actor_projection_supported(projection_type)) {
 		return false;
 	}
 	runtime = p->spelunking;
@@ -281,8 +294,7 @@ bool world_spelunk_player_project_ball(struct player *p, int dx, int dy,
 		if (next_x < 0 || next_y < 0 ||
 				next_x >= runtime->state.map.width ||
 				next_y >= runtime->state.map.height ||
-				runtime->cells[(size_t)next_y * runtime->state.map.width +
-					next_x] == WORLD_SPELUNK_ROCK) {
+				world_spelunk_map_blocks(&runtime->state.map, next_x, next_y)) {
 			break;
 		}
 		centre_x = next_x;
@@ -294,8 +306,8 @@ bool world_spelunk_player_project_ball(struct player *p, int dx, int dy,
 		previous_y = centre_y;
 		if (world_spelunk_runtime_actor_at(runtime, centre_x, centre_y)) break;
 	}
-	while (i < runtime->actor_count) {
-		struct world_spelunk_actor *actor = &runtime->actors[i];
+	for (i = runtime->actor_count; i > 0; i--) {
+		struct world_spelunk_actor *actor = &runtime->actors[i - 1];
 		int blast_distance = distance(loc(centre_x, centre_y),
 			loc(actor->x, actor->y));
 
@@ -304,16 +316,13 @@ bool world_spelunk_player_project_ball(struct player *p, int dx, int dy,
 					centre_y, actor->x, actor->y)) {
 			int actor_damage = (damage + blast_distance) /
 				(blast_distance + 1);
-			size_t count_before = runtime->actor_count;
 
-			if (!apply_projection_damage(p, actor, actor_damage,
+			if (!world_spelunk_actor_project(p, actor, actor_damage,
 					projection_type)) {
 				return false;
 			}
 			(*hits)++;
-			if (runtime->actor_count < count_before) continue;
 		}
-		i++;
 	}
 	return world_spelunk_runtime_is_valid(runtime);
 }
@@ -350,7 +359,6 @@ static size_t projectile_path(const struct world_spelunk_runtime *runtime,
 
 	while (count < capacity) {
 		int doubled = error * 2;
-		size_t index;
 
 		if (doubled >= delta_y) {
 			error += delta_y;
@@ -365,8 +373,7 @@ static size_t projectile_path(const struct world_spelunk_runtime *runtime,
 				distance(start, loc(x, y)) > range) {
 			break;
 		}
-		index = (size_t)y * runtime->state.map.width + x;
-		if (runtime->cells[index] == WORLD_SPELUNK_ROCK) break;
+		if (world_spelunk_map_blocks(&runtime->state.map, x, y)) break;
 		path[count++] = loc(x, y);
 		if ((stop_at_actor && world_spelunk_runtime_actor_at(runtime, x, y)) ||
 				(!through_target && x == target.x && y == target.y)) {
@@ -479,11 +486,14 @@ enum world_spelunk_projectile_result world_spelunk_player_projectile(
 		hit->y = grid.y;
 		hit->visible = world_spelunk_visibility_is_visible(runtime,
 			grid.x, grid.y);
-		hit->hit = player_resolve_ranged_attack_against_armour(p, missile,
+		hit->hit = player_resolve_ranged_attack_with_modifier(p, missile,
 			launcher, definition->armour, distance(loc(runtime->state.x,
-			runtime->state.y), grid), hit->visible, &hit->damage,
+			runtime->state.y), grid), hit->visible,
+			world_spelunk_attack_modifier(p, definition, missile, launcher, false, false), &hit->damage,
 			&hit->message_type);
 		if (hit->hit) {
+			actor->status[WORLD_SPELUNK_STATUS_SLEEP] = 0;
+			(void)world_spelunk_attack_modifier(p, definition, missile, launcher, false, hit->visible);
 			report->hit_target = true;
 			missile_learn_on_ranged_attack(p, missile);
 			equip_learn_on_ranged_attack(p);
@@ -520,6 +530,7 @@ static bool actor_can_step(const struct world_spelunk_runtime *runtime,
 
 	return x >= 0 && x < map->width && y >= 0 && y + 1 < map->height &&
 		runtime->cells[(size_t)y * map->width + x] == WORLD_SPELUNK_AIR &&
+		!world_spelunk_map_blocks(map, x, y) &&
 		runtime->cells[(size_t)(y + 1) * map->width + x] ==
 			WORLD_SPELUNK_ROCK &&
 		!world_spelunk_runtime_actor_at(runtime, x, y);
@@ -551,9 +562,22 @@ bool world_spelunk_process_actors(struct player *p,
 		int gained_energy;
 		int dx = runtime->state.x - actor->x;
 		int dy = runtime->state.y - actor->y;
+		bool asleep = actor->status[WORLD_SPELUNK_STATUS_SLEEP] != 0;
+		bool held = actor->status[WORLD_SPELUNK_STATUS_HOLD] != 0;
+		bool confused = actor->status[WORLD_SPELUNK_STATUS_CONFUSED] != 0;
+		bool afraid = actor->status[WORLD_SPELUNK_STATUS_FEAR] != 0;
+		bool stunned = actor->status[WORLD_SPELUNK_STATUS_STUN] != 0;
+		int speed = definition ? definition->speed : 110;
+		int s;
 
 		if (!definition) return false;
-		gained_energy = turn_energy(definition->speed);
+		if (actor->status[WORLD_SPELUNK_STATUS_SLOW]) speed -= 10;
+		if (actor->status[WORLD_SPELUNK_STATUS_FAST]) speed += 10;
+		for (s = 0; s < WORLD_SPELUNK_STATUS_MAX; s++) {
+			if (actor->status[s]) actor->status[s]--;
+		}
+		if (asleep || held) { actor->energy = 0; continue; }
+		gained_energy = turn_energy(MAX(1, MIN(199, speed)));
 		if (gained_energy <= 0) return false;
 		/* Side-view actors participate in Angband's shared energy clock.  Cap at
 		 * one ready action while out of sight rather than overflowing or banking
@@ -575,8 +599,8 @@ bool world_spelunk_process_actors(struct player *p,
 		report->from_y = actor->y;
 		report->to_x = actor->x;
 		report->to_y = actor->y;
-		if (dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1) {
-			report->event = test_hit(definition->to_hit,
+		if (!afraid && !confused && dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1) {
+			report->event = test_hit(stunned ? definition->to_hit / 2 : definition->to_hit,
 				p->state.ac + p->state.to_a) ?
 				WORLD_SPELUNK_ACTOR_EVENT_HIT :
 				WORLD_SPELUNK_ACTOR_EVENT_MISSED;
@@ -585,9 +609,12 @@ bool world_spelunk_process_actors(struct player *p,
 					definition->damage_sides);
 				take_hit(p, report->damage, definition->death_cause);
 			}
-		} else if (dy == 0) {
+		} else if (dy == 0 || confused) {
 			int step = dx > 0 ? 1 : -1;
-			int next_x = actor->x + step;
+			int next_x;
+			if (afraid) step = -step;
+			if (confused) step = randint0(3) - 1;
+			next_x = actor->x + step;
 
 			if (next_x != runtime->state.x &&
 					actor_can_step(runtime, next_x, actor->y)) {

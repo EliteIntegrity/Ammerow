@@ -458,6 +458,7 @@ desc:A strange fungal growth, prone to moving if not observed.  Not very tasty
 desc: but quite filling.
 
 name:& Ration~ of Food
+art:ration-of-food
 type:food
 graphics:,:U
 level:0

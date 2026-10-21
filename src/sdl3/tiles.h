@@ -19,6 +19,19 @@
 #define SDL3_TILE_ATLAS_CAPACITY 16
 #define SDL3_TILE_ENTRY_CAPACITY 4096
 
+/* Persisted values: keep the original ASCII=0 and Hybrid=1 settings. */
+enum sdl3_tile_mode {
+	SDL3_TILE_MODE_ASCII = 0,
+	SDL3_TILE_MODE_HYBRID,
+	SDL3_TILE_MODE_FULL
+};
+
+const char *sdl3_tile_mode_name(enum sdl3_tile_mode mode);
+enum sdl3_tile_mode sdl3_tile_mode_change(enum sdl3_tile_mode mode,
+		int delta, bool full_available);
+/* Optional media is never inferred from the retired 16px sheets. */
+bool sdl3_tiles_full_available(void);
+
 enum sdl3_tile_namespace {
 	SDL3_TILE_FEATURE = 0,
 	SDL3_TILE_MONSTER,

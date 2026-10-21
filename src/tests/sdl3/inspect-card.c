@@ -22,6 +22,10 @@
 #include "mon-predicate.h"
 #include "sdl3/inspect-card-presenter.h"
 #include "sdl3/map-view.h"
+#include "world-spelunking-publication.h"
+#include "world-spelunking-system-data.h"
+#include "world-spelunking-actor-data.h"
+#include "map-visual-data.h"
 
 int setup_tests(void **state)
 {
@@ -171,7 +175,54 @@ static int test_target_marker_is_not_inspection(void *unused)
 	ok;
 }
 
+static int test_cave_creature_art_and_knowledge(void *unused)
+{
+	struct world_spelunk_system *system = NULL;
+	struct world_spelunk_runtime *runtime;
+	struct sdl3_map_view view = { 0 };
+	struct sdl3_inspect_card card;
+	int i, x, y;
+	(void)unused;
+	view.active = true;
+	view.cols = view.source_cols = 30;
+	view.rows = view.source_rows = 20;
+	eq(world_spelunk_publish_system_candidate(world_spelunk_system_profile_by_id("deepwell"),
+		0, 100, "shaft.surface", &system), WORLD_SPELUNK_PUBLICATION_OK);
+	runtime = system->nodes[0].runtime;
+	x = runtime->actors[0].x; y = runtime->actors[0].y;
+	while (runtime->actor_count) require(world_spelunk_runtime_remove_actor(runtime, &runtime->actors[0]));
+	for (i = 0; i < world_spelunk_actor_definition_count(); i++) {
+		const struct world_spelunk_actor_definition *kind = world_spelunk_actor_by_index(i);
+		const struct map_visual_binding *binding = map_visual_for("cave-actor", kind->id);
+		require(world_spelunk_runtime_add_actor(runtime, kind->id, x, y));
+		memset(runtime->visible, 0, runtime->state.map.width * runtime->state.map.height);
+		runtime->visible[y * runtime->state.map.width + x] = 1;
+		runtime->explored[y * runtime->state.map.width + x] = 1;
+		notnull(binding);
+		sdl3_inspect_card_configure_spelunking(&card, system, runtime, &view, x, y, true, false, true);
+		require(card.active);
+		require(streq(card.name, kind->name));
+		require(streq(card.flavor, kind->description));
+		eq(card.glyph, kind->glyph);
+		if (streq(binding->domain, "monster")) require(strstr(card.asset_key, binding->art_id));
+		else require(!card.asset_key[0]); /* Glyph fallback for the skitter. */
+		/* Detection/remembering are not permission to reveal a creature portrait. */
+		runtime->visible[y * runtime->state.map.width + x] = 0;
+		runtime->detected[y * runtime->state.map.width + x] = 1;
+		sdl3_inspect_card_configure_spelunking(&card, system, runtime, &view, x, y, true, false, true);
+		require(card.active && !card.asset_key[0] && !card.flavor[0]);
+		require(streq(card.name, kind->name)); /* Existing detection knowledge. */
+		runtime->detected[y * runtime->state.map.width + x] = 0;
+		sdl3_inspect_card_configure_spelunking(&card, system, runtime, &view, x, y, true, false, true);
+		require(!card.active && !card.asset_key[0]);
+		require(world_spelunk_runtime_remove_actor(runtime, &runtime->actors[0]));
+	}
+	world_spelunk_system_free(system);
+	ok;
+}
+
 struct test tests[] = {
+	{ "cave creature art and knowledge", test_cave_creature_art_and_knowledge },
 	{ "known trap precedes floor", test_known_trap_precedes_floor },
 	{ "target marker is not inspection", test_target_marker_is_not_inspection },
 	{ NULL, NULL }

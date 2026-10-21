@@ -19,6 +19,38 @@
 #define LIGHTNING_MIN_TICKS 3600U
 #define LIGHTNING_SPAN_TICKS 6000U
 
+/** Advance at most once: cosmetic weather must never catch up ahead of input. */
+bool sdl3_weather_tick(struct sdl3_weather_state *weather, uint64_t now,
+		uint64_t *next_tick)
+{
+	if (!weather || !next_tick) return false;
+	if (!weather->visible) {
+		*next_tick = 0;
+		return false;
+	}
+	if (!*next_tick) {
+		*next_tick = now + SDL3_WEATHER_TICK_MS;
+		return false;
+	}
+	if (now < *next_tick) return false;
+	*next_tick = now + SDL3_WEATHER_TICK_MS;
+	return sdl3_weather_advance(weather);
+}
+
+/** A small screen-space ripple, not an expanding fraction of a zoomed tile. */
+float sdl3_weather_splash_half_width(float cell_width, float progress,
+		float display_scale)
+{
+	float width, cap;
+	if (!(cell_width > 0.0f)) return 0.0f;
+	if (!(display_scale > 0.0f)) display_scale = 1.0f;
+	if (progress < 0.0f) progress = 0.0f;
+	if (progress > 1.0f) progress = 1.0f;
+	width = (1.5f + 2.5f * progress) * display_scale;
+	cap = cell_width * 0.25f;
+	return width < cap ? width : cap;
+}
+
 static uint32_t weather_hash(uint32_t value)
 {
 	value ^= value >> 16;

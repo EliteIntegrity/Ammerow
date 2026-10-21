@@ -18,7 +18,64 @@
 #include "player.h"
 #include "world-spelunking-adapter.h"
 #include "world-spelunking-combat.h"
+#include "world-spelunking-door.h"
+#include "world-spelunking-fixture.h"
+#include "player-calcs.h"
+#include "player-timed.h"
+#include "player-util.h"
+#include "player-resource.h"
+#include "world-spelunking-terrain.h"
+#include "world-spelunking-rest.h"
 #include "world-spelunking-transition.h"
+#include "world-spelunking-system.h"
+
+void do_cmd_spelunk_rest(struct command *cmd)
+{
+	struct world_spelunk_command wait = { WORLD_SPELUNK_COMMAND_WAIT, 0, 0 };
+	struct world_spelunk_action_report report;
+	const char *reason;
+	int n, energy;
+	cmd_cancel_repeat();
+	cmd_disable_repeat();
+	if (!cmd || player->upkeep->energy_use ||
+		cmd_get_arg_choice(cmd, "choice", &n) != CMD_OK ||
+		n > 9999 || n < INT16_MIN || (n < 0 && !player_resting_is_special(n))) return;
+	player->upkeep->redraw |= PR_STATE;
+	reason = world_spelunk_rest_block_reason(player);
+	if (reason) {
+		/* This command has consumed its continuation. Do not leave a stale
+		 * disturbance latch which would swallow the next manual Rest. */
+		player_resting_cancel(player, false);
+		msg("Rest stopped: %s", reason);
+		return;
+	}
+	player_resting_set_count(player, (int16_t)n);
+	if (!player_is_resting(player)) return; /* includes a prior disturbance */
+	if (world_spelunk_rest_is_complete(player, n)) {
+		player_resting_cancel(player, false);
+		return;
+	}
+	/* Use the ordinary cave Wait: search, fixture triggers and resource rules
+	 * have one owner. The scheduler still runs creatures, hunger and hazards. */
+	if (world_spelunk_player_apply(player, &wait, &report) != WORLD_SPELUNK_PLAYER_TURN) {
+		player_resting_cancel(player, false);
+		return;
+	}
+	if (!player_is_resting(player)) {
+		/* Wait may itself trigger a trap and disturb. There is no queued
+		 * continuation to consume that latch in this case. */
+		player_resting_cancel(player, false);
+		return;
+	}
+	energy = player->upkeep->energy_use;
+	player_resting_step_turn(player);
+	player->upkeep->energy_use = energy;
+	if (player_is_resting(player)) {
+		if (!cmdq_push(CMD_REST))
+			cmd_set_arg_choice(cmdq_peek(), "choice", player_resting_count(player));
+		else player_resting_cancel(player, false);
+	} else player_resting_cancel(player, false);
+}
 
 static bool spelunk_command_is_valid(enum world_spelunk_command_kind kind,
 		int dx, int dy)
@@ -34,6 +91,177 @@ static bool spelunk_command_is_valid(enum world_spelunk_command_kind kind,
 	default:
 		return false;
 	}
+}
+
+void do_cmd_spelunk_tunnel(struct command *cmd)
+{
+	struct world_spelunk_runtime *r;
+	enum world_spelunk_cut_result result;
+	int dir, x, y, chance, cost;
+	cmd_cancel_repeat();
+	cmd_disable_repeat();
+	if (!cmd || !world_spelunk_player_is_active(player) || player->is_dead ||
+		player->upkeep->energy_use) return;
+	r = player->spelunking;
+	if (r->state.rules.action_energy > INT_MAX) return;
+	if (!world_spelunk_has_stable_floor(&r->state)) {
+		msg("You need a stable rock floor to tunnel, not a rope or grip.");
+		return;
+	}
+	if (cmd_get_direction(cmd, "direction", &dir, false) || dir < 1 || dir > 9 || dir == 5) return;
+	player_confuse_dir(player, &dir, false);
+	x = r->state.x + ddgrid[dir].x;
+	y = r->state.y + ddgrid[dir].y;
+	cost = z_info->stamina_dig_cost ? z_info->stamina_dig_cost : 5;
+	result = world_spelunk_cut_check(player,x,y,cost);
+	if (result != SPELUNK_CUT_OK) {
+		msg("%s", world_spelunk_cut_reason(result));
+		return;
+	}
+	chance = world_spelunk_dig_chance(r,x,y,calc_digging_skill(player,NULL));
+	if (!chance) {
+		msg("You need a better digging tool or more digging skill for %s.", world_spelunk_rock_name(r,x,y));
+		return;
+	}
+	if (!player_stamina_spend(player,cost)) {
+		msg("You are too exhausted to dig. Wait on stable ground to recover.");
+		return;
+	}
+	r->state.stamina = player_stamina_current(player);
+	player->upkeep->energy_use = (int)r->state.rules.action_energy;
+	if (randint0(1600) < chance) {
+		const char *name = world_spelunk_rock_name(r,x,y);
+		/* The preflight and edit share one transaction boundary. Spending
+		 * stamina cannot remove stable footing before the cut is committed. */
+		result = world_spelunk_cut_rock(player,x,y);
+		if (result == SPELUNK_CUT_OK) {
+			msgt(MSG_DIG, "You finish cutting through %s (-%d stamina).", name, cost);
+		} else {
+			msg("%s", world_spelunk_cut_reason(result));
+		}
+	} else {
+		msgt(MSG_DIG, "You chip at %s (-%d stamina).", world_spelunk_rock_name(r,x,y), cost);
+	}
+}
+
+enum cave_interaction { CAVE_OPEN, CAVE_CLOSE, CAVE_DISARM };
+
+static bool interaction_candidate(const struct world_spelunk_runtime *r,
+		int x, int y, enum cave_interaction action)
+{
+	const struct world_spelunk_door *d = world_spelunk_door_at(r, x, y);
+	const struct world_spelunk_fixture *f = world_spelunk_fixture_at(r, x, y);
+	const struct world_spelunk_fixture_definition *def = f ?
+		world_spelunk_fixture_by_id(f->id) : NULL;
+	if (action == CAVE_DISARM)
+		return f && f->known && f->trap_known == SPELUNK_TRAP_ARMED;
+	if (action == CAVE_OPEN && f && f->known && def && def->kind == SPELUNK_CHEST)
+		return f->known != SPELUNK_FIXTURE_SPENT;
+	return d && d->known && (action == CAVE_OPEN ?
+		d->known != WORLD_SPELUNK_DOOR_OPEN : d->known == WORLD_SPELUNK_DOOR_OPEN);
+}
+
+static void cave_interact(struct command *cmd, enum cave_interaction action)
+{
+	struct world_spelunk_runtime *r;
+	struct world_spelunk_door *door;
+	struct world_spelunk_fixture *fixture;
+	const struct world_spelunk_door_definition *def;
+	int dir, x, y, i, candidates = 0, candidate_dir = 0;
+	bool open = action == CAVE_OPEN;
+
+	/* Native Open/Close/Disarm install automatic repeats. Cave attempts are
+	 * explicit, including failure; one keypress cannot silently pick a lock. */
+	cmd_cancel_repeat();
+	cmd_disable_repeat();
+	if (!cmd || !world_spelunk_player_is_active(player) || player->is_dead ||
+		player->upkeep->energy_use || !world_spelunk_runtime_is_valid(player->spelunking)) return;
+	r = player->spelunking;
+	if (r->state.rules.action_energy > INT_MAX) return;
+	if (!world_spelunk_has_stable_floor(&r->state)) {
+		msg("You need stable footing to work on a cave fixture.");
+		return;
+	}
+	if (cmd_get_arg_direction(cmd, "direction", &dir) != CMD_OK || dir == DIR_UNKNOWN) {
+		for (i = -1; i <= 1; i++) {
+			if (interaction_candidate(r, r->state.x + i, r->state.y, action)) {
+				candidates++;
+				candidate_dir = i < 0 ? 4 : i > 0 ? 6 : 5;
+			}
+		}
+		if (candidates == 1) dir = candidate_dir;
+		else if (cmd_get_direction(cmd, "direction", &dir, action != CAVE_CLOSE)) return;
+	}
+	if (dir < 1 || dir > 9) return;
+	player_confuse_dir(player, &dir, false);
+	x = r->state.x + ddgrid[dir].x;
+	y = r->state.y + ddgrid[dir].y;
+	if (y != r->state.y) {
+		msg("Stand beside the fixture, or on a trap or chest, to reach it.");
+		return;
+	}
+	fixture = world_spelunk_fixture_at_mutable(r, x, y);
+	if (action == CAVE_DISARM || (open && fixture && fixture->known)) {
+		if (!fixture || !fixture->known) {
+			msg("There is no known trap or chest there.");
+			return;
+		}
+		if (world_spelunk_runtime_actor_at(r, x, y)) {
+			msg("A creature is in the way.");
+			return;
+		}
+		if (world_spelunk_fixture_interact(player, fixture, action == CAVE_DISARM)) {
+			player->upkeep->energy_use = (int)r->state.rules.action_energy;
+			player->upkeep->redraw |= PR_MAP | PR_ITEMLIST;
+			event_signal_point(EVENT_MAP, -1, -1);
+		}
+		return;
+	}
+	door = world_spelunk_door_at_mutable(r, x, y);
+	if (!door || !door->known) {
+		msg("There is no known cave door there.");
+		return;
+	}
+	if (x == r->state.x) {
+		msg("Stand beside the door to reach its latch.");
+		return;
+	}
+	if (open == (door->state == WORLD_SPELUNK_DOOR_OPEN)) {
+		msg(open ? "That door is already open." : "That door is already closed.");
+		return;
+	}
+	if (!open && (world_spelunk_runtime_actor_at(r, x, y) ||
+		world_spelunk_runtime_ground_object_at(r, x, y))) {
+		msg("Something is in the doorway.");
+		return;
+	}
+	def = world_spelunk_door_by_id(door->id);
+	if (!def) return;
+	if (open && door->state == WORLD_SPELUNK_DOOR_LOCKED) {
+		int chance = calc_unlocking_chance(player, def->lock_power,
+			player->timed[TMD_BLIND] != 0);
+		door->known = WORLD_SPELUNK_DOOR_LOCKED;
+		player->upkeep->energy_use = (int)r->state.rules.action_energy;
+		if (randint0(100) >= chance) {
+			msgt(MSG_LOCKPICK_FAIL, "You fail to pick the %s's lock.", def->name);
+			return;
+		}
+		sound(MSG_LOCKPICK);
+	}
+	if (!world_spelunk_door_set_open(r, x, y, open)) return;
+	player->upkeep->energy_use = (int)r->state.rules.action_energy;
+	msgt(open ? MSG_OPENDOOR : MSG_SHUTDOOR, "You %s the %s.", open ? "open" : "close", def->name);
+	event_signal_point(EVENT_MAP, -1, -1);
+}
+
+void do_cmd_spelunk_door(struct command *cmd, bool open)
+{
+	cave_interact(cmd, open ? CAVE_OPEN : CAVE_CLOSE);
+}
+
+void do_cmd_spelunk_disarm(struct command *cmd)
+{
+	cave_interact(cmd, CAVE_DISARM);
 }
 
 errr cmdq_push_spelunk_action(enum world_spelunk_command_kind kind,
@@ -114,6 +342,7 @@ void do_cmd_spelunk_action(struct command *cmd)
 	enum world_spelunk_player_result result;
 	enum world_spelunk_combat_result combat_result;
 	int kind;
+	int old_x, old_y;
 
 	if (!cmd || cmd_get_arg_choice(cmd, "kind", &kind) != CMD_OK ||
 			cmd_get_arg_number(cmd, "dx", &action.dx) != CMD_OK ||
@@ -158,11 +387,16 @@ void do_cmd_spelunk_action(struct command *cmd)
 			return;
 		}
 	}
+	old_x = player->spelunking->state.x;
+	old_y = player->spelunking->state.y;
 	result = world_spelunk_player_apply(player, &action, &report);
 	if (result != WORLD_SPELUNK_PLAYER_TURN &&
 			result != WORLD_SPELUNK_PLAYER_DEAD) {
 		if (action.kind == WORLD_SPELUNK_COMMAND_MOVE &&
 				result == WORLD_SPELUNK_PLAYER_REJECTED) {
+			const struct world_spelunk_door *door = world_spelunk_door_at(player->spelunking,
+				player->spelunking->state.x + action.dx, player->spelunking->state.y + action.dy);
+			if (door && door->known) msg("A closed cave door blocks the way. Use o to open it.");
 			sound(MSG_HITWALL);
 		}
 		return;
@@ -181,6 +415,21 @@ void do_cmd_spelunk_action(struct command *cmd)
 		/* The authored climb cue already has the short body-and-gear effort
 		 * needed here; keep jump audio within the existing sound manifest. */
 		sound(MSG_SPELUNK_CLIMB);
+	}
+	/* Only arrivals schedule pickup: not blocked steps, attacks, peek, rest
+	 * or dropping. Bind the background command to this exact destination. */
+	if (!player->is_dead && (old_x != player->spelunking->state.x ||
+			old_y != player->spelunking->state.y) &&
+			world_spelunk_runtime_ground_object_at(player->spelunking,
+				player->spelunking->state.x, player->spelunking->state.y) &&
+			!cmdq_push(CMD_AUTOPICKUP)) {
+		struct command *pickup = cmdq_peek();
+		cmd_set_arg_string(pickup, "cave-location", player->spelunking->location_id);
+		cmd_set_arg_string(pickup, "cave-node", player->spelunking_system ?
+			player->spelunking_system->active_node_id : "");
+		cmd_set_arg_number(pickup, "x", player->spelunking->state.x);
+		cmd_set_arg_number(pickup, "y", player->spelunking->state.y);
+		pickup->background_command = 2;
 	}
 	combat_result = world_spelunk_player_resolve_collision(player,
 		&combat_report);
@@ -235,9 +484,9 @@ void do_cmd_spelunk_local(struct command *cmd)
 			msgt(MSG_ROPE_DEPLOY,
 				"Whirrp! You deploy the rope down %d tile%s.", report.affected,
 				PLURAL(report.affected));
-		} else if (action == WORLD_SPELUNK_LOCAL_PICKUP &&
-				report.completion_message > MSG_GENERIC) {
-			sound(report.completion_message);
+		} else if (action == WORLD_SPELUNK_LOCAL_PICKUP) {
+			sound(report.completion_message > MSG_GENERIC ?
+				report.completion_message : MSG_PICKUP);
 		}
 		break;
 	case WORLD_SPELUNK_LOCAL_NO_TOOL:

@@ -316,7 +316,32 @@ static int test_focus_neighbourhood_geometry(void *unused)
 	ok;
 }
 
+static int test_square_area(void *unused)
+{
+	(void)unused;
+	eq(sdl3_zoom_square_size(16, 30, 100), 22);
+	eq(sdl3_zoom_square_size(16, 30, 200), 44);
+	eq(sdl3_zoom_square_size(30, 16, 100), 22);
+	eq(sdl3_zoom_square_size(16, 16, 100), 16);
+	eq(sdl3_zoom_square_size(0, -2, 100), 1);
+	eq(sdl3_zoom_square_visible_cells(40, 30, 44), 30);
+	eq(sdl3_zoom_square_visible_cells(120, 16, 44), 46);
+	for (int zoom = 50; zoom <= 800; zoom += 25) {
+		float exact = sqrtf(16.0f * 30.0f) * zoom / 100;
+		int side = sdl3_zoom_square_size(16, 30, zoom);
+		require(fabsf(side - exact) <= 0.501f);
+		require(sdl3_zoom_square_visible_cells(40, 30, side) * side >= 1200);
+		for (int cell = 0; cell < 200; cell++) {
+			float center = sdl3_zoom_camera_center(0, 200, cell, 1024, (float)side);
+			float pixel = 512 + (cell + 0.5f - center) * side;
+			eq(sdl3_zoom_cell_from_pixel(pixel, 0, 1024, (float)side, center), cell);
+		}
+	}
+	ok;
+}
+
 struct test tests[] = {
+	{ "equal-area square grid and mouse round trip", test_square_area },
 	{ "edge focus includes nearby terrain", test_focus_neighbourhood_at_edges },
 	{ "HUD neighbourhood geometry and mouse round trip", test_focus_neighbourhood_geometry },
 	{ "HUD safe camera and mouse round trip", test_hud_safe_camera },

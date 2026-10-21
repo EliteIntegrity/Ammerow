@@ -28,6 +28,10 @@ errr cmdq_push_spelunk_exit(void);
 errr cmdq_push_spelunk_peek(enum world_spelunk_peek_action action,
 	int dx, int dy);
 void do_cmd_spelunk_action(struct command *cmd);
+void do_cmd_spelunk_door(struct command *cmd, bool open);
+void do_cmd_spelunk_disarm(struct command *cmd);
+void do_cmd_spelunk_tunnel(struct command *cmd);
+void do_cmd_spelunk_rest(struct command *cmd);
 void do_cmd_spelunk_local(struct command *cmd);
 void do_cmd_spelunk_passage(struct command *cmd);
 void do_cmd_spelunk_exit(struct command *cmd);

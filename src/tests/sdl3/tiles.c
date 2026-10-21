@@ -76,6 +76,38 @@ static int test_hybrid_loading_and_cleanup(void *unused)
 	ok;
 }
 
+static int test_cave_creature_media(void *unused)
+{
+	static const char *manifests[] = { "hybrid-32.txt", "hybrid-64.txt", "full-32.txt", "full-64.txt" };
+	static const char *keys[] = { "monster:giant-grey-rat", "monster:killer-brown-beetle" };
+	struct sdl3_tile_registry *registry;
+	SDL_Surface *surface;
+	SDL_Renderer *renderer;
+	SDL_FRect rect = { 0, 0, 64, 64 };
+	char path[1024];
+	size_t i, j;
+	(void)unused;
+	set_file_paths();
+	path_build(path, sizeof(path), ANGBAND_DIR_TILES, "pixel-32-001.png");
+	if (!file_exists(path)) { ok; } /* Optional media absent in source-only builds. */
+	registry = mem_zalloc(sizeof(*registry));
+	surface = SDL_CreateSurface(64, 64, SDL_PIXELFORMAT_RGBA32);
+	notnull(surface);
+	renderer = SDL_CreateSoftwareRenderer(surface);
+	notnull(renderer);
+	for (i = 0; i < N_ELEMENTS(manifests); i++) {
+		require(sdl3_tiles_init(registry, renderer, manifests[i]));
+		for (j = 0; j < N_ELEMENTS(keys); j++) {
+			require(sdl3_tiles_draw(registry, renderer, keys[j], 0, 0, &rect, 255));
+		}
+		sdl3_tiles_free(registry);
+	}
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroySurface(surface);
+	mem_free(registry);
+	ok;
+}
+
 /* Synthetic art keeps these drawing regressions runnable in public source
  * builds, which deliberately omit the separately licensed portrait sheets. */
 static int check_moving_subject(int detail)
@@ -163,8 +195,25 @@ static int test_moving_subject_64(void *unused)
 	return check_moving_subject(64);
 }
 
+static int test_presentation_modes(void *unused)
+{
+	(void)unused;
+	eq(sdl3_tile_mode_change(SDL3_TILE_MODE_ASCII, 1, false), SDL3_TILE_MODE_HYBRID);
+	eq(sdl3_tile_mode_change(SDL3_TILE_MODE_HYBRID, 1, false), SDL3_TILE_MODE_ASCII);
+	eq(sdl3_tile_mode_change(SDL3_TILE_MODE_ASCII, -1, false), SDL3_TILE_MODE_HYBRID);
+	eq(sdl3_tile_mode_change(SDL3_TILE_MODE_HYBRID, 1, true), SDL3_TILE_MODE_FULL);
+	eq(sdl3_tile_mode_change(SDL3_TILE_MODE_FULL, 1, true), SDL3_TILE_MODE_ASCII);
+	eq(sdl3_tile_mode_change(SDL3_TILE_MODE_ASCII, -1, true), SDL3_TILE_MODE_FULL);
+	eq(sdl3_tile_mode_change(SDL3_TILE_MODE_FULL, -1, true), SDL3_TILE_MODE_HYBRID);
+	eq(sdl3_tile_mode_change(SDL3_TILE_MODE_FULL, 0, false), SDL3_TILE_MODE_HYBRID);
+	require(streq(sdl3_tile_mode_name(SDL3_TILE_MODE_FULL), "Full Tile"));
+	ok;
+}
+
 const char *suite_name = "sdl3/tiles";
 struct test tests[] = {
+	{ "cave creature media in both hybrid and full sizes", test_cave_creature_media },
+	{ "trial presentation cycling preserves ordinary modes", test_presentation_modes },
 	{ "stable keys and normalization", test_stable_keys_and_normalization },
 	{ "hybrid loading and cleanup", test_hybrid_loading_and_cleanup },
 	{ "moving subject retains 32px sprite", test_moving_subject_32 },

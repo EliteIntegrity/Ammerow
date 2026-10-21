@@ -117,6 +117,30 @@ void spelunking_view_cell_appearance(
 	*attr = COLOUR_DARK;
 	*glyph = L' ';
 	switch (cell) {
+	case WORLD_SPELUNK_VIEW_TRAP:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_TRAP:
+		*attr = cell == WORLD_SPELUNK_VIEW_TRAP ? COLOUR_ORANGE : COLOUR_L_DARK;
+		*glyph = L'^'; break;
+	case WORLD_SPELUNK_VIEW_TRAP_SPENT:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_TRAP_SPENT:
+		*attr = COLOUR_L_DARK; *glyph = L'^'; break;
+	case WORLD_SPELUNK_VIEW_CHEST:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_CHEST:
+		*attr = cell == WORLD_SPELUNK_VIEW_CHEST ? COLOUR_L_UMBER : COLOUR_L_DARK;
+		*glyph = L'~'; break;
+	case WORLD_SPELUNK_VIEW_CHEST_EMPTY:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_CHEST_EMPTY:
+		*attr = COLOUR_L_DARK; *glyph = L'_'; break;
+	case WORLD_SPELUNK_VIEW_DOOR_CLOSED:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_DOOR_CLOSED:
+		*attr = cell == WORLD_SPELUNK_VIEW_DOOR_CLOSED ? COLOUR_L_UMBER : COLOUR_L_DARK;
+		*glyph = L'+';
+		break;
+	case WORLD_SPELUNK_VIEW_DOOR_OPEN:
+	case WORLD_SPELUNK_VIEW_REMEMBERED_DOOR_OPEN:
+		*attr = cell == WORLD_SPELUNK_VIEW_DOOR_OPEN ? COLOUR_L_UMBER : COLOUR_L_DARK;
+		*glyph = L'\'';
+		break;
 	case WORLD_SPELUNK_VIEW_REMEMBERED_AIR:
 		*attr = view->remembered_air_attr;
 		*glyph = view->remembered_air_glyph;

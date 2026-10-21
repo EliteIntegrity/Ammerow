@@ -14,6 +14,7 @@
 #include "parser.h"
 #include "sdl3/spelunking-presenter.h"
 #include "world-spelunking-actor-data.h"
+#include "world-spelunking-fixture.h"
 #include "world-spelunking-visibility.h"
 #include "world-spelunking-view-terrain.h"
 #include "z-color.h"
@@ -104,9 +105,15 @@ int setup_tests(void **data)
 		if (parser_parse(p, lines[i]) != PARSE_ERROR_NONE) return 1;
 	}
 	if (spelunking_actor_parser.finish(p) != PARSE_ERROR_NONE) return 1;
+	p = spelunking_fixture_parser.init();
+	if (parser_parse(p, "trap:test.spring:20:10:4:spring trap") ||
+		parser_parse(p, "chest:test.chest:1:none:potion:1:Cure Light Wounds:survey chest")) return 1;
+	if (spelunking_fixture_parser.finish(p) != PARSE_ERROR_NONE) return 1;
 	p = map_visual_parser.init();
 	if (parser_parse(p, "tile:cave:rock:feature:cave-rock") ||
 			parser_parse(p, "tile:cave:water-body:feature:cave-water-body") ||
+			parser_parse(p, "tile:map:chest:object:chest") ||
+			parser_parse(p, "tile:cave:trap:feature:dart-trap") ||
 			parser_parse(p, "tile:cave-actor:core.spelunk.actor.chasm-skitter:actor:chasm-skitter")) return 1;
 	return map_visual_parser.finish(p) == PARSE_ERROR_NONE ? 0 : 1;
 }
@@ -115,6 +122,7 @@ int teardown_tests(void *data)
 {
 	(void)data;
 	spelunking_actor_parser.cleanup();
+	spelunking_fixture_parser.cleanup();
 	map_visual_parser.cleanup();
 	return 0;
 }
@@ -157,10 +165,12 @@ static int test_zoom_changes_only_map_source_density(void *unused)
 		view.focus_row + 1);
 	notnull(variant);
 	require(variant->in_view);
+	eq(variant->ascii_terrain, SDL3_ASCII_TERRAIN_WALL);
 	variant = sdl3_terrain_overlay_get(view.terrain, view.focus_col + 2,
 		view.focus_row);
 	notnull(variant);
 	require(variant->in_view);
+	eq(variant->ascii_terrain, SDL3_ASCII_TERRAIN_NORMAL);
 	variant = sdl3_terrain_overlay_get(view.terrain, view.focus_col,
 		view.focus_row - 8);
 	notnull(variant);
@@ -235,7 +245,7 @@ static int test_look_focus_drives_cursor_without_moving_player(void *unused)
 	player_y = f.runtime->state.y;
 	require(sdl3_spelunking_presenter_configure_focus(&presenter, NULL,
 		f.runtime,
-		0, 0, 20, 10, 200, player_x + 2, player_y, true, &view));
+		0, 0, 20, 10, 200, player_x + 2, player_y, true, 0, 0, &view));
 	eq(view.cursor_col, view.focus_col);
 	eq(view.cursor_row, view.focus_row);
 	cell = sdl3_grid_cell(view.source, view.cursor_col, view.cursor_row);
@@ -365,7 +375,70 @@ static int test_tile_adjacency_uses_only_explored_geometry(void *unused)
 }
 
 const char *suite_name = "sdl3/spelunking-presenter";
+static int test_square_source_extent(void *unused)
+{
+	struct fixture f;
+	struct sdl3_spelunking_presenter presenter = {0};
+	struct sdl3_map_view view;
+	(void)unused;
+	require(fixture_open(&f));
+	require(sdl3_spelunking_presenter_configure_focus(&presenter, NULL, f.runtime,
+		0, 0, 20, 10, 200, -1, -1, false, 9, 9, &view));
+	eq(view.cols, 20);
+	eq(view.rows, 10);
+	eq(view.source_cols, 9);
+	eq(view.source_rows, 9);
+	eq(view.dungeon_col + view.focus_col, f.runtime->state.x);
+	eq(view.dungeon_row + view.focus_row, f.runtime->state.y);
+	sdl3_spelunking_presenter_free(&presenter);
+	fixture_close(&f);
+	ok;
+}
+
+static int test_fixture_presentation(void *unused)
+{
+	struct fixture f;
+	struct sdl3_spelunking_presenter presenter = { 0 };
+	struct sdl3_map_view view;
+	const struct sdl3_terrain_variant *variant;
+	int x = TEST_WIDTH / 2, y = TEST_HEIGHT - 2;
+	size_t i;
+	bool chest = false;
+	(void)unused;
+	require(fixture_open(&f));
+	require(world_spelunk_fixture_add(f.runtime, "test.chest", x + 1, y));
+	require(world_spelunk_fixture_add(f.runtime, "test.spring", x - 1, y));
+	world_spelunk_visibility_follow_player(f.runtime);
+	require(sdl3_spelunking_presenter_configure(&presenter, NULL, f.runtime, 0, 0, 20, 10, 100, &view));
+	for (i = 0; i < view.art_subject_count; i++) {
+		if (streq(view.art_subjects[i].tile_key, "object:chest")) chest = true;
+	}
+	require(chest);
+	variant = sdl3_terrain_overlay_get(view.terrain, view.focus_col - 1, view.focus_row);
+	null(variant->tile_overlay_key); /* Hidden pressure plate stays absent. */
+	require(world_spelunk_fixture_detect(f.runtime, 1, 1, true));
+	require(sdl3_spelunking_presenter_configure(&presenter, NULL, f.runtime, 0, 0, 20, 10, 100, &view));
+	variant = sdl3_terrain_overlay_get(view.terrain, view.focus_col - 1, view.focus_row);
+	require(streq(variant->tile_overlay_key, "feature:dart-trap"));
+	f.runtime->fixtures[0].state = SPELUNK_FIXTURE_SPENT;
+	f.runtime->fixtures[1].state = SPELUNK_FIXTURE_SPENT;
+	f.runtime->fixtures[1].armed = 0;
+	world_spelunk_visibility_follow_player(f.runtime);
+	require(sdl3_spelunking_presenter_configure(&presenter, NULL, f.runtime, 0, 0, 20, 10, 100, &view));
+	for (i = 0; i < view.art_subject_count; i++) {
+		require(!streq(view.art_subjects[i].tile_key, "object:chest"));
+	}
+	eq(sdl3_grid_cell(view.source, view.focus_col + 1, view.focus_row)->codepoint, L'_');
+	variant = sdl3_terrain_overlay_get(view.terrain, view.focus_col - 1, view.focus_row);
+	null(variant->tile_overlay_key); eq(variant->tile_glyph_policy, SDL3_TILE_GLYPH_PRESERVE);
+	sdl3_spelunking_presenter_free(&presenter);
+	fixture_close(&f);
+	ok;
+}
+
 struct test tests[] = {
+	{ "hidden spent and closed fixture presentation", test_fixture_presentation },
+	{ "square source extent keeps viewport and player focus", test_square_source_extent },
 	{ "tile occupant priority and unidentified objects", test_tile_subject_priority_and_unknown_objects },
 	{ "tile adjacency reveals no unexplored geometry", test_tile_adjacency_uses_only_explored_geometry },
 	{ "zoom changes only map source density",

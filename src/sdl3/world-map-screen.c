@@ -18,14 +18,6 @@
 #include "sdl3/ui-draw.h"
 #include "sdl3/world-map-screen.h"
 
-static int map_scale(int value, int minimum, int maximum, int start,
-		int span)
-{
-	if (maximum <= minimum || span <= 0) return start + MAX(0, span) / 2;
-	return start + (int)(((int64_t)value - minimum) * span /
-		((int64_t)maximum - minimum));
-}
-
 static void draw_map_edge(const struct sdl3_screen_map_edge *edge,
 		const int *node_x, const int *node_y, struct sdl3_visual *visual,
 		const struct sdl3_theme *theme)
@@ -82,76 +74,19 @@ static int draw_wrapped_description(struct sdl3_visual *visual,
 	return drawn;
 }
 
-static void stamp_spacing(const int *node_x, const int *node_y, int count,
-		int *horizontal, int *vertical)
-{
-	int i, j;
-
-	*horizontal = INT_MAX;
-	*vertical = INT_MAX;
-	for (i = 0; i < count; i++) {
-		for (j = i + 1; j < count; j++) {
-			if (node_y[i] == node_y[j]) {
-				*horizontal = MIN(*horizontal, ABS(node_x[i] - node_x[j]));
-			}
-			if (node_x[i] == node_x[j]) {
-				*vertical = MIN(*vertical, ABS(node_y[i] - node_y[j]));
-			}
-		}
-	}
-}
-
 bool sdl3_world_map_screen_draw(const struct sdl3_screen *screen,
 		SDL_Renderer *renderer, struct sdl3_visual *visual,
 		const struct sdl3_theme *theme, int left, int width)
 {
-	int node_x[SDL3_SCREEN_MAP_NODE_CAPACITY];
-	int node_y[SDL3_SCREEN_MAP_NODE_CAPACITY];
-	int minimum_x = INT_MAX, maximum_x = INT_MIN;
-	int minimum_y = INT_MAX, maximum_y = INT_MIN;
-	int diagram_top = 7;
-	int detail_top = visual->rows - 8;
-	int diagram_bottom = detail_top - 2;
-	int x_start, x_span, y_start, y_span;
-	int horizontal_spacing, vertical_spacing;
-	int stamp_width = UI_SCREEN_MAP_STAMP_WIDTH;
-	int stamp_height = UI_SCREEN_MAP_STAMP_HEIGHT;
+	struct sdl3_screen_map_layout map;
+	const int *node_x = map.x, *node_y = map.y;
+	int stamp_width, stamp_height, detail_top;
 	int i;
 
-	if ((screen->kind != UI_SCREEN_WORLD_MAP &&
-			screen->kind != UI_SCREEN_CAVE_SURVEY) ||
-			screen->map_node_count <= 0 ||
-			width < 48 || diagram_bottom - diagram_top < 6) {
-		return false;
-	}
-	for (i = 0; i < screen->map_node_count; i++) {
-		minimum_x = MIN(minimum_x, screen->map_nodes[i].x);
-		maximum_x = MAX(maximum_x, screen->map_nodes[i].x);
-		minimum_y = MIN(minimum_y, screen->map_nodes[i].y);
-		maximum_y = MAX(maximum_y, screen->map_nodes[i].y);
-	}
-	x_start = left + UI_SCREEN_MAP_STAMP_WIDTH / 2 + 1;
-	x_span = MAX(0, width - UI_SCREEN_MAP_STAMP_WIDTH - 2);
-	y_start = diagram_top + UI_SCREEN_MAP_STAMP_HEIGHT / 2;
-	y_span = MAX(0, diagram_bottom - diagram_top -
-		UI_SCREEN_MAP_STAMP_HEIGHT);
-	for (i = 0; i < screen->map_node_count; i++) {
-		node_x[i] = map_scale(screen->map_nodes[i].x, minimum_x, maximum_x,
-			x_start, x_span);
-		node_y[i] = map_scale(screen->map_nodes[i].y, minimum_y, maximum_y,
-			y_start, y_span);
-	}
-	stamp_spacing(node_x, node_y, screen->map_node_count,
-		&horizontal_spacing, &vertical_spacing);
-	if (horizontal_spacing < UI_SCREEN_MAP_STAMP_WIDTH + 2 ||
-			vertical_spacing < UI_SCREEN_MAP_STAMP_HEIGHT + 2) {
-		stamp_width = 3;
-		stamp_height = 1;
-	}
-	if (horizontal_spacing < 4 || vertical_spacing < 2) {
-		stamp_width = 1;
-		stamp_height = 1;
-	}
+	if (!sdl3_screen_map_measure(screen, visual->cols, visual->rows, &map)) return false;
+	stamp_width = map.stamp_width;
+	stamp_height = map.stamp_height;
+	detail_top = map.detail_top;
 	for (i = 0; i < screen->map_edge_count; i++) {
 		draw_map_edge(&screen->map_edges[i], node_x, node_y, visual, theme);
 	}
@@ -182,6 +117,15 @@ bool sdl3_world_map_screen_draw(const struct sdl3_screen *screen,
 			sdl3_ui_draw_text(visual, stamp, node_left, node_top + row,
 				stamp_width, node_color);
 		}
+		if (screen->kind == UI_SCREEN_CAVE_SURVEY && !node->current) {
+			char number[12];
+			/* A compressed charted stamp used to be three blank spaces.
+			 * Keep every section visible and match the selected title's number. */
+			strnfmt(number, sizeof(number), "%d", i + 1);
+			sdl3_ui_draw_text(visual, number,
+				node_x[i] - (int)strlen(number) / 2, node_y[i],
+				(int)strlen(number), selected ? theme->accent : node_color);
+		}
 		if (node->current && node->glyph && node->glyph >= 32) {
 			sdl3_font_draw(&visual->font, (uint32_t)node->glyph,
 				theme->accent,
@@ -207,7 +151,9 @@ bool sdl3_world_map_screen_draw(const struct sdl3_screen *screen,
 			width, theme->accent);
 		draw_wrapped_description(visual, selected->description, left,
 			detail_top + 2, width, 2, theme->text);
-		sdl3_ui_draw_text(visual, screen->subtitle, left, detail_top + 5,
+		sdl3_ui_draw_text(visual, screen->kind == UI_SCREEN_CAVE_SURVEY ?
+			"Solid links: visited sections. Dotted: charted. Inspection only." : screen->subtitle,
+			left, detail_top + 5,
 			width, theme->muted);
 	}
 	return true;

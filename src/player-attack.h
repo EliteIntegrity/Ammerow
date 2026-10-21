@@ -64,6 +64,10 @@ int chance_of_melee_hit_base(const struct player *p,
 	const struct object *weapon);
 extern bool test_hit(int to_hit, int ac);
 /** Resolve launched or thrown damage against armour without a native monster. */
+bool player_resolve_ranged_attack_with_modifier(struct player *p,
+	struct object *missile, struct object *launcher, int armour,
+	int distance_penalty, bool target_visible, int modifier, int *damage,
+	uint32_t *message_type);
 bool player_resolve_ranged_attack_against_armour(struct player *p,
 		struct object *missile, struct object *launcher, int armour,
 		int distance_penalty, bool target_visible, int *damage,

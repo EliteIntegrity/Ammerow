@@ -1,0 +1,8 @@
+# Original cave fixtures. Physical hazards do not excavate terrain or water.
+# trap:id:search threshold:disarm power:damage:name
+trap:core.spelunk.trap.spring:20:10:4:spring-spike trap
+trap:core.spelunk.trap.stone:30:18:7:stone-release trap
+# chest:id:lock power:trap ID (or none):tval:quantity:sval:name
+# Modest fixed supplies: opening cannot reroll treasure or generate artefacts.
+chest:core.spelunk.chest.supplies:1:none:potion:1:Cure Light Wounds:survey supply chest
+chest:core.spelunk.chest.store:2:core.spelunk.trap.spring:potion:2:Cure Serious Wounds:survey store chest

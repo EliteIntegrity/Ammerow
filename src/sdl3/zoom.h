@@ -25,8 +25,10 @@ int sdl3_zoom_panel_margin(int cell_count, int percent);
 int sdl3_zoom_visible_cells(int viewport_cells, int percent);
 int sdl3_zoom_pixel_art_size(int base_cell_height, int percent,
 		int native_art_size);
-int sdl3_zoom_pixel_art_size(int base_cell_height, int percent,
-		int native_art_size);
+/* Area-preserving ASCII grid; unrelated to sprite resolution/snapping. */
+int sdl3_zoom_square_size(int base_width, int base_height, int percent);
+int sdl3_zoom_square_visible_cells(int viewport_cells, int base_axis_size,
+		int square_size);
 int sdl3_zoom_centered_start(int focus_cell, int cell_count, int limit);
 int sdl3_zoom_source_cell_for_grid(int grid_cell, int dungeon_first,
 		int source_first, int tile_span, bool expanded_source);

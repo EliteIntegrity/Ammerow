@@ -122,6 +122,20 @@ static int test_overlay_stores_recipe_metadata(void *unused)
 	ptreq(stored->recipe, &floor_recipe);
 	eq(stored->codepoint, L'.');
 	require(!sdl3_terrain_overlay_set(&overlay, 17, 9, &variant));
+	variant.ascii_terrain = SDL3_ASCII_TERRAIN_WALL;
+	require(sdl3_terrain_overlay_set(&overlay, 17, 9, &variant));
+	eq(sdl3_terrain_overlay_get(&overlay, 17, 9)->ascii_terrain,
+		SDL3_ASCII_TERRAIN_WALL);
+	variant.crossing = GRID_SURFACE_EXIT_EAST;
+	require(sdl3_terrain_overlay_set(&overlay, 17, 9, &variant));
+	eq(sdl3_terrain_overlay_get(&overlay, 17, 9)->crossing, GRID_SURFACE_EXIT_EAST);
+	require(!sdl3_terrain_overlay_set(&overlay, 17, 9, &variant));
+	variant.crossing = GRID_SURFACE_NONE;
+	require(sdl3_terrain_overlay_set(&overlay, 17, 9, &variant));
+	variant.full_tile_id = "village-masonry";
+	require(sdl3_terrain_overlay_set(&overlay, 17, 9, &variant));
+	ptreq(sdl3_terrain_overlay_get(&overlay, 17, 9)->full_tile_id,
+		variant.full_tile_id);
 	variant.foreground = COLOUR_WHITE;
 	require(sdl3_terrain_overlay_set(&overlay, 17, 9, &variant));
 	variant.tile_overlay_key = "feature:cave-rope-middle";
@@ -130,6 +144,8 @@ static int test_overlay_stores_recipe_metadata(void *unused)
 	require(sdl3_terrain_variant(&floor_recipe, LIGHTING_LOS, L'.',
 		COLOUR_SLATE, SDL3_TERRAIN_NATURAL, &variant));
 	require(!variant.tile_overlay_key);
+	require(!variant.full_tile_id);
+	eq(variant.ascii_terrain, SDL3_ASCII_TERRAIN_NORMAL);
 	eq(variant.tile_glyph_policy, SDL3_TILE_GLYPH_AUTO);
 	require(sdl3_terrain_overlay_set(&overlay, 17, 9, NULL));
 	null(sdl3_terrain_overlay_get(&overlay, 17, 9));
@@ -137,8 +153,55 @@ static int test_overlay_stores_recipe_metadata(void *unused)
 	ok;
 }
 
+static int test_ground_and_underlay(void *unused)
+{
+	(void)unused;
+	require(sdl3_terrain_plain_ground("open-floor"));
+	require(sdl3_terrain_plain_ground("meridian-floor"));
+	require(sdl3_terrain_plain_ground("patch-of-grass"));
+	require(sdl3_terrain_plain_ground("dirt"));
+	require(!sdl3_terrain_plain_ground(NULL));
+	require(!sdl3_terrain_plain_ground("cave-air"));
+	require(!sdl3_terrain_plain_ground("cave-water"));
+	require(!sdl3_terrain_plain_ground("shallow-water"));
+	require(!sdl3_terrain_plain_ground("lava"));
+	require(!sdl3_terrain_plain_ground("dark-pit"));
+	require(!sdl3_terrain_plain_ground("down-staircase"));
+	require(streq(sdl3_terrain_underlay("door"), "open-floor"));
+	require(streq(sdl3_terrain_underlay("tree"), "patch-of-grass"));
+	null(sdl3_terrain_underlay("cave-air"));
+	null(sdl3_terrain_underlay("cave-rope-middle"));
+	null(sdl3_terrain_underlay("shallow-water"));
+	null(sdl3_terrain_underlay(NULL));
+	ok;
+}
+
+static int test_crossing_metadata(void *unused)
+{
+	struct grid_data data = { .f_idx = FEAT_FLOOR };
+	(void)unused;
+	for (int surface = GRID_SURFACE_NONE; surface <= GRID_SURFACE_EXIT_WEST; surface++) {
+		data.surface = surface;
+		eq(sdl3_terrain_crossing(&data), surface >= GRID_SURFACE_EXIT_NORTH ?
+			surface : GRID_SURFACE_NONE);
+	}
+	/* A known crossing remains underneath a subject; no unknown information. */
+	data.is_player = true;
+	eq(sdl3_terrain_crossing(&data), GRID_SURFACE_EXIT_WEST);
+	data.is_player = false; data.m_idx = 1;
+	eq(sdl3_terrain_crossing(&data), GRID_SURFACE_EXIT_WEST);
+	data.hallucinate = true;
+	eq(sdl3_terrain_crossing(&data), GRID_SURFACE_NONE);
+	data.hallucinate = false; data.f_idx = FEAT_NONE;
+	eq(sdl3_terrain_crossing(&data), GRID_SURFACE_NONE);
+	eq(sdl3_terrain_crossing(NULL), GRID_SURFACE_NONE);
+	ok;
+}
+
 const char *suite_name = "sdl3/terrain";
 struct test tests[] = {
+	{ "known crossing metadata and subjects", test_crossing_metadata },
+	{ "ground excludes hazards and cave air", test_ground_and_underlay },
 	{ "level key stability", test_level_key_is_stable_and_sensitive },
 	{ "natural style", test_natural_resolves_material },
 	{ "classic and missing recipe", test_classic_and_missing_recipes_fail_closed },

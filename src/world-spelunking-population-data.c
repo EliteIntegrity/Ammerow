@@ -13,6 +13,8 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "world-spelunking-actor-data.h"
+#include "world-spelunking-door.h"
+#include "world-spelunking-fixture.h"
 #include "world-spelunking-population-data.h"
 
 #include <string.h>
@@ -62,6 +64,9 @@ static void free_profile_strings(
 	string_free((char *)profile->id);
 	string_free((char *)profile->name);
 	string_free((char *)profile->description);
+	string_free((char *)profile->door_id);
+	string_free((char *)profile->trap_id);
+	string_free((char *)profile->chest_id);
 	for (i = 0; i < profile->actor_entry_count; i++) {
 		string_free((char *)profile->actors[i].actor_id);
 	}
@@ -256,6 +261,32 @@ static enum parser_error parse_object(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_population_door(struct parser *p)
+{
+	struct population_parse_state *state = parser_priv(p);
+	const char *id = parser_getsym(p, "id");
+	if (!state->current) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (state->current->profile.door_id) return PARSE_ERROR_REPEATED_DIRECTIVE;
+	if (!world_id_is_valid(id)) return PARSE_ERROR_INVALID_VALUE;
+	state->current->profile.door_id = string_make(id);
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_population_fixture(struct parser *p, bool chest)
+{
+	struct population_parse_state *state = parser_priv(p);
+	const char *id = parser_getsym(p, "id");
+	const char **slot;
+	if (!state->current) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	slot = chest ? &state->current->profile.chest_id : &state->current->profile.trap_id;
+	if (*slot) return PARSE_ERROR_REPEATED_DIRECTIVE;
+	if (!world_id_is_valid(id)) return PARSE_ERROR_INVALID_VALUE;
+	*slot = string_make(id);
+	return PARSE_ERROR_NONE;
+}
+static enum parser_error parse_population_trap(struct parser *p) { return parse_population_fixture(p, false); }
+static enum parser_error parse_population_chest(struct parser *p) { return parse_population_fixture(p, true); }
+
 static struct parser *init_parse_population(void)
 {
 	struct parser *p = parser_new();
@@ -264,6 +295,9 @@ static struct parser *init_parse_population(void)
 	parser_setpriv(p, state);
 	parser_reg(p, "profile sym id int version", parse_profile);
 	parser_reg(p, "name str name", parse_name);
+	parser_reg(p, "door sym id", parse_population_door);
+	parser_reg(p, "trap sym id", parse_population_trap);
+	parser_reg(p, "chest sym id", parse_population_chest);
 	parser_reg(p, "description str description", parse_description);
 	parser_reg(p, "exclusion int entrance int landmark int endpoint",
 		parse_exclusion);
@@ -374,10 +408,20 @@ bool world_spelunk_population_data_validate_world(void)
 {
 	int i;
 
-	if (!population_data_loaded) return false;
+	if (!population_data_loaded || !world_spelunk_fixture_data_validate()) return false;
 	for (i = 0; i < profile_count; i++) {
 		const struct world_spelunk_population_profile *profile = &profiles[i];
 		int j;
+		const struct world_spelunk_fixture_definition *trap = world_spelunk_fixture_by_id(profile->trap_id);
+		const struct world_spelunk_fixture_definition *chest = world_spelunk_fixture_by_id(profile->chest_id);
+		if ((profile->trap_id && (!trap || trap->kind != SPELUNK_TRAP)) ||
+			(profile->chest_id && (!chest || chest->kind != SPELUNK_CHEST))) return false;
+
+		if (profile->door_id && !world_spelunk_door_by_id(profile->door_id)) {
+			plog_fmt("Spelunking population %s has unknown door %s",
+				profile->id, profile->door_id);
+			return false;
+		}
 
 		for (j = 0; j < profile->actor_entry_count; j++) {
 			if (!world_spelunk_actor_by_id(profile->actors[j].actor_id)) {

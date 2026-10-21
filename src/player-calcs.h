@@ -119,6 +119,8 @@ void calc_inventory(struct player *p);
 void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 				  bool update);
 void calc_digging_chances(struct player_state *state, int chances[DIGGING_MAX]);
+/** Digging skill with the same temporary best-tool swap used in either map mode. */
+int calc_digging_skill(struct player *p, bool *swapped);
 int calc_unlocking_chance(const struct player *p, int lock_power,
 		bool lock_unseen);
 int calc_blows(struct player *p, const struct object *obj,

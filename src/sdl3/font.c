@@ -217,6 +217,18 @@ static bool create_glyphs(struct sdl3_font *font)
 	return true;
 }
 
+static void clear_square_glyphs(struct sdl3_font *font)
+{
+	int i;
+	for (i = 0; i < SDL3_FONT_GLYPH_COUNT; i++) {
+		if (font->glyphs[i].square_texture) {
+			SDL_DestroyTexture(font->glyphs[i].square_texture);
+			font->glyphs[i].square_texture = NULL;
+			resource_counts.square_textures--;
+		}
+	}
+}
+
 bool sdl3_font_fit(struct sdl3_font *font, int output_width,
 		int output_height, int cols, int rows, int zoom_percent)
 {
@@ -225,12 +237,14 @@ bool sdl3_font_fit(struct sdl3_font *font, int output_width,
 	int fitted_size;
 	int chosen_width = 0;
 	int chosen_height = 0;
+	int codepoint;
 
 	if (!font || !font->handle || output_width <= 0 || output_height <= 0 ||
 			cols <= 0 || rows <= 0) {
 		return false;
 	}
 
+	clear_square_glyphs(font);
 	zoom_percent = sdl3_zoom_clamp(zoom_percent);
 	available_height = output_height / rows;
 	candidate = SDL_min(available_height, SDL3_FONT_MAX_SIZE);
@@ -265,6 +279,16 @@ bool sdl3_font_fit(struct sdl3_font *font, int output_width,
 	font->point_size = candidate;
 	font->cell_width = chosen_width;
 	font->cell_height = chosen_height;
+	font->ink_width = font->ink_height = 1;
+	for (codepoint = SDL3_FONT_FIRST_GLYPH;
+			codepoint <= SDL3_FONT_LAST_GLYPH; codepoint++) {
+		int minx, maxx, miny, maxy;
+		if (TTF_GetGlyphMetrics(font->handle, codepoint, &minx, &maxx,
+				&miny, &maxy, NULL)) {
+			font->ink_width = SDL_max(font->ink_width, maxx - minx);
+			font->ink_height = SDL_max(font->ink_height, maxy - miny);
+		}
+	}
 	return refresh_glyph_sizes(font);
 }
 
@@ -382,6 +406,7 @@ void sdl3_font_free(struct sdl3_font *font)
 	int i;
 
 	if (!font) return;
+	clear_square_glyphs(font);
 	for (i = 0; i < SDL3_FONT_GLYPH_COUNT; i++) {
 		if (font->glyphs[i].text) {
 			TTF_DestroyText(font->glyphs[i].text);
@@ -431,4 +456,87 @@ bool sdl3_font_draw(struct sdl3_font *font, uint32_t codepoint,
 		return false;
 	}
 	return TTF_DrawRendererText(glyph->text, x, y);
+}
+
+static bool create_square_glyph(struct sdl3_font *font,
+		SDL_Renderer *renderer, int index)
+{
+	struct sdl3_glyph *glyph = &font->glyphs[index];
+	SDL_Color white = {255, 255, 255, 255};
+	char text[2] = {(char)(index + SDL3_FONT_FIRST_GLYPH), '\0'};
+	SDL_Surface *rendered = TTF_RenderText_Blended(font->handle, text, 1, white);
+	SDL_Surface *rgba;
+	int x, y, left, top, right = -1, bottom = -1;
+
+	if (!rendered) return false;
+	rgba = SDL_ConvertSurface(rendered, SDL_PIXELFORMAT_RGBA32);
+	SDL_DestroySurface(rendered);
+	if (!rgba) return false;
+	left = rgba->w;
+	top = rgba->h;
+	/* RGBA32 guarantees byte-order RGBA, independent of host endianness. */
+	for (y = 0; y < rgba->h; y++) {
+		const Uint8 *row = (const Uint8 *)rgba->pixels + y * rgba->pitch;
+		for (x = 0; x < rgba->w; x++) {
+			if (!row[x * 4 + 3]) continue;
+			left = SDL_min(left, x); right = SDL_max(right, x);
+			top = SDL_min(top, y); bottom = SDL_max(bottom, y);
+		}
+	}
+	glyph->square_ink = (SDL_Rect){left, top,
+		SDL_max(0, right - left + 1), SDL_max(0, bottom - top + 1)};
+	glyph->square_texture = SDL_CreateTextureFromSurface(renderer, rgba);
+	SDL_DestroySurface(rgba);
+	if (!glyph->square_texture) return false;
+	resource_counts.square_textures++;
+	SDL_SetTextureScaleMode(glyph->square_texture, SDL_SCALEMODE_NEAREST);
+	return true;
+}
+
+static bool draw_square(struct sdl3_font *font, SDL_Renderer *renderer,
+		uint32_t codepoint, SDL_Color color, float cell_x, float cell_y,
+		float cell_width, float cell_height, bool wall)
+{
+	struct sdl3_glyph *glyph;
+	SDL_FRect source, target;
+	float scale;
+	int index;
+	if (!font || !font->handle || codepoint == ' ') return true;
+	if (codepoint < SDL3_FONT_FIRST_GLYPH || codepoint > SDL3_FONT_LAST_GLYPH)
+		codepoint = '?';
+	index = (int)codepoint - SDL3_FONT_FIRST_GLYPH;
+	glyph = &font->glyphs[index];
+	if (!glyph->square_texture && !create_square_glyph(font, renderer, index))
+		return false;
+	if (!glyph->square_ink.w || !glyph->square_ink.h) return true;
+	/* Do not inflate punctuation or stretch letters to fill individual cells. */
+	scale = SDL_min(1.0f, SDL_min(SDL_max(1.0f, cell_width - 2) / font->ink_width,
+		SDL_max(1.0f, cell_height - 2) / font->ink_height));
+	source = (SDL_FRect){(float)glyph->square_ink.x, (float)glyph->square_ink.y,
+		(float)glyph->square_ink.w, (float)glyph->square_ink.h};
+	target.w = SDL_max(1.0f, SDL_roundf(source.w * scale));
+	target.h = SDL_max(1.0f, SDL_roundf(source.h * scale));
+	if (wall) target.w = SDL_min(SDL_max(1.0f, cell_width - 2),
+		SDL_max(1.0f, SDL_roundf(target.w * 1.20f)));
+	target.x = SDL_roundf(cell_x + (cell_width - target.w) * 0.5f);
+	target.y = SDL_roundf(cell_y + (cell_height - target.h) * 0.5f);
+	SDL_SetTextureColorMod(glyph->square_texture, color.r, color.g, color.b);
+	SDL_SetTextureAlphaMod(glyph->square_texture, color.a);
+	return SDL_RenderTexture(renderer, glyph->square_texture, &source, &target);
+}
+
+bool sdl3_font_draw_square(struct sdl3_font *font, SDL_Renderer *renderer,
+		uint32_t codepoint, SDL_Color color, float cell_x, float cell_y,
+		float cell_width, float cell_height)
+{
+	return draw_square(font, renderer, codepoint, color, cell_x, cell_y,
+		cell_width, cell_height, false);
+}
+
+bool sdl3_font_draw_square_wall(struct sdl3_font *font, SDL_Renderer *renderer,
+		uint32_t codepoint, SDL_Color color, float cell_x, float cell_y,
+		float cell_width, float cell_height)
+{
+	return draw_square(font, renderer, codepoint, color, cell_x, cell_y,
+		cell_width, cell_height, true);
 }

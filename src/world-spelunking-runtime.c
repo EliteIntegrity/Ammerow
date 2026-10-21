@@ -12,6 +12,8 @@
 
 #include "world-spelunking-runtime.h"
 #include "world-spelunking-local.h"
+#include "world-spelunking-door.h"
+#include "world-spelunking-fixture.h"
 #include "world-spelunking-actor-data.h"
 #include "world-spelunking-data-util.h"
 #include "world-spelunking-geology-data.h"
@@ -88,6 +90,7 @@ static bool actors_are_valid(const struct world_spelunk_runtime *runtime)
 				actor->y < 0 || actor->y >= runtime->state.map.height ||
 				actor->hp <= 0 || actor->hp > actor->max_hp ||
 				actor->max_hp != definition->hitpoints ||
+				actor->reward > definition->experience ||
 				actor->energy > runtime->state.rules.action_energy ||
 				runtime->cells[(size_t)actor->y *
 					runtime->state.map.width + actor->x] ==
@@ -99,6 +102,9 @@ static bool actors_are_valid(const struct world_spelunk_runtime *runtime)
 					runtime->actors[j].y == actor->y) {
 				return false;
 			}
+		}
+		for (j = 0; j < WORLD_SPELUNK_STATUS_MAX; j++) {
+			if (actor->status[j] > 2000) return false;
 		}
 	}
 	return true;
@@ -158,6 +164,23 @@ static bool geology_decoration_fits(
 			geology_has_cardinal_tile(runtime, x, y, WORLD_SPELUNK_WATER);
 	}
 	return false;
+}
+
+void world_spelunk_runtime_prune_decorations(struct world_spelunk_runtime *runtime)
+{
+	const struct world_spelunk_geology_profile *profile;
+	size_t i, count;
+	if (!runtime || !runtime->decoration_tags) return;
+	profile = world_spelunk_geology_profile_by_id(runtime->geology_profile_id);
+	count = (size_t)runtime->state.map.width * runtime->state.map.height;
+	for (i = 0; i < count; i++) {
+		const struct world_spelunk_decoration_definition *d =
+			world_spelunk_geology_decoration_by_tag(profile, runtime->decoration_tags[i]);
+		if (d && !geology_decoration_fits(runtime, d,
+			(int)(i % runtime->state.map.width), (int)(i / runtime->state.map.width))) {
+			runtime->decoration_tags[i] = WORLD_SPELUNK_GEOLOGY_TAG_NONE;
+		}
+	}
 }
 
 static bool geology_is_valid(const struct world_spelunk_runtime *runtime)
@@ -249,6 +272,8 @@ bool world_spelunk_runtime_is_valid(
 	}
 	return terrain_is_valid(map) &&
 		world_spelunk_perception_is_valid(&runtime->perception) &&
+		world_spelunk_doors_valid(runtime) &&
+		world_spelunk_fixtures_valid(runtime) &&
 		actors_are_valid(runtime) &&
 		geology_is_valid(runtime) &&
 		world_spelunk_runtime_local_is_valid(runtime) &&
@@ -318,6 +343,7 @@ struct world_spelunk_runtime *world_spelunk_runtime_create_with_perception(
 
 	runtime = mem_zalloc(sizeof(*runtime));
 	runtime->cells = mem_alloc(count * sizeof(*runtime->cells));
+	runtime->blocked = mem_zalloc(count);
 	runtime->pitons = mem_zalloc(count * sizeof(*runtime->pitons));
 	runtime->ropes = mem_zalloc(count * sizeof(*runtime->ropes));
 	runtime->explored = mem_zalloc(count * sizeof(*runtime->explored));
@@ -330,6 +356,7 @@ struct world_spelunk_runtime *world_spelunk_runtime_create_with_perception(
 	}
 	runtime->state = *source;
 	runtime->state.map.cells = runtime->cells;
+	runtime->state.map.blocked = runtime->blocked;
 	runtime->state.map.stride = runtime->state.map.width;
 	runtime->state.map.pitons = runtime->pitons;
 	runtime->state.map.ropes = runtime->ropes;
@@ -401,19 +428,20 @@ bool world_spelunk_runtime_add_actor(struct world_spelunk_runtime *runtime,
 			runtime->actor_count >= WORLD_SPELUNK_ACTOR_MAX ||
 			!definition || x < 0 || y < 0 ||
 			x >= runtime->state.map.width || y >= runtime->state.map.height ||
-			runtime->cells[(size_t)y * runtime->state.map.width + x] ==
-				WORLD_SPELUNK_ROCK ||
+			world_spelunk_map_blocks(&runtime->state.map, x, y) ||
 			(x == runtime->state.x && y == runtime->state.y) ||
 			world_spelunk_runtime_actor_at(runtime, x, y)) {
 		return false;
 	}
 	actor = &runtime->actors[runtime->actor_count++];
+	memset(actor, 0, sizeof(*actor));
 	my_strcpy(actor->id, definition->id, sizeof(actor->id));
 	actor->x = x;
 	actor->y = y;
 	actor->hp = definition->hitpoints;
 	actor->max_hp = definition->hitpoints;
 	actor->energy = 0;
+	actor->reward = (uint16_t)definition->experience;
 	return true;
 }
 
@@ -448,6 +476,7 @@ void world_spelunk_runtime_free(struct world_spelunk_runtime *runtime)
 	mem_free(runtime->explored);
 	mem_free(runtime->ropes);
 	mem_free(runtime->pitons);
+	mem_free(runtime->blocked);
 	mem_free(runtime->cells);
 	mem_free(runtime);
 }

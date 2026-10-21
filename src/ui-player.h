@@ -28,6 +28,7 @@ void do_cmd_change_name(void);
 int ui_player_present_objectives(int *row_offset, int cursor, bool briefing,
 		const char *briefing_subtitle);
 int ui_player_character_page_step(int page, int direction);
+int ui_player_present_cave_survey(int *cursor, bool focused);
 void ui_player_present_fishing_quest_briefing(const char *subtitle, bool wait_for_ack);
 
 #endif /* !UI_PLAYER_H */

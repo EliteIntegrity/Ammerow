@@ -6,6 +6,104 @@
 /* Melee, launcher, and throwing parity in side view. */
 
 #include "spelunking-integration-fixture.h"
+#include "project.h"
+
+static int test_ground_creature_roster(void *unused)
+{
+	int kind_index;
+	(void)unused;
+	reset_before_load();
+	require(savefile_load("Test1", false));
+	eq(world_spelunk_actor_definition_count(), 3);
+	for (kind_index = 0; kind_index < world_spelunk_actor_definition_count(); kind_index++) {
+		const struct world_spelunk_actor_definition *kind = world_spelunk_actor_by_index(kind_index);
+		enum world_spelunk_tile cells[72];
+		struct world_spelunk_actor_report reports[WORLD_SPELUNK_ACTOR_MAX];
+		struct level *level;
+		struct world_spelunk_runtime *runtime;
+		size_t count, hits;
+		int i, ticks, damage = 0, actions = 0, before_stamina, before_air;
+		int32_t before_xp;
+		for (i = 0; i < 72; i++) cells[i] = WORLD_SPELUNK_AIR;
+		for (i = 0; i < 12; i++) cells[5 * 12 + i] = WORLD_SPELUNK_ROCK;
+		require(install_spelunking_runtime(cells, 12, 6, 2, 4, 90));
+		level = (struct level *)world_player_level(player);
+		notnull(level);
+		level->mode = WORLD_MODE_SPELUNKING;
+		my_strcpy(player->world_location.entry, "stair.main", sizeof(player->world_location.entry));
+		runtime = player->spelunking;
+		runtime->actor_roster_initialized = true;
+		require(world_spelunk_runtime_add_actor(runtime, kind->id, 4, 4));
+		world_spelunk_visibility_follow_player(runtime);
+		ticks = (100 + turn_energy(kind->speed) - 1) / turn_energy(kind->speed);
+		for (i = 0; i < ticks; i++) {
+			require(world_spelunk_process_actors(player, reports, N_ELEMENTS(reports), &count));
+			eq(count, i == ticks - 1 ? 1 : 0);
+		}
+		eq(runtime->actors[0].x, 3);
+		eq(reports[0].event, WORLD_SPELUNK_ACTOR_EVENT_MOVED);
+		before_stamina = runtime->state.stamina;
+		before_air = runtime->state.breath;
+		player->chp = player->mhp = 1000;
+		/* Guaranteed-hit upper bound for ten standard player-action intervals.
+		 * This measures cadence/damage, not an equipped player's survival odds. */
+		for (i = 0; i < 100; i++) {
+			bool processed;
+			rand_fix(100);
+			processed = world_spelunk_process_actors(player, reports, N_ELEMENTS(reports), &count);
+			rand_unfix();
+			require(processed);
+			if (count) {
+				eq(reports[0].event, WORLD_SPELUNK_ACTOR_EVENT_HIT);
+				require(reports[0].damage >= 1 && reports[0].damage <= kind->damage_dice * kind->damage_sides);
+				damage += reports[0].damage;
+				actions++;
+			}
+		}
+		eq(actions, 100 / ticks);
+		eq(player->chp, 1000 - damage);
+		eq(runtime->state.stamina, before_stamina);
+		eq(runtime->state.breath, before_air);
+		if (verbose) printf("\n%s: %d ticks/action, %d hits / %d damage in 100 ticks\n",
+			kind->name, ticks, actions, damage);
+		/* No crossing an unsupported lip, water, an occupied cell, or rock. */
+		runtime->actors[0].x = 4;
+		for (i = 0; i < 4; i++) {
+			runtime->cells[5 * 12 + 3] = i == 0 ? WORLD_SPELUNK_AIR : WORLD_SPELUNK_ROCK;
+			runtime->cells[4 * 12 + 3] = i == 1 ? WORLD_SPELUNK_WATER :
+				i == 3 ? WORLD_SPELUNK_ROCK : WORLD_SPELUNK_AIR;
+			if (i == 2) require(world_spelunk_runtime_add_actor(runtime, kind->id, 3, 4));
+			runtime->actors[0].energy = 100;
+			world_spelunk_visibility_follow_player(runtime);
+			require(world_spelunk_process_actors(player, reports, N_ELEMENTS(reports), &count));
+			eq(runtime->actors[0].x, 4);
+			if (i == 2) require(world_spelunk_runtime_remove_actor(runtime, &runtime->actors[1]));
+		}
+		/* Occlusion pauses activity and cannot bank a burst of later attacks. */
+		for (i = 0; i < 100; i++) {
+			require(world_spelunk_process_actors(player, reports, N_ELEMENTS(reports), &count));
+			eq(count, 0);
+		}
+		eq(runtime->actors[0].energy, 100);
+		runtime->cells[4 * 12 + 3] = WORLD_SPELUNK_AIR;
+		world_spelunk_visibility_follow_player(runtime);
+		require(world_spelunk_process_actors(player, reports, N_ELEMENTS(reports), &count));
+		eq(count, 1);
+		eq(runtime->actors[0].energy, 0);
+		/* Every registered kind is damageable by cave magic; death awards once. */
+		before_xp = player->exp;
+		require(world_spelunk_player_project_ray(player, 1, 0, 10, kind->hitpoints,
+			PROJ_MISSILE, true, &hits));
+		eq(hits, 1);
+		eq(runtime->actor_count, 0);
+		eq(player->exp, before_xp + kind->experience);
+		require(world_spelunk_player_project_ray(player, 1, 0, 10, kind->hitpoints,
+			PROJ_MISSILE, true, &hits));
+		eq(hits, 0);
+		eq(player->exp, before_xp + kind->experience);
+	}
+	ok;
+}
 
 static int test_spelunking_combat_slice(void *state)
 {
@@ -289,6 +387,7 @@ static int test_spelunking_throwing(void *state)
 
 const char *suite_name = "game/spelunking-combat";
 struct test tests[] = {
+	{ "ground creature roster", test_ground_creature_roster },
 	{ "combat slice", test_spelunking_combat_slice },
 	{ "launcher fire", test_spelunking_launcher_fire },
 	{ "throwing", test_spelunking_throwing },

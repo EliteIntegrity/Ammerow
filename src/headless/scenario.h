@@ -50,6 +50,8 @@ enum headless_expected_result {
 struct headless_scenario {
 	char name[HEADLESS_SCENARIO_TEXT];
 	uint32_t seed;
+	uint32_t overworld_seed;
+	bool has_overworld_seed;
 	char race[HEADLESS_SCENARIO_TEXT];
 	char player_class[HEADLESS_SCENARIO_TEXT];
 	char player_name[HEADLESS_SCENARIO_TEXT];
@@ -69,6 +71,7 @@ struct headless_scenario {
 	char theme[HEADLESS_SCENARIO_TEXT];
 	char map_style[HEADLESS_SCENARIO_TEXT];
 	char map_presentation[HEADLESS_SCENARIO_TEXT];
+	char ascii_grid[HEADLESS_SCENARIO_TEXT];
 	int map_zoom_percent;
 	int screen_width;
 	int screen_height;

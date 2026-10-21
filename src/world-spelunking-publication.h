@@ -62,7 +62,8 @@ enum world_spelunk_publication_result
 
 /**
  * Rebuild one materialized section from its persistent recipe identity and
- * verify it against the saved graph coordinates and immutable runtime layers.
+ * verify it against saved graph coordinates and retained runtime layers.
+ * Legal rock-to-air excavation and decoration pruning are retained differences.
  *
  * This diagnostic never mutates the system, runtime, player, or gameplay RNG.
  * On success, reconstructed owns a certified traversal witness and must be

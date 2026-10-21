@@ -24,6 +24,8 @@
 
 struct sdl3_glyph {
 	TTF_Text *text;
+	SDL_Texture *square_texture;
+	SDL_Rect square_ink;
 	int width;
 	int height;
 };
@@ -37,12 +39,15 @@ struct sdl3_font {
 	int cell_width;
 	int cell_height;
 	bool fixed_width;
+	int ink_width;
+	int ink_height;
 };
 
 struct sdl3_font_resource_counts {
 	int fonts;
 	int engines;
 	int texts;
+	int square_textures;
 	Uint64 fonts_opened;
 	Uint64 engines_created;
 	Uint64 texts_created;
@@ -70,6 +75,14 @@ bool sdl3_font_fit(struct sdl3_font *font, int output_width,
 bool sdl3_font_draw(struct sdl3_font *font, uint32_t codepoint,
 		SDL_Color color, float cell_x, float cell_y, float cell_width,
 		float cell_height);
+/** Draw map glyphs centred by ink, with one uniform scale for the font. */
+bool sdl3_font_draw_square(struct sdl3_font *font, SDL_Renderer *renderer,
+		uint32_t codepoint, SDL_Color color, float cell_x, float cell_y,
+		float cell_width, float cell_height);
+/** Enhanced Square: 20% wider wall ink, unchanged height, bounded to its cell. */
+bool sdl3_font_draw_square_wall(struct sdl3_font *font, SDL_Renderer *renderer,
+		uint32_t codepoint, SDL_Color color, float cell_x, float cell_y,
+		float cell_width, float cell_height);
 void sdl3_font_get_resource_counts(
 		struct sdl3_font_resource_counts *counts);
 int sdl3_font_bundled_count(void);

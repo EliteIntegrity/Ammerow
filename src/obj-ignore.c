@@ -33,6 +33,9 @@
 #include "obj-util.h"
 #include "object.h"
 #include "player-calcs.h"
+#include "world-turn.h"
+#include "world-object-transfer.h"
+#include "world-spelunking-runtime.h"
 
 
 typedef struct
@@ -205,7 +208,13 @@ void rune_autoinscribe(struct player *p, int i)
 	}
 
 	/* Autoinscribe each object on the ground */
-	if (cave)
+	if (world_player_mode_has_capability(p, WORLD_MODE_CAP_SIDE_VIEW)) {
+		for (obj = p->spelunking->ground_objects; obj; obj = obj->next)
+			if (obj->grid.x == p->spelunking->state.x &&
+					obj->grid.y == p->spelunking->state.y && object_has_rune(obj, i))
+				rune_add_autoinscription(obj, i);
+	} else if (world_player_mode_has_capability(p, WORLD_MODE_CAP_NATIVE_CAVE) &&
+			cave && square_in_bounds(cave, p->grid))
 		for (obj = square_object(cave, p->grid); obj; obj = obj->next)
 			if (object_has_rune(obj, i))
 				rune_add_autoinscription(obj, i);
@@ -345,8 +354,17 @@ int add_autoinscription(int16_t kind, const char *inscription, bool aware)
 void autoinscribe_ground(struct player *p)
 {
 	struct object *obj;
+	if (world_player_mode_has_capability(p, WORLD_MODE_CAP_SIDE_VIEW)) {
+		for (obj = p->spelunking->ground_objects; obj; obj = obj->next)
+			if (obj->grid.x == p->spelunking->state.x &&
+					obj->grid.y == p->spelunking->state.y)
+				apply_autoinscription(p, obj);
+		return;
+	}
 
 	/* Autoinscribe each object in the pile */
+	if (!world_player_mode_has_capability(p, WORLD_MODE_CAP_NATIVE_CAVE) ||
+			!cave || !square_in_bounds(cave, p->grid)) return;
 	for (obj = square_object(cave, p->grid); obj; obj = obj->next)
 		apply_autoinscription(p, obj);
 }
@@ -656,12 +674,22 @@ bool ignore_known_item_ok(const struct player *p, const struct object *obj)
 void ignore_drop(struct player *p)
 {
 	struct object *obj;
+	bool side_view = world_player_mode_has_capability(p, WORLD_MODE_CAP_SIDE_VIEW);
+	size_t room = side_view ? WORLD_SPELUNK_OBJECT_MAX -
+		world_spelunk_runtime_ground_object_count(p->spelunking) : 0;
+	if (!world_player_mode_is_valid(p)) return;
+
+	/* Reject before prompting or queuing: water, blocked cells and a full
+	 * local store cannot accept ignored gear. Nothing is destroyed. */
+	if (side_view && !world_player_location_accepts_object(p, NULL)) return;
 
 	/* Scan through the slots backwards */
 	for (obj = gear_last_item(p); obj; obj = obj->prev) {
 		/* Skip non-objects and unignoreable objects */
 		assert(obj->kind);
 		if (!ignore_item_ok(p, obj)) continue;
+		if (side_view && (!room ||
+				(object_is_equipped(p->body, obj) && !obj_can_takeoff(obj)))) continue;
 
 		/* Check for !d (no drop) inscription */
 		if (!check_for_inscrip(obj, "!d") && !check_for_inscrip(obj, "!*")) {
@@ -686,11 +714,12 @@ void ignore_drop(struct player *p)
 			}
 
 			/* We're allowed to drop it. */
-			if (!square_isshop(cave, p->grid)) {
+			if (side_view || !square_isshop(cave, p->grid)) {
 				struct command *drop_cmd;
 
+				if (cmdq_push(CMD_DROP)) break;
 				p->upkeep->dropping = true;
-				cmdq_push(CMD_DROP);
+				if (side_view) room--;
 				drop_cmd = cmdq_peek();
 				assert(drop_cmd);
 				cmd_set_arg_item(drop_cmd, "item", obj);

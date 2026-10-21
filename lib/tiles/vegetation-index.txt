@@ -1,0 +1,5 @@
+# Full Tile terrain bindings (GPL-2.0-only).
+domain:feature
+tree -> 0,0
+pine-tree -> 1,0
+brake -> 2,0

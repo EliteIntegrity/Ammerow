@@ -1,0 +1,20 @@
+# Explicit encounter fixture on an existing supported cave shelf.
+# Change encounter to core.spelunk.actor.stone-beetle for the second new kind.
+# Re-run at ascii, hybrid-32/64 and full-32/64; simulation hashes must agree.
+name:cave-creature-smoke
+seed:424242
+race:Nearlander
+class:Warrior
+player:Cave Reviewer
+location:core.cave.east.001
+entry:shaft.spelunk
+enter-route:core.route.spelunk.east.in
+encounter:core.spelunk.actor.cave-rat
+bot:scripted
+capture:both
+expect:complete
+map-presentation:full-64
+map-zoom:250
+screen-width:1280
+screen-height:720
+action:inspect:refresh

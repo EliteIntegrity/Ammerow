@@ -22,6 +22,8 @@
  */
 
 #include "angband.h"
+#include "cmd-spelunking.h"
+#include "world-spelunking-adapter.h"
 #include "cave.h"
 #include "cmd-core.h"
 #include "cmds.h"
@@ -285,6 +287,11 @@ static bool do_cmd_open_aux(struct loc grid)
  */
 void do_cmd_open(struct command *cmd)
 {
+	if (world_spelunk_player_is_active(player)) {
+		do_cmd_spelunk_door(cmd, true);
+		return;
+	}
+
 	struct loc grid;
 	int dir;
 	struct object *obj;
@@ -445,6 +452,11 @@ static bool do_cmd_close_aux(struct loc grid)
  */
 void do_cmd_close(struct command *cmd)
 {
+	if (world_spelunk_player_is_active(player)) {
+		do_cmd_spelunk_door(cmd, false);
+		return;
+	}
+
 	struct loc grid;
 	int dir;
 	int err;
@@ -585,10 +597,8 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	bool digger_swapped = false;
 	int weapon_slot = slot_by_name(player, "weapon");
 	struct object *current_weapon = slot_object(player, weapon_slot);
-	struct object *best_digger = NULL;
-	struct player_state local_state;
-	struct player_state *used_state = &player->state;
-	int oldn = 1, dig_idx;
+	struct player_state local_state = player->state;
+	int dig_idx;
 	const char *with_clause = current_weapon == NULL ? "with your hands" : "with your weapon";
 
 	/* Verify legality */
@@ -603,28 +613,9 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	}
 
 	/* Find what we're digging with and our chance of success */
-	best_digger = player_best_digger(player, false);
-	if (best_digger != current_weapon &&
-			(!current_weapon || obj_can_takeoff(current_weapon))) {
-		digger_swapped = true;
-		with_clause = "with your swap digger";
-		/* Use only one without the overhead of gear_obj_for_use(). */
-		if (best_digger) {
-			oldn = best_digger->number;
-			best_digger->number = 1;
-		}
-		player->body.slots[weapon_slot].obj = best_digger;
-		memcpy(&local_state, &player->state, sizeof(local_state));
-		/*
-		 * Avoid side effects from using update set to false with
-		 * calc_bonuses().
-		 */
-		local_state.stat_ind[STAT_STR] = 0;
-		local_state.stat_ind[STAT_DEX] = 0;
-		calc_bonuses(player, &local_state, false, false);
-		used_state = &local_state;
-	}
-	calc_digging_chances(used_state, digging_chances);
+	local_state.skills[SKILL_DIGGING] = calc_digging_skill(player, &digger_swapped);
+	if (digger_swapped) with_clause = "with your swap digger";
+	calc_digging_chances(&local_state, digging_chances);
 
 	/* Do we succeed? */
 	dig_idx = square_digging(cave, grid);
@@ -637,14 +628,6 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	}
 	chance = digging_chances[dig_idx - 1];
 	okay = (chance > randint0(1600));
-
-	/* Swap back */
-	if (digger_swapped) {
-		if (best_digger) {
-			best_digger->number = oldn;
-		}
-		player->body.slots[weapon_slot].obj = current_weapon;
-	}
 
 	/* Success */
 	if (okay && twall(grid)) {
@@ -714,6 +697,10 @@ void do_cmd_tunnel(struct command *cmd)
 	struct loc grid;
 	int dir;
 	bool more = false;
+	if (world_spelunk_player_is_active(player)) {
+		do_cmd_spelunk_tunnel(cmd);
+		return;
+	}
 
 	/* Get arguments */
 	if (cmd_get_direction(cmd, "direction", &dir, false))
@@ -916,6 +903,10 @@ static bool do_cmd_disarm_aux(struct loc grid)
  */
 void do_cmd_disarm(struct command *cmd)
 {
+	if (world_spelunk_player_is_active(player)) {
+		do_cmd_spelunk_disarm(cmd);
+		return;
+	}
 	struct loc grid;
 	int dir;
 	int err;
@@ -1712,6 +1703,10 @@ void do_cmd_hold(struct command *cmd)
 void do_cmd_rest(struct command *cmd)
 {
 	int n;
+	if (world_spelunk_player_is_active(player)) {
+		do_cmd_spelunk_rest(cmd);
+		return;
+	}
 
 	/* XXX-AS need to insert UI here */
 	if (cmd_get_arg_choice(cmd, "choice", &n) != CMD_OK)

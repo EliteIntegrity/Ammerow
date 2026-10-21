@@ -19,9 +19,12 @@ NOTEARDOWN
 static const char *complete_lines[] = {
 	"actor:core.spelunk.actor.test:test crawler",
 	"death-cause:a test crawler",
+	"description:A cautious ground crawler.",
 	"appearance:c:Light Blue",
 	"combat:7:31:2:3",
 	"vitals:12:115:9",
+	"trait:ANIMAL",
+	"trait:IM_COLD",
 	"spawn:core.spelunk.spawn.test:core.spelunk.test.001:core.spelunk.actor.test",
 	"candidate:30:7:5",
 	"candidate:10:3:4",
@@ -57,6 +60,7 @@ static int test_complete_registry(void *unused)
 	ptreq(actor, world_spelunk_actor_by_index(0));
 	require(streq(actor->name, "test crawler"));
 	require(streq(actor->death_cause, "a test crawler"));
+	require(streq(actor->description, "A cautious ground crawler."));
 	eq(actor->glyph, L'c');
 	eq(actor->attr, COLOUR_L_BLUE);
 	eq(actor->hitpoints, 12);
@@ -66,6 +70,8 @@ static int test_complete_registry(void *unused)
 	eq(actor->damage_sides, 3);
 	eq(actor->speed, 115);
 	eq(actor->experience, 9);
+	require(rf_has(actor->flags, RF_ANIMAL));
+	require(rf_has(actor->flags, RF_IM_COLD));
 	spawn = world_spelunk_spawn_by_id("core.spelunk.spawn.test");
 	notnull(spawn);
 	ptreq(spawn, world_spelunk_spawn_by_index(0));
@@ -89,11 +95,18 @@ static int test_headers_duplicates_and_ranges(void *unused)
 	(void)unused;
 	eq(parser_parse(p, "combat:1:1:1:1"),
 		PARSE_ERROR_MISSING_RECORD_HEADER);
+	eq(parser_parse(p, "description:No actor yet."), PARSE_ERROR_MISSING_RECORD_HEADER);
 	eq(parser_parse(p, "actor:Bad ID:bad"), PARSE_ERROR_INVALID_VALUE);
 	eq(parser_parse(p, "actor:core.actor.test:test"), PARSE_ERROR_NONE);
+	eq(parser_parse(p, "trait:FLY"), PARSE_ERROR_INVALID_VALUE);
+	eq(parser_parse(p, "trait:INVISIBLE"), PARSE_ERROR_INVALID_VALUE);
+	eq(parser_parse(p, "trait:ANIMAL"), PARSE_ERROR_NONE);
+	eq(parser_parse(p, "trait:ANIMAL"), PARSE_ERROR_REPEATED_DIRECTIVE);
 	eq(parser_parse(p, "actor:core.actor.test:duplicate"),
 		PARSE_ERROR_REPEATED_DIRECTIVE);
 	eq(parser_parse(p, "death-cause:a test"), PARSE_ERROR_NONE);
+	eq(parser_parse(p, "description:First description."), PARSE_ERROR_NONE);
+	eq(parser_parse(p, "description:Second description."), PARSE_ERROR_REPEATED_DIRECTIVE);
 	eq(parser_parse(p, "death-cause:a duplicate"),
 		PARSE_ERROR_REPEATED_DIRECTIVE);
 	eq(parser_parse(p, "appearance:c:Not A Colour"),

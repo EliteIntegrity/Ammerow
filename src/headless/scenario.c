@@ -37,6 +37,7 @@ struct scenario_fields {
 	bool theme;
 	bool map_style;
 	bool map_presentation;
+	bool ascii_grid;
 	bool map_zoom_percent;
 	bool screen_width;
 	bool screen_height;
@@ -91,6 +92,8 @@ static bool parse_unsigned(const char *value, unsigned long maximum,
 	char *end;
 	unsigned long result;
 
+	/* strtoul accepts a leading minus; on Windows -1 becomes UINT32_MAX. */
+	if (*value == '-') return false;
 	errno = 0;
 	result = strtoul(value, &end, 10);
 	if (errno || end == value || *end || result > maximum) return false;
@@ -162,7 +165,9 @@ static bool valid_map_presentation(const char *value)
 		my_stricmp(value, "tiles") == 0 ||
 		my_stricmp(value, "hybrid") == 0 ||
 		my_stricmp(value, "hybrid-32") == 0 ||
-		my_stricmp(value, "hybrid-64") == 0;
+		my_stricmp(value, "hybrid-64") == 0 ||
+		my_stricmp(value, "full-32") == 0 ||
+		my_stricmp(value, "full-64") == 0;
 }
 
 void headless_scenario_defaults(struct headless_scenario *scenario)
@@ -187,6 +192,7 @@ void headless_scenario_defaults(struct headless_scenario *scenario)
 	my_strcpy(scenario->map_style, "natural", sizeof(scenario->map_style));
 	my_strcpy(scenario->map_presentation, "ascii",
 		sizeof(scenario->map_presentation));
+	my_strcpy(scenario->ascii_grid, "classic", sizeof(scenario->ascii_grid));
 	scenario->map_zoom_percent = 100;
 }
 
@@ -213,6 +219,15 @@ static bool parse_field(struct headless_scenario *scenario,
 	if (streq(key, "race")) {
 		return set_once(scenario->race, sizeof(scenario->race), &fields->race,
 			value, line, error, error_size);
+	}
+	if (streq(key, "overworld-seed")) {
+		if (scenario->has_overworld_seed) return set_error(error, error_size,
+			line, "duplicate field", key);
+		if (!parse_unsigned(value, UINT32_MAX, &number))
+			return set_error(error, error_size, line, "invalid overworld seed", value);
+		scenario->overworld_seed = (uint32_t)number;
+		scenario->has_overworld_seed = true;
+		return true;
 	}
 	if (streq(key, "class")) {
 		return set_once(scenario->player_class,
@@ -341,6 +356,12 @@ static bool parse_field(struct headless_scenario *scenario,
 			sizeof(scenario->map_presentation), &fields->map_presentation,
 			value, line, error, error_size);
 	}
+	if (streq(key, "ascii-grid")) {
+		if (!streq(value, "classic") && !streq(value, "square"))
+			return set_error(error, error_size, line, "invalid ASCII grid", value);
+		return set_once(scenario->ascii_grid, sizeof(scenario->ascii_grid),
+			&fields->ascii_grid, value, line, error, error_size);
+	}
 	if (streq(key, "map-zoom")) {
 		if (fields->map_zoom_percent) {
 			return set_error(error, error_size, line, "duplicate field", key);
@@ -392,6 +413,9 @@ static bool parse_field(struct headless_scenario *scenario,
 	if (streq(key, "start-anchor")) {
 		if (!streq(value, "fishing-stance") && !streq(value, "open-floor") &&
 				!streq(value, "first-rope-anchor") &&
+				!streq(value, "cave-door") &&
+				!streq(value, "cave-tunnel") &&
+				!streq(value, "cave-chest") && !streq(value, "cave-trap") &&
 				!streq(value, "downward-peek-right")) {
 			return set_error(error, error_size, line,
 				"invalid start anchor", value);

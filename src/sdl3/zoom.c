@@ -80,6 +80,27 @@ int sdl3_zoom_visible_cells(int viewport_cells, int percent)
 	return result;
 }
 
+int sdl3_zoom_square_size(int base_width, int base_height, int percent)
+{
+	double side;
+	if (base_width < 1) base_width = 1;
+	if (base_height < 1) base_height = 1;
+	side = sqrt((double)base_width * base_height) * sdl3_zoom_clamp(percent) / 100.0;
+	if (side >= INT_MAX) return INT_MAX;
+	return side < 1.0 ? 1 : (int)(side + 0.5);
+}
+
+int sdl3_zoom_square_visible_cells(int viewport_cells, int base_axis_size,
+		int square_size)
+{
+	double span;
+	if (viewport_cells <= 0 || base_axis_size <= 0 || square_size <= 0) return 0;
+	/* Cover the physical square-cell viewport, not the old terminal row count.
+	 * Guards cover fractional camera alignment. */
+	span = ceil((double)viewport_cells * base_axis_size / square_size) + 2;
+	return span >= INT_MAX ? INT_MAX : (int)span;
+}
+
 int sdl3_zoom_pixel_art_size(int base_cell_height, int percent,
 		int native_art_size)
 {

@@ -43,6 +43,10 @@
 #include "player-history.h"
 #include "player-util.h"
 #include "player-explore.h"
+#include "world-turn.h"
+#include "world-spelunking-inventory.h"
+#include "world-spelunking-runtime.h"
+#include "world-spelunking-system.h"
 #include "trap.h"
 
 /**
@@ -131,11 +135,12 @@ static void player_pickup_gold(struct player *p)
 /**
  * Find the specified object in the inventory (not equipment)
  */
-static const struct object *find_stack_object_in_inventory(const struct object *obj, const struct object *start)
+static const struct object *find_stack_object_in_inventory(struct player *p,
+		const struct object *obj, const struct object *start)
 {
 	const struct object *gear_obj;
-	for (gear_obj = (start) ? start : player->gear; gear_obj; gear_obj = gear_obj->next) {
-		if (!object_is_equipped(player->body, gear_obj) &&
+	for (gear_obj = (start) ? start : p->gear; gear_obj; gear_obj = gear_obj->next) {
+		if (!object_is_equipped(p->body, gear_obj) &&
 				object_similar(gear_obj, obj, OSTACK_PACK)) {
 			/* We found the object */
 			return gear_obj;
@@ -150,7 +155,7 @@ static const struct object *find_stack_object_in_inventory(const struct object *
  * Determine if an object can be picked up automatically and return the
  * number to pick up.
  */
-static int auto_pickup_okay(const struct object *obj)
+int auto_pickup_amount(struct player *p, const struct object *obj)
 {
         /*
 	 * Use the following inscriptions to guide pickup with the last one
@@ -173,13 +178,13 @@ static int auto_pickup_okay(const struct object *obj)
 	 * inscriptions.  The player option to pickup if in the inventory
 	 * honors those inscriptions.
 	 */
-	int num = inven_carry_num(player, obj);
+	int num = inven_carry_num(p, obj);
 	unsigned obj_has_auto, obj_has_maxauto;
 	int obj_maxauto;
 
 	if (!num) return 0;
 
-	if (OPT(player, pickup_always)) return num;
+	if (OPT(p, pickup_always)) return num;
 	if (check_for_inscrip(obj, "!g")) return 0;
 
 	obj_has_auto = check_for_inscrip(obj, "=g");
@@ -187,8 +192,8 @@ static int auto_pickup_okay(const struct object *obj)
 	obj_has_maxauto = check_for_inscrip_with_int(obj, "=g", &obj_maxauto);
 	if (obj_has_auto > obj_has_maxauto) return num;
 
-	if (OPT(player, pickup_inven) || obj_has_maxauto) {
-		const struct object *gear_obj = find_stack_object_in_inventory(obj, NULL);
+	if (OPT(p, pickup_inven) || obj_has_maxauto) {
+		const struct object *gear_obj = find_stack_object_in_inventory(p, obj, NULL);
 		if (!gear_obj) {
 			if (obj_has_maxauto) {
 				return (num < obj_maxauto) ? num : obj_maxauto;
@@ -215,7 +220,7 @@ static int auto_pickup_okay(const struct object *obj)
 					if (!gear_obj->next) {
 						break;
 					}
-					gear_obj = find_stack_object_in_inventory(obj, gear_obj->next);
+					gear_obj = find_stack_object_in_inventory(p, obj, gear_obj->next);
 					if (!gear_obj) {
 						break;
 					}
@@ -434,11 +439,13 @@ int do_autopickup(struct player *p)
 
 			/* Acknowledged loot uses the normal pickup rules without ending
 			 * continuous exploration. New discoveries still stop it. */
-			if (!player_explore_active(p) || player_explore_new_loot(p))
+			if (!player_explore_active(p) || player_explore_new_loot(p)) {
+				player_explore_cancel(p, "new loot discovered");
 				disturb(p);
+			}
 
 			/* Automatically pick up items into the backpack */
-			auto_num = auto_pickup_okay(obj);
+			auto_num = auto_pickup_amount(p, obj);
 			if (auto_num) {
 				/* Pick up the object (as much as possible) with message */
 				player_pickup_aux(p, obj, auto_num, true);
@@ -462,6 +469,17 @@ void do_cmd_pickup(struct command *cmd)
 
 	/* See if we have an item already */
 	(void) cmd_get_arg_item(cmd, "item", &obj);
+	if (world_player_mode_has_capability(player, WORLD_MODE_CAP_SIDE_VIEW)) {
+		struct world_spelunk_local_report report;
+		if (world_spelunk_player_pickup(player, obj, false, &report) ==
+				WORLD_SPELUNK_LOCAL_TURN) {
+			sound(report.completion_message > MSG_GENERIC ?
+				report.completion_message : MSG_PICKUP);
+		} else {
+			msg("There is nothing you can pick up here.");
+		}
+		return;
+	}
 
 	/* Pick up floor objects with a menu for multiple objects */
 	objs_picked_up = player_pickup_item(player, obj, false);
@@ -484,6 +502,32 @@ void do_cmd_pickup(struct command *cmd)
  */
 void do_cmd_autopickup(struct command *cmd)
 {
+	const char *location;
+	/* A queued cave pickup belongs to the arrival that scheduled it. Never
+	 * reinterpret it on the retained native chunk after travel/recall. */
+	if (cmd_get_arg_string(cmd, "cave-location", &location) == CMD_OK) {
+		int x, y;
+		const char *node;
+		if (!world_player_mode_has_capability(player, WORLD_MODE_CAP_SIDE_VIEW) ||
+				cmd_get_arg_string(cmd, "cave-node", &node) != CMD_OK ||
+				!streq(node, player->spelunking_system ?
+					player->spelunking_system->active_node_id : "") ||
+				cmd_get_arg_number(cmd, "x", &x) != CMD_OK ||
+				cmd_get_arg_number(cmd, "y", &y) != CMD_OK ||
+				!streq(location, player->spelunking->location_id) ||
+				x != player->spelunking->state.x || y != player->spelunking->state.y)
+			return;
+	}
+	if (world_player_mode_has_capability(player, WORLD_MODE_CAP_SIDE_VIEW)) {
+		struct world_spelunk_local_report report;
+		if (world_spelunk_player_pickup(player, NULL, true, &report) ==
+				WORLD_SPELUNK_LOCAL_TURN) {
+			if (report.completion_message > MSG_GENERIC)
+				sound(report.completion_message);
+			else if (report.energy_use) sound(MSG_PICKUP);
+		}
+		return;
+	}
 	if (!player_explore_check(player)) return;
 	/* Get the obvious things */
 	player->upkeep->energy_use = do_autopickup(player)

@@ -1337,7 +1337,7 @@ int ui_player_present_objectives(int *row_offset, int cursor,
 	return count;
 }
 
-static int present_player_cave_survey(int *cursor)
+int ui_player_present_cave_survey(int *cursor, bool focused)
 {
 	struct ui_spelunk_survey_model model = { 0 };
 	struct ui_screen screen = { 0 };
@@ -1365,12 +1365,13 @@ static int present_player_cave_survey(int *cursor)
 	}
 	screen.kind = have_survey ? UI_SCREEN_CAVE_SURVEY :
 		UI_SCREEN_CHARACTER_DOSSIER;
-	screen.title = "Cave survey";
+	screen.title = focused && have_survey ? "Explore cave survey" : "Cave survey";
 	screen.subtitle = have_survey ?
-		"Only discovered sections and passages are shown." :
+		"Known connections, not compass directions. @ = here; highlight = selected." :
 		"No connected cave has been charted yet.";
 	screen.help = have_survey ?
-		"Up/Down selects a section   Left/Right changes page   Escape returns" :
+		(focused ? "Arrows select | Tab next | Home here | Esc back to tabs" :
+		"Enter explore survey | Left/Right tabs | Esc close") :
 		"Left/Right changes page   Escape returns";
 	screen.content_col = 4;
 	screen.content_row = PLAYER_SCREEN_CONTENT_ROW;
@@ -1379,8 +1380,10 @@ static int present_player_cave_survey(int *cursor)
 	screen.cursor = *cursor;
 	screen.row_count = have_survey ? model.node_count : 1;
 	screen.rows = have_survey ? model.rows : &empty_row;
-	screen.tab_count = 4;
+	screen.tab_count = focused && have_survey ? 0 : 4;
 	screen.tabs = tabs;
+	/* The compact renderer falls back to a list. Keep selection on screen. */
+	screen.row_offset = have_survey ? MAX(0, *cursor - screen.content_rows + 1) : 0;
 	if (have_survey) {
 		screen.map_node_count = model.node_count;
 		screen.map_nodes = model.nodes;
@@ -1464,7 +1467,7 @@ static void display_player_cave_survey_terminal(int cursor)
 	struct ui_spelunk_survey_model model = { 0 };
 	bool have_survey = player && player->spelunking_system &&
 		ui_spelunk_survey_build(player->spelunking_system, &model);
-	int i;
+	int i, first, visible = MAX(1, Term->hgt - 6);
 
 	clear_from(0);
 	Term_putstr(2, 1, -1, COLOUR_L_BLUE, "Cave survey");
@@ -1475,12 +1478,13 @@ static void display_player_cave_survey_terminal(int cursor)
 	}
 	cursor = cursor < 0 ? model.current_node :
 		MIN(cursor, model.node_count - 1);
-	for (i = 0; i < model.node_count && i < 16; i++) {
+	first = MAX(0, cursor - visible + 1);
+	for (i = first; i < model.node_count && i < first + visible; i++) {
 		char line[256];
 
 		strnfmt(line, sizeof(line), "%s%s  %s", i == cursor ? "> " : "  ",
 			model.rows[i].label, model.rows[i].detail);
-		Term_putstr(4, 4 + i, MIN(75, (int)strlen(line)),
+		Term_putstr(4, 4 + i - first, MIN(Term->wid - 8, (int)strlen(line)),
 			i == cursor ? COLOUR_L_BLUE : model.rows[i].attr, line);
 	}
 }
@@ -1874,6 +1878,7 @@ void do_cmd_change_name(void)
 	int objectives_count = 0;
 	int survey_cursor = -1;
 	int survey_count = 0;
+	bool survey_focused = false;
 
 	const char *p;
 
@@ -1906,7 +1911,8 @@ void do_cmd_change_name(void)
 						objectives_count - 1);
 				}
 			} else {
-				survey_count = present_player_cave_survey(&survey_cursor);
+				survey_count = ui_player_present_cave_survey(&survey_cursor,
+					survey_focused);
 				if (survey_count > 0) {
 					survey_cursor = MIN(survey_cursor, survey_count - 1);
 				}
@@ -1918,15 +1924,35 @@ void do_cmd_change_name(void)
 			if (mode == UI_PLAYER_CHARACTER_QUESTS) {
 				display_player_objectives_terminal();
 			} else if (mode == UI_PLAYER_CHARACTER_CAVE_SURVEY) {
+				struct ui_spelunk_survey_model model;
+				survey_count = player->spelunking_system &&
+					ui_spelunk_survey_build(player->spelunking_system, &model) ?
+					model.node_count : 0;
 				display_player_cave_survey_terminal(survey_cursor);
 			} else {
 				display_player(mode);
 			}
-			Term_putstr(2, 23, -1, COLOUR_WHITE, p);
+			Term_putstr(2, Term->hgt - 1, -1, COLOUR_WHITE,
+				mode == UI_PLAYER_CHARACTER_CAVE_SURVEY ?
+				(survey_focused ? "Arrows select | Tab next | Home here | Esc back to tabs" :
+				 "Enter explore survey | Left/Right tabs | Esc close") : p);
 		}
 
 		/* Query */
 		ke = inkey_m();
+		if (mode == UI_PLAYER_CHARACTER_CAVE_SURVEY && survey_count > 0) {
+			struct ui_spelunk_survey_model model;
+			struct keypress key = ke.key;
+			if (ke.type == EVT_MOUSE && ke.mouse.button == 2)
+				key = (struct keypress){ EVT_KBRD, ESCAPE, 0 };
+			if (key.type == EVT_KBRD &&
+					ui_spelunk_survey_build(player->spelunking_system, &model) &&
+					ui_spelunk_survey_handle(&model, key, &survey_cursor,
+						&survey_focused)) {
+				sound(MSG_UI_NAVIGATE);
+				continue;
+			}
+		}
 
 		if (ke.type == EVT_KBRD) {
 			switch (ke.key.code) {
@@ -1985,8 +2011,6 @@ void do_cmd_change_name(void)
 						defences_offset = MAX(0, defences_offset - 1);
 					} else if (mode == UI_PLAYER_CHARACTER_QUESTS) {
 						objectives_cursor = MAX(0, objectives_cursor - 1);
-					} else {
-						survey_cursor = MAX(0, survey_cursor - 1);
 					}
 					break;
 
@@ -2003,14 +2027,13 @@ void do_cmd_change_name(void)
 							objectives_count > 0) {
 						objectives_cursor = MIN(objectives_cursor + 1,
 							objectives_count - 1);
-					} else if (mode == UI_PLAYER_CHARACTER_CAVE_SURVEY &&
-							survey_count > 0) {
-						survey_cursor = MIN(survey_cursor + 1,
-							survey_count - 1);
 					}
 					break;
 			}
 		} else if (ke.type == EVT_MOUSE) {
+			/* Blank survey clicks must not unexpectedly switch character tabs. */
+			if (mode == UI_PLAYER_CHARACTER_CAVE_SURVEY &&
+					ke.mouse.button != 2) continue;
 			if (ke.mouse.button == 1) {
 				/* Flip through the screens */			
 				change_character_page(&mode, 1);

@@ -50,6 +50,8 @@
 #include "randname.h"
 #include "trap.h"
 #include "z-queue.h"
+#include "world-turn.h"
+#include "world-spelunking-runtime.h"
 
 /* #define LIST_DEBUG */
 
@@ -1307,12 +1309,17 @@ int scan_floor(struct object **items, int max_size, struct player *p,
 {
 	struct object *obj;
 	int num = 0;
+	bool side_view = world_player_mode_has_capability(p, WORLD_MODE_CAP_SIDE_VIEW);
 
 	/* Sanity */
-	if (!square_in_bounds(cave, p->grid)) return 0;
+	if (!world_player_mode_is_valid(p)) return 0;
+	if (!side_view && (!cave || !square_in_bounds(cave, p->grid))) return 0;
 
 	/* Scan all objects in the grid */
-	for (obj = square_object(cave, p->grid); obj; obj = obj->next) {
+	for (obj = side_view ? p->spelunking->ground_objects :
+			square_object(cave, p->grid); obj; obj = obj->next) {
+		if (side_view && (obj->grid.x != p->spelunking->state.x ||
+				obj->grid.y != p->spelunking->state.y)) continue;
 		/* Enforce limit */
 		if (num >= max_size) break;
 
@@ -1323,7 +1330,7 @@ int scan_floor(struct object **items, int max_size, struct player *p,
 		if ((mode & OFLOOR_SENSE) && (!obj->known)) continue;
 
 		/* Visible */
-		if ((mode & OFLOOR_VISIBLE) && !is_unknown(obj)
+		if ((mode & OFLOOR_VISIBLE) && (side_view || !is_unknown(obj))
 				&& ignore_item_ok(p, obj)) continue;
 
 		/* Accept this item */

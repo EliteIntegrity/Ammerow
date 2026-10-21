@@ -9,6 +9,7 @@
  */
 
 #include "angband.h"
+#include "ui-spelunking-list.h"
 #include "cmd-fishing.h"
 #include "cmd-larder.h"
 #include "cmd-spelunking.h"
@@ -36,6 +37,7 @@
 #include "player-util.h"
 #include "project.h"
 #include "store.h"
+#include "trap.h"
 #include "ui-command.h"
 #include "ui-advancement.h"
 #include "ui-help.h"
@@ -52,7 +54,11 @@
 #include "world-larder.h"
 #include "world-larder-data.h"
 #include "world-location.h"
+#include "world-overworld.h"
 #include "world-spelunking-adapter.h"
+#include "world-spelunking-actor-data.h"
+#include "world-spelunking-fixture.h"
+#include "world-spelunking-terrain.h"
 #include "world-spelunking-runtime.h"
 #include "world-spelunking-traversal-proof.h"
 #include "world-spelunking-transition.h"
@@ -82,6 +88,57 @@ static bool runner_error(char *error, size_t error_size, const char *message,
 		}
 	}
 	return false;
+}
+
+/* Disposable, explicit headless-only courtyard for map media regression tests.
+ * Uses real knowledge, trap and object paths; never a player save or game mode. */
+static void tile_review_fixture(void)
+{
+	static const char *traps[] = { "standing mark", "decoy", "web", "trap door",
+		"pit", "rune of summoning", "fire trap", "slow dart", "poison gas trap",
+		"aggravation trap", "mine trap", "mind blasting trap", "rock fall trap", "knife trap" };
+	static const char *items[] = { "rope-length", "scuba-gear", "reed-bank-rod",
+		"rain-minnow", "mudbelly", "glassfin", "piton", "ration-of-food", "rope-length" };
+	int cx = MAX(12, MIN(cave->width - 13, player->grid.x));
+	int cy = MAX(7, MIN(cave->height - 8, player->grid.y));
+	square_set_mon(cave, player->grid, 0);
+	for (int y = cy - 6; y <= cy + 6; y++) {
+		for (int x = cx - 11; x <= cx + 11; x++) {
+			struct loc grid = loc(x, y);
+			struct monster *mon = square_monster(cave, grid);
+			if (mon) delete_monster_idx(cave, mon->midx);
+			square_remove_all_traps(cave, grid);
+			square_set_feat(cave, grid, (abs(x - cx) == 11 || abs(y - cy) == 6) ? FEAT_GRANITE : FEAT_FLOOR);
+			sqinfo_on(square(cave, grid)->info, SQUARE_GLOW);
+		}
+	}
+	player->grid = loc(cx, cy + 4);
+	square_set_mon(cave, player->grid, -1);
+	for (size_t i = 0; i < N_ELEMENTS(traps); i++) {
+		struct trap_kind *kind = lookup_trap(traps[i]);
+		struct loc grid = loc(cx - 9 + (i % 7) * 3, cy - 4 + (i / 7) * 3);
+		if (!kind) continue;
+		place_trap(cave, grid, kind->tidx, 0);
+		square_reveal_trap(cave, grid, true, false);
+		square_memorize_traps(cave, grid);
+	}
+	/* Hidden trap is intentionally present on an otherwise empty grid. */
+	place_trap(cave, loc(cx - 9, cy + 4), lookup_trap("poison gas trap")->tidx, 0);
+	for (size_t i = 0; i < N_ELEMENTS(items); i++) {
+		for (int k = 1; k < z_info->k_max; k++) {
+			if (k_info[k].art_id && streq(k_info[k].art_id, items[i])) {
+				struct object *object = object_new();
+				object_prep(object, &k_info[k], 0, AVERAGE);
+				object->number = 1;
+				struct loc grid = i < 7 ? loc(cx - 9 + (int)i * 3, cy + 2) : loc(cx + 6, cy + 4);
+				floor_carry(cave, grid, object, NULL);
+				break;
+			}
+		}
+	}
+	wiz_light(cave, player, false);
+	player->upkeep->update |= PU_UPDATE_VIEW | PU_MONSTERS;
+	do_cmd_redraw();
 }
 
 static bool give_scenario_item(const char *definition, uint8_t quantity,
@@ -389,7 +446,50 @@ static bool relocate_start_position(const struct headless_scenario *scenario,
 				"could not resolve generated cave start anchor",
 				scenario->start_anchor);
 		}
-		if (streq(scenario->start_anchor, "first-rope-anchor")) {
+		if (streq(scenario->start_anchor, "cave-tunnel")) {
+			const struct world_spelunk_runtime *r = node->runtime;
+			int x, y, w = r->state.map.width;
+			for (y = 2; y < r->state.map.height-2 && !has_target; y++) {
+				for (x = 2; x < w-2; x++) {
+					if (r->cells[y*w+x] != WORLD_SPELUNK_AIR ||
+						r->cells[(y+1)*w+x] != WORLD_SPELUNK_ROCK ||
+						r->cells[y*w+x+1] != WORLD_SPELUNK_ROCK ||
+						r->blocked[y*w+x] || world_spelunk_runtime_actor_at(r,x,y) ||
+						world_spelunk_fixture_at(r,x,y)) continue;
+					if (world_spelunk_cut_check(player,x+1,y,0) != SPELUNK_CUT_OK) continue;
+					target = loc(x,y); has_target = true; break;
+				}
+			}
+			if (!has_target) {
+				world_spelunk_generated_layout_dispose(&generated);
+				return runner_error(error,error_size,"no safe west stance for excavation",scenario->start_anchor);
+			}
+		} else if (streq(scenario->start_anchor, "cave-chest") || streq(scenario->start_anchor, "cave-trap")) {
+			const struct world_spelunk_runtime *r = node->runtime;
+			int kind = streq(scenario->start_anchor, "cave-chest") ? SPELUNK_CHEST : SPELUNK_TRAP;
+			size_t f;
+			for (f = 0; f < r->fixture_count; f++) {
+				const struct world_spelunk_fixture *fixture = &r->fixtures[f];
+				int x = fixture->x - 1, y = fixture->y, w = r->state.map.width;
+				if (world_spelunk_fixture_by_id(fixture->id)->kind != kind || x <= 0 ||
+					r->cells[y*w+x] != WORLD_SPELUNK_AIR || r->cells[(y+1)*w+x] != WORLD_SPELUNK_ROCK ||
+					r->blocked[y*w+x] || world_spelunk_runtime_actor_at(r, x, y) ||
+					world_spelunk_fixture_at(r, x, y)) continue;
+				target = loc(x, y); has_target = true; break;
+			}
+			if (!has_target) {
+				world_spelunk_generated_layout_dispose(&generated);
+				return runner_error(error, error_size, "no generated fixture with safe west stance", scenario->start_anchor);
+			}
+		} else if (streq(scenario->start_anchor, "cave-door")) {
+			const struct world_spelunk_runtime *r = node->runtime;
+			if (!r->door_count) {
+				world_spelunk_generated_layout_dispose(&generated);
+				return runner_error(error, error_size, "no generated cave door", scenario->start_anchor);
+			}
+			target = loc(r->doors[0].x - 1, r->doors[0].y);
+			has_target = true;
+		} else if (streq(scenario->start_anchor, "first-rope-anchor")) {
 			bool staged = stage_first_rope_anchor(&generated, error,
 				error_size);
 
@@ -478,7 +578,30 @@ static bool stage_scenario_encounter(
 	size_t i;
 
 	if (!scenario->encounter[0]) return true;
-	if (!player || !cave || world_spelunk_player_is_active(player)) {
+	if (world_spelunk_player_is_active(player)) {
+		/* Explicit screenshot/test setup, never a gameplay spawn mechanism.
+		 * Use a supported existing shelf: no terrain edits or hidden discovery. */
+		struct world_spelunk_runtime *runtime = player->spelunking;
+		const struct world_spelunk_actor_definition *kind =
+			world_spelunk_actor_by_id(scenario->encounter);
+		int y = runtime->state.y, width = runtime->state.map.width;
+		if (kind && y + 1 < runtime->state.map.height) {
+			for (int side = 1; side >= -1; side -= 2) {
+				int x = runtime->state.x + side * 2;
+				if (x <= 0 || x >= width - 1 ||
+						runtime->cells[y * width + x] != WORLD_SPELUNK_AIR ||
+						runtime->cells[(y + 1) * width + x] != WORLD_SPELUNK_ROCK ||
+						world_spelunk_runtime_ground_object_at(runtime, x, y) ||
+						!world_spelunk_visibility_is_visible(runtime, x, y)) continue;
+				if (!world_spelunk_runtime_add_actor(runtime, kind->id, x, y)) continue;
+				event_signal_point(EVENT_MAP, -1, -1);
+				return true;
+			}
+		}
+		return runner_error(error, error_size,
+			"unknown cave actor or no visible supported encounter cell", scenario->encounter);
+	}
+	if (!player || !cave) {
 		return runner_error(error, error_size,
 			"scenario encounter requires a top-down location",
 			scenario->encounter);
@@ -671,6 +794,26 @@ static uint64_t state_hash(void)
 		hash = hash_u32(hash, (uint32_t)runtime->state.breath);
 		hash = hash_u32(hash, (uint32_t)runtime->state.movement);
 		hash = hash_u32(hash, (uint32_t)runtime->actor_count);
+		hash = hash_u32(hash, (uint32_t)runtime->door_count);
+		hash = hash_u32(hash, (uint32_t)runtime->fixture_count);
+		for (i = 0; i < runtime->fixture_count; i++) {
+			const struct world_spelunk_fixture *f = &runtime->fixtures[i];
+			hash = hash_text(hash, f->id);
+			hash = hash_u32(hash, (uint32_t)f->x);
+			hash = hash_u32(hash, (uint32_t)f->y);
+			hash = hash_byte(hash, f->state);
+			hash = hash_byte(hash, f->known);
+			hash = hash_byte(hash, f->armed);
+			hash = hash_byte(hash, f->trap_known);
+		}
+		for (i = 0; i < runtime->door_count; i++) {
+			const struct world_spelunk_door *door = &runtime->doors[i];
+			hash = hash_text(hash, door->id);
+			hash = hash_u32(hash, (uint32_t)door->x);
+			hash = hash_u32(hash, (uint32_t)door->y);
+			hash = hash_byte(hash, door->state);
+			hash = hash_byte(hash, door->known);
+		}
 		for (i = 0; i < runtime->actor_count; i++) {
 			const struct world_spelunk_actor *actor = &runtime->actors[i];
 
@@ -680,6 +823,9 @@ static uint64_t state_hash(void)
 			hash = hash_u32(hash, (uint32_t)actor->hp);
 			hash = hash_u32(hash, (uint32_t)actor->max_hp);
 			hash = hash_u32(hash, actor->energy);
+			hash = hash_u32(hash, actor->reward);
+			for (int s = 0; s < WORLD_SPELUNK_STATUS_MAX; s++)
+				hash = hash_u32(hash, actor->status[s]);
 		}
 		for (i = 0; i < cells; i++) {
 			hash = hash_byte(hash, (unsigned int)runtime->cells[i]);
@@ -941,6 +1087,26 @@ static bool queue_action(const char *action, char *error, size_t error_size)
 		r = spelunking ?
 			cmdq_push_spelunk_action(WORLD_SPELUNK_COMMAND_WAIT, 0, 0) :
 			cmdq_push(CMD_HOLD);
+	} else if (prefix(action, "aim-wand:")) {
+		char aim[24];
+		const char *name = strchr(action + 9, ':');
+		struct object *obj;
+		int sval;
+		if (!name || (size_t)(name - (action + 9)) >= sizeof(aim))
+			return runner_error(error,error_size,"invalid wand action",action);
+		memcpy(aim, action + 9, name - (action + 9));
+		aim[name - (action + 9)] = '\0';
+		if (!direction(aim,&keypad,&dx,&dy))
+			return runner_error(error,error_size,"invalid wand direction",action);
+		sval = lookup_sval(TV_WAND,name+1);
+		for (obj = player->gear; obj; obj = obj->next)
+			if (tval_is_wand(obj) && obj->sval == sval) break;
+		if (!obj) return runner_error(error,error_size,"requested wand is not carried",action);
+		r = cmdq_push(CMD_USE_WAND);
+		if (!r) {
+			cmd_set_arg_item(cmdq_peek(),"item",obj);
+			cmd_set_arg_target(cmdq_peek(),"target",keypad);
+		}
 	} else if (prefix(action, "quaff:")) {
 		struct object *obj;
 		int sval = lookup_sval(TV_POTION, action + strlen("quaff:"));
@@ -951,6 +1117,11 @@ static bool queue_action(const char *action, char *error, size_t error_size)
 			"requested potion is not carried", action);
 		r = cmdq_push(CMD_QUAFF);
 		if (!r) cmd_set_arg_item(cmdq_peek(), "item", obj);
+	} else if ((prefix(action, "open:") || prefix(action, "close:") || prefix(action, "disarm:") || prefix(action, "tunnel:")) &&
+			direction(strchr(action, ':') + 1, &keypad, &dx, &dy)) {
+		r = cmdq_push(prefix(action, "open:") ? CMD_OPEN : prefix(action, "disarm:") ? CMD_DISARM :
+			prefix(action, "tunnel:") ? CMD_TUNNEL : CMD_CLOSE);
+		if (!r) cmd_set_arg_direction(cmdq_peek(), "direction", keypad);
 	} else if (streq(action, "read-recall")) {
 		struct object *obj;
 		for (obj = player->gear; obj; obj = obj->next) {
@@ -1090,6 +1261,16 @@ static bool initialize_player(const struct headless_scenario *scenario,
 		return runner_error(error, error_size,
 			"unknown race or class in scenario", scenario->name);
 	}
+	/* Opt-in fixed surface layout for gate/travel captures. Keep the existing
+	 * scenario contract unchanged when omitted. Zero selects the supported
+	 * legacy layout with the village in the centre and four real exits. */
+	if (scenario->has_overworld_seed &&
+			(!world_overworld_layout_set(player, WORLD_OVERWORLD_VERSION,
+				WORLD_OVERWORLD_LAUNCH_WIDTH, WORLD_OVERWORLD_LAUNCH_HEIGHT,
+				WORLD_OVERWORLD_LAUNCH_CELLS, scenario->overworld_seed) ||
+			 !world_overworld_rebuild_routes(player))) {
+		return runner_error(error, error_size, "could not set overworld layout", NULL);
+	}
 	for (i = 0; i < scenario->inventory_count; i++) {
 		if (!give_scenario_item(scenario->inventory[i],
 				scenario->inventory_quantity[i], false, error, error_size)) {
@@ -1217,6 +1398,9 @@ static void write_replay_header(struct headless_output *output,
 	file_putf(output->replay, "bot:scripted\ncapture:%s\nexpect:%s\n",
 		capture_name(scenario->capture),
 		expected_result_name(scenario->expected_result));
+	if (scenario->has_overworld_seed) {
+		file_putf(output->replay, "overworld-seed:%u\n", scenario->overworld_seed);
+	}
 	if (scenario->interface_font[0]) {
 		file_putf(output->replay, "interface-font:%s\n",
 			scenario->interface_font);
@@ -1234,6 +1418,7 @@ static void write_replay_header(struct headless_output *output,
 		file_putf(output->replay, "map-presentation:%s\n",
 			scenario->map_presentation);
 	}
+	file_putf(output->replay, "ascii-grid:%s\n", scenario->ascii_grid);
 	file_putf(output->replay, "map-zoom:%d\n",
 		scenario->map_zoom_percent);
 	if (scenario->screen_width && scenario->screen_height) {
@@ -1401,7 +1586,36 @@ bool headless_run_scenario(const struct headless_scenario *scenario,
 			Term->screen_hook(NULL);
 			Term->screen_hook(NULL);
 		}
-		if (streq(action, "inspect:refresh")) {
+		if (streq(action, "inspect:tile-review")) {
+			tile_review_fixture();
+		} else if (streq(action, "inspect:cave-creatures") ||
+				streq(action, "inspect:cave-items")) {
+			if (!textui_spelunking_list_present(player, streq(action, "inspect:cave-items"))) {
+				runner_error(error, error_size, "no active cave list to inspect", action);
+				goto cleanup;
+			}
+		} else if (streq(action, "inspect:survey") ||
+				streq(action, "inspect:survey:focused") ||
+				streq(action, "inspect:survey:branches")) {
+			int cursor = -1;
+			struct world_spelunk_system *original = player->spelunking_system;
+			struct world_spelunk_system preview;
+			if (!original) {
+				runner_error(error, error_size, "no cave survey to inspect", action);
+				goto cleanup;
+			}
+			/* Explicit screenshot fixture: expand knowledge on a graph copy,
+			 * never discover passages or generate sections in the real run. */
+			if (streq(action, "inspect:survey:branches")) {
+				preview = *original;
+				for (size_t j = 0; j < preview.edge_count; j++)
+					world_spelunk_system_discover_edge(&preview, preview.edges[j].id);
+				player->spelunking_system = &preview;
+				cursor = 1;
+			}
+			ui_player_present_cave_survey(&cursor, !streq(action, "inspect:survey"));
+			player->spelunking_system = original;
+		} else if (streq(action, "inspect:refresh")) {
 			Term_activate(angband_term[0]);
 			do_cmd_redraw();
 			Term_redraw_section(0, 0, Term->wid - 1, Term->hgt - 1);

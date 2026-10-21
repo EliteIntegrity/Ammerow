@@ -22,11 +22,17 @@ static int test_bindings_and_validation(void *unused)
 	eq(parser_parse(p, "tile:cave:../hidden:feature:fish"), PARSE_ERROR_INVALID_VALUE);
 	eq(parser_parse(p, "tile:typo:rock:feature:cave-rock"), PARSE_ERROR_INVALID_VALUE);
 	eq(parser_parse(p, "tile:cave-actor:core.spelunk.actor.skitter:actor:skitter"), PARSE_ERROR_NONE);
+	eq(parser_parse(p, "tile:cave-actor:core.spelunk.actor.rat:monster:giant-grey-rat"), PARSE_ERROR_NONE);
+	eq(parser_parse(p, "tile:cave-actor:core.spelunk.actor.bad:object:rat"), PARSE_ERROR_INVALID_VALUE);
 	eq(parser_parse(p, "tile:map:visible-pile:object:loot-pile"), PARSE_ERROR_NONE);
+	eq(parser_parse(p, "tile:trap:gas-trap:feature:gas-trap"), PARSE_ERROR_NONE);
+	eq(parser_parse(p, "tile:trap:gas-trap:feature:other"), PARSE_ERROR_REPEATED_DIRECTIVE);
+	eq(parser_parse(p, "tile:trap:pit:object:pit"), PARSE_ERROR_INVALID_VALUE);
 	eq(map_visual_parser.finish(p), PARSE_ERROR_NONE);
 	binding = map_visual_for("cave-actor", "core.spelunk.actor.skitter");
 	notnull(binding);
 	require(streq(binding->key, "actor:skitter"));
+	require(streq(map_visual_for("cave-actor", "core.spelunk.actor.rat")->key, "monster:giant-grey-rat"));
 	require(streq(map_visual_for("map", "visible-pile")->key, "object:loot-pile"));
 	require(!map_visual_for("cave", "unknown"));
 	require(!map_visual_for(NULL, "rock"));
