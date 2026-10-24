@@ -6,3 +6,19 @@ trap:core.spelunk.trap.stone:30:18:7:stone-release trap
 # Modest fixed supplies: opening cannot reroll treasure or generate artefacts.
 chest:core.spelunk.chest.supplies:1:none:potion:1:Cure Light Wounds:survey supply chest
 chest:core.spelunk.chest.store:2:core.spelunk.trap.spring:potion:2:Cure Serious Wounds:survey store chest
+
+# Rare Finds are ordinary persistent chest fixtures with optional narrative.
+# discovery:id:short exterior description:note (revealed only after opening)
+# Reopening an emptied find rereads its note without a turn or another reward.
+chest:core.spelunk.find.rope-camp:0:none:tool:3:Rope Length (2 metres):survey camp rope box
+discovery:core.spelunk.find.rope-camp:A cold hearth and folded groundsheet mark an abandoned camp.:We measured every length twice. Pell still insists the cave gets taller on the way back. Spare rope below. Do not lend it to Pell.
+chest:core.spelunk.find.ration-camp:0:none:food:2:Ration of Food:survey camp mess tin
+discovery:core.spelunk.find.ration-camp:Three cup rings and one bootprint remain beside a sealed tin.:Third night. The drips have learned our marching song. We are leaving before they learn the words. Two dry meals for whoever follows.
+chest:core.spelunk.find.ledge-cache:0:none:potion:2:Cure Light Wounds:ledge first-aid cache
+discovery:core.spelunk.find.ledge-cache:A small iron box is tucked into the back of this dry shelf.:If you needed both bottles, rest before the return climb. The ledge will not become wider just because you are in a hurry.
+chest:core.spelunk.find.counter-niche:0:none:tool:1:Brass Survey Counter:brass-counter specimen box
+discovery:core.spelunk.find.counter-niche:A chalk tally surrounds a specimen box in a shallow alcove.:A counter for each measured chamber. This one has been counted twice and invoiced three times. Please return it to somebody less honest.
+chest:core.spelunk.find.lens-niche:0:none:tool:1:Clouded Survey Lens:optical specimen box
+discovery:core.spelunk.find.lens-niche:A padded instrument box rests beneath an old sighting mark.:The lens shows every distance as slightly farther than we hoped. Glass is sound. Surveyor is not. Sold as an antique, not as navigation equipment.
+chest:core.spelunk.find.stone-niche:0:none:tool:1:Knotted Stone Sample:knotted-stone specimen box
+discovery:core.spelunk.find.stone-niche:A stone-lined nook holds a carefully labelled specimen box.:It resembles a knot, but has no loose end. Do not spend another afternoon trying to untie it. The village collectors will know what to pay.

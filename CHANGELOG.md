@@ -1,5 +1,30 @@
 # Ammerow release notes
 
+## 0.1.4 (2026-10-24)
+
+- Three new fish give expeditions different destinations: Fernscale in forest
+  pools, Cistern Bream in ruined cisterns, and Blind Deepfish in deeper caves.
+  Each has its own illustration and 32x32/64x64 sprites, food value and rewards.
+- Newly generated cave sections can contain abandoned survey camps, ledge
+  caches and specimen niches, with short authored notes, modest supplies and
+  saleable curios. Finds are optional and remember when they have been looted.
+- Some discoveries have nearby cave wildlife. Encounters are placed away from
+  arrivals and the main route, with a clear approach and retreat; visited caves
+  are not repopulated when loading a save.
+- Three optional village requests reward donating one of each new fish:
+  Fernscale 40 gold, Cistern Bream 120 gold and Blind Deepfish 240 gold.
+  Use Shift+D at the General Store and Shift+C > Quests for details. Bonuses
+  are once per character; normal larder portions and donation XP still apply.
+- Expanded the Field Guide with fishing habitats, discoveries, curios and cave
+  wildlife. The quest log shows full request details on smaller interfaces.
+- Fixed a rare crash caused by stale item references and repeat state surviving
+  a return to Home or reload. Command history is now fully cleared on teardown.
+
+Back up saves before updating. Older saves can load without retrospective
+request rewards; new discoveries appear in newly generated cave sections.
+Saves written by 0.1.4 contain new request state and cannot be reopened in older
+releases. Keep the original save if you may want to go back.
+
 ## 0.1.3 (2026-10-21)
 
 - Full Tile joins ASCII and Hybrid, with 32x32 and 64x64 artwork for walls,

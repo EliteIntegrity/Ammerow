@@ -50,6 +50,14 @@
 #include "world-spelunking-runtime.h"
 #include "world-spelunking-system.h"
 
+void wr_village_requests(void)
+{
+	wr_byte(player->village_requests.count);
+	for (int i = 0; i < player->village_requests.count; i++)
+		wr_string(player->village_requests.completed[i]);
+	wr_byte(0xa7); /* Detect an exhausted/truncated optional block. */
+}
+
 void wr_advancement(void)
 {
 	wr_byte(player->advancement.highest);

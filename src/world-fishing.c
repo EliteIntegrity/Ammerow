@@ -64,8 +64,11 @@ static world_fishing_kind random_fish_kind(
 	int i;
 
 	for (i = 0; i < count; i++) {
+		const struct world_fishing_species *species =
+			world_fishing_species_by_kind((world_fishing_kind)i);
 		weights[i] = world_fishing_habitat_weight(runtime->habitat,
 			runtime->location_danger, (world_fishing_kind)i);
+		if (runtime->cave_depth < species->minimum_cave_depth) weights[i] = 0;
 	}
 	for (i = 0; i < count; i++) total += weights[i];
 	roll = fishing_random_range(runtime, 1, MAX(1, total));
@@ -107,7 +110,7 @@ static void configure_fish(struct world_fishing_runtime *runtime,
 
 void world_fishing_runtime_start(struct world_fishing_runtime *runtime,
 		uint32_t seed, enum world_fishing_habitat habitat,
-		int location_danger, int maximum_reach, int maximum_depth,
+		int location_danger, int cave_depth, int maximum_reach, int maximum_depth,
 		const char *rig_id, const char *rig_name, struct loc origin)
 {
 	const struct world_fishing_rules *rules = world_fishing_rules();
@@ -131,6 +134,8 @@ void world_fishing_runtime_start(struct world_fishing_runtime *runtime,
 		habitat < WORLD_FISHING_HABITAT_MAX ? habitat :
 		WORLD_FISHING_HABITAT_NONE;
 	runtime->location_danger = clamp_int(location_danger, 0, INT16_MAX);
+	runtime->cave_depth = runtime->habitat == WORLD_FISHING_HABITAT_CAVE_POOL ?
+		clamp_int(cave_depth, 0, INT16_MAX) : 0;
 	if (!rig_id || !world_id_is_valid(rig_id)) rig_id = "village-rig";
 	my_strcpy(runtime->rig_id, rig_id, sizeof(runtime->rig_id));
 	if (!rig_name || !rig_name[0]) rig_name = "Village rig";
@@ -178,7 +183,8 @@ bool world_fishing_runtime_is_valid(const struct world_fishing_runtime *runtime)
 			runtime->depth < 0 || runtime->depth > runtime->maximum_depth ||
 			runtime->habitat <= WORLD_FISHING_HABITAT_NONE ||
 			runtime->habitat >= WORLD_FISHING_HABITAT_MAX ||
-			runtime->location_danger < 0 || !runtime->rig_name[0] ||
+			runtime->location_danger < 0 || runtime->cave_depth < 0 ||
+			!runtime->rig_name[0] ||
 			runtime->fish_move_chance_percent < 0 ||
 			runtime->fish_move_chance_percent > 100 ||
 			runtime->fish_depth_move_chance_percent < 0 ||
@@ -570,6 +576,7 @@ int world_fishing_habitat_weight(enum world_fishing_habitat habitat,
 	}
 	danger = clamp_int(location_danger, 0, INT16_MAX);
 	weight = species->habitat_weights[habitat];
+	if (!weight) return 0;
 	/* Local danger gently favours tougher, more valuable catches without
 	 * replacing the authored habitat identity. */
 	weight += danger * species->danger_weight;

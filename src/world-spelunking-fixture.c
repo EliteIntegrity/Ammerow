@@ -74,12 +74,33 @@ static enum parser_error parse_fixture(struct parser *p, bool chest)
 }
 static enum parser_error parse_trap(struct parser *p) { return parse_fixture(p, false); }
 static enum parser_error parse_chest(struct parser *p) { return parse_fixture(p, true); }
+static enum parser_error parse_discovery(struct parser *p)
+{
+	struct fixture_data *parsed = parser_priv(p);
+	const char *id = parser_getsym(p, "id");
+	const char *description = parser_getsym(p, "description");
+	const char *note = parser_getstr(p, "note");
+	size_t i;
+	for (i = 0; i < parsed->count; i++) {
+		struct world_spelunk_fixture_definition *d = &parsed->entries[i];
+		if (!streq(id, d->id)) continue;
+		if (d->description[0]) return PARSE_ERROR_REPEATED_DIRECTIVE;
+		if (d->kind != SPELUNK_CHEST || d->lock_power || d->trap_id[0] ||
+			!description[0] || strlen(description) >= sizeof(d->description) ||
+			!note[0] || strlen(note) >= sizeof(d->note)) return PARSE_ERROR_INVALID_VALUE;
+		my_strcpy(d->description, description, sizeof(d->description));
+		my_strcpy(d->note, note, sizeof(d->note));
+		return PARSE_ERROR_NONE;
+	}
+	return PARSE_ERROR_MISSING_RECORD_HEADER;
+}
 static struct parser *init_fixtures(void)
 {
 	struct parser *p = parser_new();
 	parser_setpriv(p, mem_zalloc(sizeof(struct fixture_data)));
 	parser_reg(p, "trap sym id int search int disarm int damage str name", parse_trap);
 	parser_reg(p, "chest sym id int lock sym trap sym tval int count sym sval str name", parse_chest);
+	parser_reg(p, "discovery sym id sym description str note", parse_discovery);
 	return p;
 }
 static errr run_fixtures(struct parser *p) { return parse_file_quit_not_found(p, "spelunking_fixture"); }
@@ -297,6 +318,13 @@ bool world_spelunk_fixture_interact(struct player *p,
 		}
 		return true;
 	}
+	if (d->kind == SPELUNK_CHEST && f->known &&
+		f->state == SPELUNK_FIXTURE_SPENT && d->note[0]) {
+		if (p->timed[TMD_BLIND] || p->timed[TMD_IMAGE])
+			msg("You cannot read the survey note clearly just now.");
+		else msg("Survey note: %s", d->note);
+		return false; /* Rereading cannot spend a turn or refill the pocket. */
+	}
 	if (d->kind != SPELUNK_CHEST || !f->known || f->state == SPELUNK_FIXTURE_SPENT) {
 		msg("There is no closed chest there.");
 		return false;
@@ -339,6 +367,11 @@ bool world_spelunk_fixture_interact(struct player *p,
 	}
 	f->state = SPELUNK_FIXTURE_SPENT;
 	learn_fixture(r, f, true);
-	msgt(MSG_OPENDOOR, "You open the %s. Its supplies lie beside the empty chest.", d->name);
+	msgt(MSG_OPENDOOR, "You open the %s. Its contents lie beside the empty chest.", d->name);
+	if (d->note[0]) {
+		if (p->timed[TMD_BLIND] || p->timed[TMD_IMAGE])
+			msg("There is a survey note inside; use Open again when you can read it.");
+		else msg("Survey note: %s", d->note);
+	}
 	return true;
 }

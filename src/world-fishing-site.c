@@ -19,6 +19,7 @@
 #include "world-object-transfer.h"
 #include "world-spelunking-adapter.h"
 #include "world-spelunking-runtime.h"
+#include "world-spelunking-system.h"
 #include "world-turn.h"
 
 #include <limits.h>
@@ -83,6 +84,7 @@ enum world_fishing_site_result world_fishing_site_query(
 	context = world_turn_context_for_player(p);
 	candidate.habitat = level->fishing_habitat;
 	candidate.danger = level->danger;
+	candidate.cave_depth = 0;
 	switch (context) {
 	case WORLD_TURN_CONTEXT_TOP_DOWN:
 		candidate.origin = p->grid;
@@ -100,6 +102,15 @@ enum world_fishing_site_result world_fishing_site_query(
 		}
 		candidate.origin = loc(p->spelunking->state.x,
 			p->spelunking->state.y);
+		if (p->spelunking_system) {
+			const struct world_spelunk_system_node *node =
+				world_spelunk_system_node_by_id(p->spelunking_system,
+					p->spelunking_system->active_node_id);
+
+			if (node && node->runtime == p->spelunking) {
+				candidate.cave_depth = node->depth;
+			}
+		}
 		if (!p->spelunking->state.rules.action_energy ||
 				p->spelunking->state.rules.action_energy > INT_MAX) {
 			return WORLD_FISHING_SITE_INVALID;
@@ -131,6 +142,7 @@ bool world_fishing_site_matches(const struct player *p,
 	return site && world_fishing_site_query(p, chunk, &current) ==
 		WORLD_FISHING_SITE_OK && loc_eq(current.origin, site->origin) &&
 		current.habitat == site->habitat && current.danger == site->danger &&
+		current.cave_depth == site->cave_depth &&
 		current.action_energy == site->action_energy;
 }
 

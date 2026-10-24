@@ -33,6 +33,7 @@ struct world_fishing_site {
 	struct loc origin;
 	enum world_fishing_habitat habitat;
 	int danger;
+	int cave_depth;
 	int action_energy;
 };
 

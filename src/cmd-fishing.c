@@ -182,7 +182,8 @@ void do_cmd_fishing_start(struct command *cmd)
 	seed = (uint32_t)randint0(0x10000000) ^
 		(uint32_t)player->total_energy ^ 0x46495348U;
 	world_fishing_runtime_start(player->fishing, seed,
-		site.habitat, site.danger, rig->maximum_reach, rig->maximum_depth,
+		site.habitat, site.danger, site.cave_depth,
+		rig->maximum_reach, rig->maximum_depth,
 		rig->id, rig->name, site.origin);
 	fishing_presentation_changed();
 	msgt(MSG_FISHING_CAST,
@@ -208,13 +209,15 @@ void do_cmd_fishing_action(struct command *cmd)
 	session_site.origin = player->fishing->origin;
 	session_site.habitat = player->fishing->habitat;
 	session_site.danger = player->fishing->location_danger;
+	session_site.cave_depth = player->fishing->cave_depth;
 	session_site.action_energy = 0;
 	if (player->is_dead ||
 			world_fishing_site_query(player, cave, &current_site) !=
 				WORLD_FISHING_SITE_OK ||
 			!loc_eq(current_site.origin, session_site.origin) ||
 			current_site.habitat != session_site.habitat ||
-			current_site.danger != session_site.danger) {
+			current_site.danger != session_site.danger ||
+			current_site.cave_depth != session_site.cave_depth) {
 		stop_fishing();
 		msg("You are pulled away from the water; the fishing session ends.");
 		return;

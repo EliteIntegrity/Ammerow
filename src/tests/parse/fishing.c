@@ -101,6 +101,7 @@ static int test_complete_registry(void *unused)
 	eq(species->wind_needed, 5);
 	eq(species->bite_timeout, 6);
 	eq(species->danger_weight, 4);
+	eq(species->minimum_cave_depth, 0);
 	eq(species->larder_value, 9);
 	eq(species->catch_experience, 7);
 	eq(species->donation_experience, 3);
@@ -124,6 +125,8 @@ static int test_headers_duplicates_and_ranges(void *unused)
 	eq(parser_parse(p, "graphics:.:Blue"),
 		PARSE_ERROR_MISSING_RECORD_HEADER);
 	eq(parser_parse(p, "experience:1:1"),
+		PARSE_ERROR_MISSING_RECORD_HEADER);
+	eq(parser_parse(p, "minimum-cave-depth:3"),
 		PARSE_ERROR_MISSING_RECORD_HEADER);
 	eq(parser_parse(p, "population:0:4"), PARSE_ERROR_INVALID_VALUE);
 	eq(parser_parse(p, "population:2:4"), PARSE_ERROR_NONE);
@@ -164,6 +167,10 @@ static int test_headers_duplicates_and_ranges(void *unused)
 	eq(parser_parse(p, "depth-band:0:16"), PARSE_ERROR_INVALID_VALUE);
 	eq(parser_parse(p, "behavior:96:1:1"), PARSE_ERROR_INVALID_VALUE);
 	eq(parser_parse(p, "danger-bonus:-1"), PARSE_ERROR_INVALID_VALUE);
+	eq(parser_parse(p, "minimum-cave-depth:-1"), PARSE_ERROR_INVALID_VALUE);
+	eq(parser_parse(p, "minimum-cave-depth:32768"), PARSE_ERROR_INVALID_VALUE);
+	eq(parser_parse(p, "minimum-cave-depth:3"), PARSE_ERROR_NONE);
+	eq(parser_parse(p, "minimum-cave-depth:4"), PARSE_ERROR_REPEATED_DIRECTIVE);
 	eq(parser_parse(p, "larder-value:0"), PARSE_ERROR_INVALID_VALUE);
 	eq(parser_parse(p, "experience:-1:1"), PARSE_ERROR_INVALID_VALUE);
 	eq(parser_parse(p, "experience:1:-1"), PARSE_ERROR_INVALID_VALUE);
@@ -234,12 +241,56 @@ static int test_habitat_validation(void *unused)
 	ok;
 }
 
+static int test_specialist_validation(void *unused)
+{
+	int variant;
+	(void)unused;
+
+	/* An unrestricted species keeps every habitat usable. Add a specialist;
+	 * reject an empty habitat set and gates which pretend surface water is deep. */
+	for (variant = 0; variant < 4; variant++) {
+		struct parser *p = fishing_parser.init();
+		int i;
+
+		eq(parse_complete(p), PARSE_ERROR_NONE);
+		for (i = 8; i < (int)N_ELEMENTS(complete_lines); i++) {
+			const char *line = complete_lines[i];
+			char buffer[80];
+
+			if (prefix(line, "species:")) line = "species:specialist:Specialist";
+			if (prefix(line, "habitat:")) {
+				const char *last = strrchr(line, ':');
+				bool cave = prefix(line, "habitat:cave-pool:");
+				strnfmt(buffer, sizeof(buffer), "%.*s:%d", (int)(last - line),
+					line, variant != 1 && (cave || variant == 2) ? 5 : 0);
+				line = buffer;
+			}
+			eq(parser_parse(p, line), PARSE_ERROR_NONE);
+		}
+		if (variant != 3) {
+			eq(parser_parse(p, "minimum-cave-depth:3"), PARSE_ERROR_NONE);
+		}
+		eq(fishing_parser.finish(p), (variant == 1 || variant == 2) ?
+			PARSE_ERROR_INVALID_VALUE : PARSE_ERROR_NONE);
+		if (variant == 0 || variant == 3) {
+			world_fishing_kind kind = world_fishing_kind_by_id("specialist");
+			eq(world_fishing_habitat_weight(WORLD_FISHING_HABITAT_FOREST_POOL,
+				INT_MAX, kind), 0); /* Even with the authored danger bonus of 4. */
+			require(world_fishing_habitat_weight(WORLD_FISHING_HABITAT_CAVE_POOL,
+				0, kind) > 0);
+		}
+		fishing_parser.cleanup();
+	}
+	ok;
+}
+
 const char *suite_name = "parse/fishing";
 struct test tests[] = {
 	{ "complete registry", test_complete_registry },
 	{ "headers duplicates and ranges", test_headers_duplicates_and_ranges },
 	{ "incomplete species fails closed", test_incomplete_species_fails_closed },
 	{ "habitat validation", test_habitat_validation },
+	{ "specialist validation", test_specialist_validation },
 	{ "missing experience fails closed", test_missing_experience_fails_closed },
 	{ NULL, NULL }
 };

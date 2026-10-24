@@ -1233,6 +1233,7 @@ int ui_player_present_objectives(int *row_offset, int cursor,
 	const char *context_titles[PLAYER_SCREEN_ROW_CAPACITY] = { 0 };
 	const char *contexts[PLAYER_SCREEN_ROW_CAPACITY] = { 0 };
 	char briefing_context[1024] = "";
+	char selected_context[1024];
 	int count = 0;
 	int i;
 	int maximum_offset;
@@ -1251,7 +1252,7 @@ int ui_player_present_objectives(int *row_offset, int cursor,
 			my_strcpy(storage.statuses[count], complete ? "COMPLETE" : "MAIN",
 				sizeof(storage.statuses[count]));
 			strnfmt(storage.sources[count], sizeof(storage.sources[count]),
-				"Meridian %u — %s", definition->level,
+				"Meridian %u - %s", definition->level,
 				definition->reward ? definition->reward : "Required");
 			row->label = storage.labels[count];
 			row->prefix = storage.statuses[count];
@@ -1279,7 +1280,7 @@ int ui_player_present_objectives(int *row_offset, int cursor,
 		my_strcpy(storage.statuses[count], progress.complete ?
 			"COMPLETE" : "OPTIONAL", sizeof(storage.statuses[count]));
 		strnfmt(storage.sources[count], sizeof(storage.sources[count]),
-			"%u/%u — %s", progress.current, progress.target,
+			"%u/%u - %s", progress.current, progress.target,
 			definition->reward);
 		row->label = storage.labels[count];
 		row->prefix = storage.statuses[count];
@@ -1315,7 +1316,10 @@ int ui_player_present_objectives(int *row_offset, int cursor,
 		screen.context = briefing_context;
 	} else if (cursor >= 0) {
 		screen.context_title = context_titles[cursor];
-		screen.context = contexts[cursor];
+		/* Narrow layouts hide row details; the selected reward must still be visible. */
+		strnfmt(selected_context, sizeof(selected_context), "%s\n\n%s",
+			contexts[cursor], storage.sources[cursor]);
+		screen.context = selected_context;
 	}
 	screen.content_col = 4;
 	screen.content_row = PLAYER_SCREEN_CONTENT_ROW;
@@ -1397,69 +1401,80 @@ int ui_player_present_cave_survey(int *cursor, bool focused)
 void ui_player_present_fishing_quest_briefing(const char *subtitle, bool wait_for_ack)
 {
 	char body[4096] = "";
-	int i;
+	int i, requests = 0;
 	if (!player) return;
 	for (i = 0; i < world_objective_count(); i++) {
 		const struct world_objective_definition *objective =
 			world_objective_by_index(i);
+		if (objective->kind == WORLD_OBJECTIVE_DONATION) {
+			requests++;
+			continue;
+		}
 		my_strcat(body, objective->title, sizeof(body));
 		my_strcat(body, "\n", sizeof(body));
 		my_strcat(body, objective->description, sizeof(body));
 		my_strcat(body, "\n\n", sizeof(body));
+	}
+	if (requests) {
+		my_strcat(body, "The General Store also offers one-time gold rewards for "
+			"unusual fish. Donate with Shift+D; read the requests in Shift+C > Quests.",
+			sizeof(body));
 	}
 	ui_story_show("Work for willing hands", subtitle, body,
 		"These quests are optional. Press Shift+C > Quests at any time "
 		"to read each objective, its reward and your progress.", wait_for_ack);
 }
 
-static void display_player_objectives_terminal(void)
+static int display_player_objectives_terminal(int cursor)
 {
-	int i;
-	int row = 4;
+	int count = z_info->quest_max + world_objective_count();
+	int visible = MAX(1, Term->hgt - 14);
+	int first, detail_row;
+	const char *description = "", *reward = "", *title = "";
+	textblock *tb;
 
 	clear_from(0);
 	Term_putstr(2, 1, -1, COLOUR_L_BLUE, "Quest log");
-	for (i = 0; i < z_info->quest_max; i++) {
-		const struct quest *definition = &quests[i];
-		const char *description = definition->description ?
-			definition->description : "No description recorded.";
-		const char *reward = definition->reward ? definition->reward :
-			"No reward recorded.";
-		bool complete = player->quests[i].level == 0;
+	if (!count) return 0;
+	cursor = MIN(MAX(0, cursor), count - 1);
+	first = MAX(0, cursor - visible + 1);
+	for (int i = first; i < count && i < first + visible; i++) {
 		char line[160];
-
-		strnfmt(line, sizeof(line), "%s  [Meridian %u]  %s",
-			definition->name, definition->level,
-			complete ? "COMPLETE" : "MAIN");
-		Term_putstr(4, row++, -1,
-			complete ? COLOUR_L_GREEN : COLOUR_L_BLUE, line);
-		Term_putstr(6, row++, MIN(70, (int)strlen(description)),
-			COLOUR_WHITE, description);
-		Term_putstr(6, row++, MIN(70, (int)strlen(reward)), COLOUR_SLATE,
-			reward);
-		row++;
+		bool complete;
+		if (i < z_info->quest_max) {
+			const struct quest *q = &quests[i];
+			complete = player->quests[i].level == 0;
+			strnfmt(line, sizeof(line), "%s%s [Meridian %u] %s",
+				i == cursor ? "> " : "  ", q->name, q->level,
+				complete ? "COMPLETE" : "MAIN");
+			if (i == cursor) {
+				title = q->name; description = q->description; reward = q->reward;
+			}
+		} else {
+			const struct world_objective_definition *d =
+				world_objective_by_index(i - z_info->quest_max);
+			struct world_objective_progress progress;
+			world_objective_progress(player, d, &progress);
+			complete = progress.complete;
+			strnfmt(line, sizeof(line), "%s%s [%u/%u] %s",
+				i == cursor ? "> " : "  ", d->title, progress.current,
+				progress.target, complete ? "COMPLETE" : "OPTIONAL");
+			if (i == cursor) {
+				title = d->title; description = d->description; reward = d->reward;
+			}
+		}
+		Term_putstr(4, 3 + i - first, Term->wid - 8,
+			i == cursor ? COLOUR_L_BLUE : complete ? COLOUR_L_GREEN : COLOUR_WHITE,
+			line);
 	}
-	for (i = 0; i < world_objective_count(); i++) {
-		const struct world_objective_definition *definition =
-			world_objective_by_index(i);
-		struct world_objective_progress progress;
-		char line[160];
-
-		if (!definition || !world_objective_progress(player, definition,
-				&progress)) continue;
-		strnfmt(line, sizeof(line), "%s  [%u/%u]  %s", definition->title,
-			progress.current, progress.target,
-			progress.complete ? "COMPLETE" : "OPTIONAL");
-		Term_putstr(4, row++, -1,
-			progress.complete ? COLOUR_L_GREEN : COLOUR_YELLOW, line);
-		Term_putstr(6, row++, MIN(70,
-			(int)strlen(definition->description)), COLOUR_WHITE,
-			definition->description);
-		Term_putstr(6, row++, MIN(70,
-			(int)strlen(definition->reward)), COLOUR_SLATE,
-			definition->reward);
-		row++;
-	}
+	detail_row = 4 + MIN(count, visible);
+	tb = textblock_new();
+	textblock_append(tb, "%s\n\n", description ? description : "No description recorded.");
+	textblock_append_c(tb, COLOUR_SLATE, "%s", reward ? reward : "No reward recorded.");
+	textui_textblock_place(tb, (region){ 4, detail_row, Term->wid - 8,
+		Term->hgt - detail_row - 2 }, title);
+	textblock_free(tb);
+	return count;
 }
 
 static void display_player_cave_survey_terminal(int cursor)
@@ -1922,7 +1937,7 @@ void do_cmd_change_name(void)
 			 * semantic dossier is the sole presenter there: drawing both models
 			 * caused fragments from the legacy labels to prefix the new rows. */
 			if (mode == UI_PLAYER_CHARACTER_QUESTS) {
-				display_player_objectives_terminal();
+				objectives_count = display_player_objectives_terminal(objectives_cursor);
 			} else if (mode == UI_PLAYER_CHARACTER_CAVE_SURVEY) {
 				struct ui_spelunk_survey_model model;
 				survey_count = player->spelunking_system &&
@@ -1933,6 +1948,8 @@ void do_cmd_change_name(void)
 				display_player(mode);
 			}
 			Term_putstr(2, Term->hgt - 1, -1, COLOUR_WHITE,
+				mode == UI_PLAYER_CHARACTER_QUESTS ?
+				"Up/Down quest | Left/Right tabs | Esc close" :
 				mode == UI_PLAYER_CHARACTER_CAVE_SURVEY ?
 				(survey_focused ? "Arrows select | Tab next | Home here | Esc back to tabs" :
 				 "Enter explore survey | Left/Right tabs | Esc close") : p);

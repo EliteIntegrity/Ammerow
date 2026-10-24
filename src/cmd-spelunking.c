@@ -156,7 +156,7 @@ static bool interaction_candidate(const struct world_spelunk_runtime *r,
 	if (action == CAVE_DISARM)
 		return f && f->known && f->trap_known == SPELUNK_TRAP_ARMED;
 	if (action == CAVE_OPEN && f && f->known && def && def->kind == SPELUNK_CHEST)
-		return f->known != SPELUNK_FIXTURE_SPENT;
+		return f->known != SPELUNK_FIXTURE_SPENT || def->note[0];
 	return d && d->known && (action == CAVE_OPEN ?
 		d->known != WORLD_SPELUNK_DOOR_OPEN : d->known == WORLD_SPELUNK_DOOR_OPEN);
 }

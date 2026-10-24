@@ -1037,6 +1037,8 @@ tests/headless/scenarios/hud-bottom-large.scn
 tests/headless/scenarios/level-rewards-large.scn
 tests/headless/scenarios/level-rewards.scn
 tests/headless/scenarios/smoke.scn
+tests/headless/scenarios/village-request-log.scn
+tests/headless/scenarios/village-request-receipt.scn
 tests/run-test
 tests/trivial/matcher/input
 tests/trivial/matcher/matcher

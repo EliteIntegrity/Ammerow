@@ -258,12 +258,12 @@ static bool place_objects(struct world_spelunk_runtime *runtime,
 }
 
 static bool near_certified_route(const struct world_spelunk_generated_layout *g,
-	int x, int y)
+	int x, int y, int radius)
 {
 	size_t i;
 	for (i = 0; i < g->witness_step_count; i++) {
 		const struct world_spelunk_witness_step *step = &g->witness_steps[i];
-		if (abs(x-step->expected_x) <= 1 && abs(y-step->expected_y) <= 1) return true;
+		if (abs(x-step->expected_x) <= radius && abs(y-step->expected_y) <= radius) return true;
 	}
 	return false;
 }
@@ -279,7 +279,7 @@ static bool place_door(struct world_spelunk_runtime *r,
 		for (x = 1; x < g->width - 1; x++) {
 			uint32_t score;
 			if (!world_spelunk_door_site(r, x, y) ||
-				near_certified_route(g, x, y) ||
+				near_certified_route(g, x, y, 1) ||
 				!is_legal_population_cell(r, g, profile, x, y, 18, 85) ||
 				r->decoration_tags[y*g->width+x]) continue;
 			score = mix32(seed ^ 0x646f6f72u ^ (uint32_t)(y*g->width+x));
@@ -310,7 +310,7 @@ static bool place_fixture(struct world_spelunk_runtime *r,
 	for (y = 1; y < g->height - 1; y++) {
 		for (x = 1; x < g->width - 1; x++) {
 			uint32_t score;
-			if (near_certified_route(g, x, y) ||
+			if (near_certified_route(g, x, y, 1) ||
 				!is_legal_population_cell(r, g, profile, x, y, 24, 85) ||
 				world_spelunk_door_at(r, x, y) || world_spelunk_fixture_at(r, x, y) ||
 				r->pitons[y*g->width+x] || r->ropes[y*g->width+x] ||
@@ -320,6 +320,165 @@ static bool place_fixture(struct world_spelunk_runtime *r,
 		}
 	}
 	return best_x < 0 || world_spelunk_fixture_add(r, id, best_x, best_y);
+}
+
+/* Pockets use existing dry footing, never new carving. */
+static bool discovery_walk_cell(const struct world_spelunk_runtime *r, int x, int y)
+{
+	int w = r->state.map.width;
+	return x > 0 && x < w - 1 && y > 0 && y < r->state.map.height - 1 &&
+		r->cells[y*w+x] == WORLD_SPELUNK_AIR &&
+		r->cells[(y+1)*w+x] == WORLD_SPELUNK_ROCK &&
+		!world_spelunk_door_at(r, x, y) && !world_spelunk_fixture_at(r, x, y) &&
+		!world_spelunk_runtime_actor_at(r, x, y);
+}
+
+/* Prove each shelf step with the same grip/move rules used in play. Requiring
+ * this in BOTH directions avoids a tempting one-way drop masquerading as a
+ * safe detour. Each endpoint has footing, so the player can rest there. */
+static bool discovery_step(const struct world_spelunk_runtime *r,
+	int x, int y, int dx, int dy)
+{
+	struct world_spelunk_state state;
+	struct world_spelunk_command move = { WORLD_SPELUNK_COMMAND_MOVE, dx, dy };
+	struct world_spelunk_command grip = { WORLD_SPELUNK_COMMAND_GRIP, 0, 0 };
+	struct world_spelunk_action_report report;
+	int attempt;
+	if (!world_spelunk_state_init(&state, &r->state.map, &r->state.rules, x, y, 100)) return false;
+	for (attempt = 0; attempt <= 8; attempt++) {
+		struct world_spelunk_state trial = state;
+		if (world_spelunk_apply_command(&trial, &move, &report) != WORLD_SPELUNK_ACTION_REJECTED &&
+			!report.damage && trial.x == x + dx && trial.y == y + dy &&
+			trial.movement == WORLD_SPELUNK_STANDING) return true;
+		if (world_spelunk_apply_command(&state, &grip, &report) == WORLD_SPELUNK_ACTION_REJECTED) break;
+	}
+	return false;
+}
+
+/* Multi-source flood from the certified route, bounded to twelve reversible
+ * supported steps. This admits uneven chamber shelves without free-climbing
+ * an unproven shaft. Zero means unreachable; one is a route cell. */
+static uint8_t *discovery_access(const struct world_spelunk_runtime *r,
+	const struct world_spelunk_generated_layout *g)
+{
+	size_t count = (size_t)g->width*g->height, i, head = 0, tail = 0;
+	uint8_t *distance = mem_zalloc(count);
+	size_t *queue = mem_alloc(count*sizeof(*queue));
+	for (i = 0; i < g->witness_step_count; i++) {
+		int x = g->witness_steps[i].expected_x, y = g->witness_steps[i].expected_y;
+		if (discovery_walk_cell(r, x, y) && !distance[y*g->width+x]) {
+			size_t index = (size_t)y*g->width+x;
+			distance[index] = 1; queue[tail++] = index;
+		}
+	}
+	while (head < tail) {
+		size_t index = queue[head++];
+		int x = (int)(index % g->width), y = (int)(index / g->width), dx, dy;
+		if (distance[index] >= 13) continue;
+		for (dy = -1; dy <= 1; dy++) for (dx = -1; dx <= 1; dx++) {
+			int nx = x + dx, ny = y + dy;
+			size_t next;
+			if ((!dx && !dy) || !discovery_walk_cell(r, nx, ny)) continue;
+			next = (size_t)ny*g->width+nx;
+			if (distance[next] || !discovery_step(r, x, y, dx, dy) ||
+				!discovery_step(r, nx, ny, -dx, -dy)) continue;
+			distance[next] = distance[index] + 1; queue[tail++] = next;
+		}
+	}
+	mem_free(queue);
+	return distance;
+}
+
+/* Optional life beyond a find, never between it and the proven approach.
+ * The pre-fixture distance map proves a shorter way home on the opposite side.
+ * No carving, new rolls on opening, or changes to the ordinary population. */
+static bool place_discovery_guardian(struct world_spelunk_runtime *r,
+	const struct world_spelunk_generated_layout *g,
+	const struct world_spelunk_population_profile *profile, uint32_t seed,
+	const uint8_t *access, int x, int y)
+{
+	const struct world_spelunk_population_actor_entry *entry = NULL;
+	uint32_t salt = mix32(seed ^ 0x67756172u), best = UINT32_MAX;
+	int i, direction, best_x = -1, w = g->width;
+	if (!profile->discovery_guardian_id ||
+		salt % 100 >= profile->discovery_guardian_chance ||
+		r->actor_count >= WORLD_SPELUNK_ACTOR_MAX) return true;
+	for (i = 0; i < profile->actor_entry_count; i++) {
+		if (streq(profile->actors[i].actor_id, profile->discovery_guardian_id))
+			entry = &profile->actors[i];
+	}
+	if (!entry) return false;
+	/* An existing neighbour already supplies the encounter. Don't pile on. */
+	for (i = 0; i < (int)r->actor_count; i++) {
+		if (within_radius(x, y, r->actors[i].x, r->actors[i].y, 6)) return true;
+	}
+	for (direction = -1; direction <= 1; direction += 2) {
+		int approach = x - direction, distance;
+		if (!discovery_walk_cell(r, approach, y) || !access[y*w+approach] ||
+			access[y*w+approach] >= access[y*w+x]) continue;
+		for (distance = 1; distance <= 4; distance++) {
+			int gx = x + direction*distance;
+			size_t index;
+			uint32_t score;
+			if (!discovery_walk_cell(r, gx, y)) break;
+			index = (size_t)y*w+gx;
+			if (world_spelunk_runtime_ground_object_at(r, gx, y) ||
+				r->pitons[index] || r->ropes[index] ||
+				(r->decoration_tags && r->decoration_tags[index])) break;
+			if (distance < 2 || access[index] <= access[y*w+x] ||
+				near_certified_route(g, gx, y, 2) ||
+				!is_legal_population_cell(r, g, profile, gx, y,
+					entry->minimum_depth_percent, entry->maximum_depth_percent) ||
+				!world_spelunk_visibility_line_is_clear(r, approach, y, gx, y)) continue;
+			score = mix32(salt ^ (uint32_t)index);
+			if (best_x < 0 || score < best) { best = score; best_x = gx; }
+		}
+	}
+	return best_x < 0 || world_spelunk_runtime_add_actor(r,
+		profile->discovery_guardian_id, best_x, y);
+}
+
+static bool place_discovery(struct world_spelunk_runtime *r,
+	const struct world_spelunk_generated_layout *g,
+	const struct world_spelunk_population_profile *profile, uint32_t seed)
+{
+	const struct world_spelunk_population_discovery_entry *entry = NULL;
+	uint32_t salt = mix32(seed ^ 0x66696e64u), best = UINT32_MAX;
+	unsigned int total = 0, roll;
+	int i, x, y, best_x = -1, best_y = -1;
+	uint8_t *access;
+	bool placed = true;
+	if (!profile->discovery_entry_count || salt % 100 >= profile->discovery_chance)
+		return true;
+	for (i = 0; i < profile->discovery_entry_count; i++) total += profile->discoveries[i].weight;
+	if (!total) return false;
+	roll = mix32(salt ^ 0x76617279u) % total;
+	for (i = 0; i < profile->discovery_entry_count; i++) {
+		entry = &profile->discoveries[i];
+		if (roll < entry->weight) break;
+		roll -= entry->weight;
+	}
+	access = discovery_access(r, g);
+	for (y = 1; y < g->height - 1; y++) {
+		for (x = 1; x < g->width - 1; x++) {
+			uint32_t score;
+			if (near_certified_route(g, x, y, 1) ||
+				!is_legal_population_cell(r, g, profile, x, y,
+					entry->minimum_depth_percent, entry->maximum_depth_percent) ||
+				!discovery_walk_cell(r, x, y) ||
+				r->pitons[y*g->width+x] || r->ropes[y*g->width+x] ||
+				(r->decoration_tags && r->decoration_tags[y*g->width+x]) || !access[y*g->width+x]) continue;
+			score = mix32(salt ^ (uint32_t)(y*g->width+x));
+			if (score < best) { best = score; best_x = x; best_y = y; }
+		}
+	}
+	/* No safe side shelf: omit the find, with no replacement or generation retry. */
+	if (best_x >= 0) {
+		placed = world_spelunk_fixture_add(r, entry->fixture_id, best_x, best_y) &&
+			place_discovery_guardian(r, g, profile, seed, access, best_x, best_y);
+	}
+	mem_free(access);
+	return placed;
 }
 
 bool world_spelunk_populate_generated_runtime(
@@ -348,6 +507,7 @@ bool world_spelunk_populate_generated_runtime(
 		place_door(runtime, generated, profile, seed) &&
 		place_fixture(runtime, generated, profile, profile->trap_id, seed ^ 0x74726170u) &&
 		place_fixture(runtime, generated, profile, profile->chest_id, seed ^ 0x63686573u) &&
+		place_discovery(runtime, generated, profile, seed) &&
 		world_spelunk_runtime_is_valid(runtime);
 	if (!populated) {
 		runtime->fixture_count = 0;

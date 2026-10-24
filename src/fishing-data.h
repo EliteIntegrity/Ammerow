@@ -52,6 +52,8 @@ struct world_fishing_species {
 	int wind_needed;
 	int bite_timeout;
 	int danger_weight;
+	/* Minimum generated cave-section depth; zero means no section gate. */
+	int minimum_cave_depth;
 	uint32_t larder_value;
 	uint16_t catch_experience;
 	uint16_t donation_experience;

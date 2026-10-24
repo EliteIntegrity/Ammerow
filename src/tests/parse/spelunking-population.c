@@ -88,8 +88,76 @@ static int test_invalid_and_incomplete_fail_closed(void *unused)
 }
 
 const char *suite_name = "parse/spelunking-population";
+static int test_discoveries(void *unused)
+{
+	int variant, i;
+	(void)unused;
+	for (variant = 0; variant < 3; variant++) {
+		struct parser *p = spelunking_population_parser.init();
+		const struct world_spelunk_population_profile *profile;
+		eq(parser_parse(p, "discovery-chance:40"), PARSE_ERROR_MISSING_RECORD_HEADER);
+		eq(parser_parse(p, "discovery:test.find:1:10:80"), PARSE_ERROR_MISSING_RECORD_HEADER);
+		for (i = 0; i < (int)N_ELEMENTS(complete_lines); i++)
+			eq(parser_parse(p, complete_lines[i]), PARSE_ERROR_NONE);
+		eq(parser_parse(p, "discovery-chance:101"), PARSE_ERROR_INVALID_VALUE);
+		eq(parser_parse(p, "discovery:test.find:0:10:80"), PARSE_ERROR_INVALID_VALUE);
+		eq(parser_parse(p, "discovery:test.find:1:90:80"), PARSE_ERROR_INVALID_VALUE);
+		if (variant != 1) {
+			eq(parser_parse(p, "discovery-chance:40"), PARSE_ERROR_NONE);
+			eq(parser_parse(p, "discovery-chance:40"), PARSE_ERROR_REPEATED_DIRECTIVE);
+		}
+		if (variant != 2) {
+			eq(parser_parse(p, "discovery:test.find:2:24:85"), PARSE_ERROR_NONE);
+			eq(parser_parse(p, "discovery:test.find:2:24:85"), PARSE_ERROR_REPEATED_DIRECTIVE);
+		}
+		eq(spelunking_population_parser.finish(p), variant ? PARSE_ERROR_TOO_FEW_ENTRIES : PARSE_ERROR_NONE);
+		if (!variant) {
+			profile = world_spelunk_population_profile_by_index(0); notnull(profile);
+			eq(profile->discovery_chance, 40); eq(profile->discovery_entry_count, 1);
+			eq(profile->discoveries[0].weight, 2);
+			eq(profile->discoveries[0].minimum_depth_percent, 24);
+		}
+		spelunking_population_parser.cleanup();
+	}
+	ok;
+}
+static int test_guardians(void *unused)
+{
+	int variant, i;
+	(void)unused;
+	for (variant = 0; variant < 4; variant++) {
+		struct parser *p = spelunking_population_parser.init();
+		eq(parser_parse(p, "discovery-guardian:60:core.spelunk.actor.test"), PARSE_ERROR_MISSING_RECORD_HEADER);
+		for (i = 0; i < (int)N_ELEMENTS(complete_lines); i++)
+			eq(parser_parse(p, complete_lines[i]), PARSE_ERROR_NONE);
+		eq(parser_parse(p, "discovery-guardian:0:core.spelunk.actor.test"), PARSE_ERROR_INVALID_VALUE);
+		eq(parser_parse(p, "discovery-guardian:101:core.spelunk.actor.test"), PARSE_ERROR_INVALID_VALUE);
+		eq(parser_parse(p, "discovery-guardian:60:bad id"), PARSE_ERROR_INVALID_VALUE);
+		eq(parser_parse(p, variant == 2 ? "discovery-guardian:60:missing" :
+			"discovery-guardian:60:core.spelunk.actor.test"), PARSE_ERROR_NONE);
+		eq(parser_parse(p, "discovery-guardian:60:core.spelunk.actor.test"), PARSE_ERROR_REPEATED_DIRECTIVE);
+		if (variant != 1) {
+			eq(parser_parse(p, "discovery-chance:40"), PARSE_ERROR_NONE);
+			eq(parser_parse(p, "discovery:test.find:2:24:85"), PARSE_ERROR_NONE);
+		}
+		if (variant == 3)
+			eq(parser_parse(p, "actor:core.spelunk.actor.other:1:13:0:100"), PARSE_ERROR_NONE);
+		eq(spelunking_population_parser.finish(p), variant == 0 ? PARSE_ERROR_NONE :
+			(variant == 3 ? PARSE_ERROR_TOO_MANY_ENTRIES : PARSE_ERROR_INVALID_VALUE));
+		if (!variant) {
+			const struct world_spelunk_population_profile *profile = world_spelunk_population_profile_by_index(0);
+			notnull(profile); eq(profile->discovery_guardian_chance, 60);
+			require(streq(profile->discovery_guardian_id, "core.spelunk.actor.test"));
+		}
+		spelunking_population_parser.cleanup();
+	}
+	ok;
+}
+
 struct test tests[] = {
 	{ "complete profile", test_complete_profile },
+	{ "bounded optional discovery roster", test_discoveries },
+	{ "optional guardian requires discovery roster member and capacity", test_guardians },
 	{ "invalid and incomplete fail closed",
 		test_invalid_and_incomplete_fail_closed },
 	{ NULL, NULL }

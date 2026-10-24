@@ -24,7 +24,8 @@ enum population_field {
 	POPULATION_FIELD_DESCRIPTION = 0x02,
 	POPULATION_FIELD_EXCLUSION = 0x04,
 	POPULATION_FIELD_CONTENT = 0x08,
-	POPULATION_FIELD_REQUIRED = 0x0f
+	POPULATION_FIELD_REQUIRED = 0x0f,
+	POPULATION_FIELD_DISCOVERY_CHANCE = 0x10
 };
 
 struct population_record {
@@ -67,6 +68,10 @@ static void free_profile_strings(
 	string_free((char *)profile->door_id);
 	string_free((char *)profile->trap_id);
 	string_free((char *)profile->chest_id);
+	string_free((char *)profile->discovery_guardian_id);
+	for (i = 0; i < profile->discovery_entry_count; i++) {
+		string_free((char *)profile->discoveries[i].fixture_id);
+	}
 	for (i = 0; i < profile->actor_entry_count; i++) {
 		string_free((char *)profile->actors[i].actor_id);
 	}
@@ -287,6 +292,59 @@ static enum parser_error parse_population_fixture(struct parser *p, bool chest)
 static enum parser_error parse_population_trap(struct parser *p) { return parse_population_fixture(p, false); }
 static enum parser_error parse_population_chest(struct parser *p) { return parse_population_fixture(p, true); }
 
+static enum parser_error parse_discovery_chance(struct parser *p)
+{
+	struct population_parse_state *state = parser_priv(p);
+	int chance = parser_getint(p, "chance");
+	if (!state->current) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (state->current->fields & POPULATION_FIELD_DISCOVERY_CHANCE)
+		return PARSE_ERROR_REPEATED_DIRECTIVE;
+	if (chance < 1 || chance > 100) return PARSE_ERROR_INVALID_VALUE;
+	state->current->fields |= POPULATION_FIELD_DISCOVERY_CHANCE;
+	state->current->profile.discovery_chance = (uint16_t)chance;
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_discovery_guardian(struct parser *p)
+{
+	struct population_parse_state *state = parser_priv(p);
+	const char *id = parser_getsym(p, "actor");
+	int chance = parser_getint(p, "chance");
+	if (!state->current) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (state->current->profile.discovery_guardian_id) return PARSE_ERROR_REPEATED_DIRECTIVE;
+	if (!world_id_is_valid(id) || chance < 1 || chance > 100) return PARSE_ERROR_INVALID_VALUE;
+	state->current->profile.discovery_guardian_id = string_make(id);
+	state->current->profile.discovery_guardian_chance = (uint16_t)chance;
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_population_discovery(struct parser *p)
+{
+	struct population_parse_state *state = parser_priv(p);
+	struct world_spelunk_population_profile *profile;
+	struct world_spelunk_population_discovery_entry *entry;
+	const char *id = parser_getsym(p, "id");
+	int weight = parser_getint(p, "weight");
+	int minimum = parser_getint(p, "minimum-depth");
+	int maximum = parser_getint(p, "maximum-depth");
+	int i;
+	if (!state->current) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	profile = &state->current->profile;
+	if (!world_id_is_valid(id) || weight < 1 || weight > 100 ||
+		minimum < 0 || minimum > maximum || maximum > 100) return PARSE_ERROR_INVALID_VALUE;
+	if (profile->discovery_entry_count >= WORLD_SPELUNK_DISCOVERY_ENTRY_MAX)
+		return PARSE_ERROR_TOO_MANY_ENTRIES;
+	for (i = 0; i < profile->discovery_entry_count; i++) {
+		if (streq(id, profile->discoveries[i].fixture_id)) return PARSE_ERROR_REPEATED_DIRECTIVE;
+	}
+	entry = &profile->discoveries[profile->discovery_entry_count++];
+	entry->fixture_id = string_make(id);
+	entry->weight = (uint16_t)weight;
+	entry->minimum_depth_percent = (uint16_t)minimum;
+	entry->maximum_depth_percent = (uint16_t)maximum;
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_population(void)
 {
 	struct parser *p = parser_new();
@@ -298,6 +356,9 @@ static struct parser *init_parse_population(void)
 	parser_reg(p, "door sym id", parse_population_door);
 	parser_reg(p, "trap sym id", parse_population_trap);
 	parser_reg(p, "chest sym id", parse_population_chest);
+	parser_reg(p, "discovery-chance int chance", parse_discovery_chance);
+	parser_reg(p, "discovery-guardian int chance sym actor", parse_discovery_guardian);
+	parser_reg(p, "discovery sym id int weight int minimum-depth int maximum-depth", parse_population_discovery);
 	parser_reg(p, "description str description", parse_description);
 	parser_reg(p, "exclusion int entrance int landmark int endpoint",
 		parse_exclusion);
@@ -338,6 +399,7 @@ static errr finish_parse_population(struct parser *p)
 	}
 	for (record = state->records; record; record = record->next) {
 		unsigned int actor_total = 0;
+		bool guardian_listed = false;
 		int i;
 
 		if ((record->fields & POPULATION_FIELD_REQUIRED) !=
@@ -346,8 +408,25 @@ static errr finish_parse_population(struct parser *p)
 			parser_destroy(p);
 			return PARSE_ERROR_TOO_FEW_ENTRIES;
 		}
+		if (!!record->profile.discovery_chance != !!record->profile.discovery_entry_count) {
+			free_parse_state(state);
+			parser_destroy(p);
+			return PARSE_ERROR_TOO_FEW_ENTRIES;
+		}
 		for (i = 0; i < record->profile.actor_entry_count; i++) {
 			actor_total += record->profile.actors[i].maximum_count;
+			if (record->profile.discovery_guardian_id &&
+				streq(record->profile.discovery_guardian_id, record->profile.actors[i].actor_id))
+				guardian_listed = true;
+		}
+		if (record->profile.discovery_guardian_id) {
+			/* Reuse a validated actor and its band; do not silently invent a roster. */
+			if (!guardian_listed || !record->profile.discovery_entry_count) {
+				free_parse_state(state);
+				parser_destroy(p);
+				return PARSE_ERROR_INVALID_VALUE;
+			}
+			actor_total++;
 		}
 		if (actor_total > WORLD_SPELUNK_ACTOR_MAX) {
 			free_parse_state(state);
@@ -416,6 +495,12 @@ bool world_spelunk_population_data_validate_world(void)
 		const struct world_spelunk_fixture_definition *chest = world_spelunk_fixture_by_id(profile->chest_id);
 		if ((profile->trap_id && (!trap || trap->kind != SPELUNK_TRAP)) ||
 			(profile->chest_id && (!chest || chest->kind != SPELUNK_CHEST))) return false;
+		for (j = 0; j < profile->discovery_entry_count; j++) {
+			const struct world_spelunk_fixture_definition *d =
+				world_spelunk_fixture_by_id(profile->discoveries[j].fixture_id);
+			if (!d || d->kind != SPELUNK_CHEST || !d->description[0] ||
+				!d->note[0] || d->lock_power || d->trap_id[0]) return false;
+		}
 
 		if (profile->door_id && !world_spelunk_door_by_id(profile->door_id)) {
 			plog_fmt("Spelunking population %s has unknown door %s",

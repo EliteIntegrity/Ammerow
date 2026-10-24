@@ -42,6 +42,7 @@ struct fishing_species_record {
 	struct world_fishing_species species;
 	uint32_t fields;
 	uint32_t habitats;
+	bool cave_depth_seen;
 	struct fishing_species_record *next;
 };
 
@@ -490,6 +491,20 @@ static enum parser_error parse_fishing_behavior(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_fishing_cave_depth(struct parser *p)
+{
+	struct fishing_parse_state *state = parser_priv(p);
+	struct fishing_species_record *record = state->current;
+	int depth = parser_getint(p, "depth");
+
+	if (!record) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (record->cave_depth_seen) return PARSE_ERROR_REPEATED_DIRECTIVE;
+	if (depth < 0 || depth > INT16_MAX) return PARSE_ERROR_INVALID_VALUE;
+	record->species.minimum_cave_depth = depth;
+	record->cave_depth_seen = true;
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_fishing_danger(struct parser *p)
 {
 	struct fishing_parse_state *state = parser_priv(p);
@@ -643,6 +658,7 @@ static struct parser *init_parse_fishing(void)
 	parser_reg(p, "behavior int run int wind int timeout",
 		parse_fishing_behavior);
 	parser_reg(p, "danger-bonus int bonus", parse_fishing_danger);
+	parser_reg(p, "minimum-cave-depth int depth", parse_fishing_cave_depth);
 	parser_reg(p, "larder-value uint value", parse_fishing_larder);
 	parser_reg(p, "experience int catch int donation", parse_fishing_experience);
 	parser_reg(p, "habitat sym habitat int weight", parse_fishing_habitat);
@@ -692,18 +708,35 @@ static errr validate_fishing_state(const struct fishing_parse_state *state)
 		}
 	}
 	for (record = state->species; record; record = record->next) {
+		int total = 0;
+
 		if (record->fields != FISHING_FIELD_ALL ||
 				record->habitats != all_habitats) {
 			plog_fmt("Fishing species %s is incomplete", record->species.id);
 			return PARSE_ERROR_TOO_FEW_ENTRIES;
 		}
+		for (habitat = WORLD_FISHING_HABITAT_NONE + 1;
+				habitat < WORLD_FISHING_HABITAT_MAX; habitat++) {
+			int weight = record->species.habitat_weights[habitat];
+
+			/* A section-depth gate is meaningful only for cave pools. */
+			if (weight && record->species.minimum_cave_depth > 0 &&
+					habitat != WORLD_FISHING_HABITAT_CAVE_POOL) {
+				return PARSE_ERROR_INVALID_VALUE;
+			}
+			total += weight;
+		}
+		if (!total) return PARSE_ERROR_INVALID_VALUE;
 	}
 	for (habitat = WORLD_FISHING_HABITAT_NONE + 1;
 			habitat < WORLD_FISHING_HABITAT_MAX; habitat++) {
 		int total = 0;
 
 		for (record = state->species; record; record = record->next) {
-			total += record->species.habitat_weights[habitat];
+			/* Every habitat must also work at root/surface depth. */
+			if (!record->species.minimum_cave_depth) {
+				total += record->species.habitat_weights[habitat];
+			}
 		}
 		if (!total) {
 			plog_fmt("Fishing habitat %s has no species weight",

@@ -15,6 +15,7 @@
 #include "obj-tval.h"
 #include "player.h"
 #include "world-larder-data.h"
+#include "world-fishing.h"
 #include "world-objective-data.h"
 
 enum objective_field {
@@ -22,6 +23,7 @@ enum objective_field {
 	OBJECTIVE_TARGET = 0x02,
 	OBJECTIVE_REWARD = 0x04,
 	OBJECTIVE_COMPLETION_SOUND = 0x08,
+	OBJECTIVE_DONATION_GOLD = 0x10,
 	OBJECTIVE_ALL = 0x07
 };
 
@@ -87,7 +89,7 @@ static enum parser_error parse_objective(struct parser *p)
 
 	if (!world_id_is_valid(id) || !title[0] ||
 			(!streq(kind, "item") && !streq(kind, "larder") &&
-			 !streq(kind, "route"))) {
+			 !streq(kind, "route") && !streq(kind, "donation"))) {
 		return PARSE_ERROR_INVALID_VALUE;
 	}
 	for (record = state ? state->records : NULL; record;
@@ -104,7 +106,7 @@ static enum parser_error parse_objective(struct parser *p)
 	record->definition.title = string_make(title);
 	record->definition.kind = streq(kind, "item") ? WORLD_OBJECTIVE_ITEM :
 		streq(kind, "larder") ? WORLD_OBJECTIVE_LARDER :
-		WORLD_OBJECTIVE_ROUTE;
+		streq(kind, "route") ? WORLD_OBJECTIVE_ROUTE : WORLD_OBJECTIVE_DONATION;
 	record->next = state->records;
 	state->records = record;
 	state->current = record;
@@ -134,7 +136,8 @@ static enum parser_error parse_item_target(struct parser *p)
 	const char *name = parser_getstr(p, "name");
 
 	if (!state->current) return PARSE_ERROR_MISSING_RECORD_HEADER;
-	if (state->current->definition.kind != WORLD_OBJECTIVE_ITEM ||
+	if ((state->current->definition.kind != WORLD_OBJECTIVE_ITEM &&
+			state->current->definition.kind != WORLD_OBJECTIVE_DONATION) ||
 			!tval[0] || !name[0]) return PARSE_ERROR_INVALID_VALUE;
 	if (state->current->fields & OBJECTIVE_TARGET) {
 		return PARSE_ERROR_REPEATED_DIRECTIVE;
@@ -214,6 +217,20 @@ static enum parser_error parse_completion_sound(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_donation_gold(struct parser *p)
+{
+	struct objective_parse_state *state = parser_priv(p);
+	int gold = parser_getint(p, "amount");
+	if (!state->current) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (state->current->definition.kind != WORLD_OBJECTIVE_DONATION ||
+			gold < 1 || gold > 10000) return PARSE_ERROR_INVALID_VALUE;
+	if (state->current->fields & OBJECTIVE_DONATION_GOLD)
+		return PARSE_ERROR_REPEATED_DIRECTIVE;
+	state->current->definition.donation_gold = gold;
+	state->current->fields |= OBJECTIVE_DONATION_GOLD;
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_objectives(void)
 {
 	struct parser *p = parser_new();
@@ -226,6 +243,7 @@ static struct parser *init_parse_objectives(void)
 	parser_reg(p, "larder sym milestone", parse_larder_target);
 	parser_reg(p, "route sym route", parse_route_target);
 	parser_reg(p, "reward str text", parse_reward);
+	parser_reg(p, "donation-gold int amount", parse_donation_gold);
 	parser_reg(p, "completion-sound sym type", parse_completion_sound);
 	return p;
 }
@@ -250,7 +268,8 @@ static errr finish_parse_objectives(struct parser *p)
 			result = PARSE_ERROR_TOO_FEW_ENTRIES;
 			break;
 		}
-		if (record->definition.kind == WORLD_OBJECTIVE_ITEM) {
+		if (record->definition.kind == WORLD_OBJECTIVE_ITEM ||
+				record->definition.kind == WORLD_OBJECTIVE_DONATION) {
 			int tval = tval_find_idx(record->definition.tval_name);
 			int sval = tval >= 0 ?
 				lookup_sval(tval, record->definition.target_id) : -1;
@@ -261,6 +280,29 @@ static errr finish_parse_objectives(struct parser *p)
 			}
 			record->definition.tval = tval;
 			record->definition.sval = sval;
+			if (record->definition.kind == WORLD_OBJECTIVE_DONATION) {
+				bool fish = false;
+				struct objective_record *other;
+				for (int i = 0; i < world_fishing_species_count(); i++) {
+					if (tval == TV_FOOD && sval == lookup_sval(TV_FOOD,
+							world_fishing_kind_name((world_fishing_kind)i))) fish = true;
+				}
+				if (!fish || !(record->fields & OBJECTIVE_DONATION_GOLD)) {
+					result = PARSE_ERROR_INVALID_VALUE;
+					break;
+				}
+				/* A donation must have one unambiguous request reward. */
+				for (other = record->next; other; other = other->next) {
+					if (other->definition.kind == WORLD_OBJECTIVE_DONATION &&
+							other->definition.tval_name && other->definition.target_id &&
+							tval_find_idx(other->definition.tval_name) == tval &&
+							lookup_sval(tval, other->definition.target_id) == sval) {
+						result = PARSE_ERROR_REPEATED_DIRECTIVE;
+						break;
+					}
+				}
+				if (result != PARSE_ERROR_NONE) break;
+			}
 		}
 	}
 	if (result != PARSE_ERROR_NONE) {
@@ -326,6 +368,9 @@ bool world_objective_progress(const struct player *p,
 		}
 	} else if (definition->kind == WORLD_OBJECTIVE_LARDER) {
 		progress->current = MIN(p->larder.food_points, progress->target);
+	} else if (definition->kind == WORLD_OBJECTIVE_DONATION) {
+		progress->current = world_request_is_complete(&p->village_requests,
+			definition->id) ? 1 : 0;
 	} else {
 		progress->current = world_player_route_is_unlocked(p,
 			definition->target_id) ? 1 : 0;
@@ -355,4 +400,50 @@ int world_objective_item_completion_message(const struct player *p,
 		return definition->completion_message;
 	}
 	return MSG_GENERIC;
+}
+
+bool world_request_state_valid(const struct world_request_state *state)
+{
+	if (!state || state->count > WORLD_OBJECTIVE_MAX) return false;
+	for (int i = 0; i < state->count; i++) {
+		if (!memchr(state->completed[i], '\0', WORLD_ID_LEN) ||
+				!world_id_is_valid(state->completed[i])) return false;
+		for (int j = 0; j < i; j++) {
+			if (streq(state->completed[i], state->completed[j])) return false;
+		}
+	}
+	return true;
+}
+
+bool world_request_is_complete(const struct world_request_state *state,
+		const char *id)
+{
+	if (!id || !world_request_state_valid(state)) return false;
+	for (int i = 0; i < state->count; i++) {
+		if (streq(state->completed[i], id)) return true;
+	}
+	return false;
+}
+
+bool world_request_record(struct world_request_state *state, const char *id)
+{
+	if (!world_request_state_valid(state) || !world_id_is_valid(id) ||
+			state->count == WORLD_OBJECTIVE_MAX ||
+			world_request_is_complete(state, id)) return false;
+	my_strcpy(state->completed[state->count++], id, WORLD_ID_LEN);
+	state->initialized = true;
+	return true;
+}
+
+const struct world_objective_definition *world_objective_donation_request(
+		const struct player *p, const struct object *obj)
+{
+	if (!p || !obj || !obj->kind) return NULL;
+	for (int i = 0; i < objective_count; i++) {
+		const struct world_objective_definition *d = &objectives[i];
+		if (d->kind == WORLD_OBJECTIVE_DONATION &&
+				d->tval == obj->kind->tval && d->sval == obj->kind->sval &&
+				!world_request_is_complete(&p->village_requests, d->id)) return d;
+	}
+	return NULL;
 }

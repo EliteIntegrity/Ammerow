@@ -21,6 +21,7 @@
 #include "obj-util.h"
 #include "object.h"
 #include "player.h"
+#include "player-calcs.h"
 #include "store.h"
 #include "world-larder.h"
 #include "world-larder-data.h"
@@ -64,6 +65,7 @@ void do_cmd_larder_donate(struct command *cmd)
 	struct object *used;
 	struct world_larder_state updated;
 	struct world_larder_report report;
+	struct world_request_state requests;
 	world_fishing_kind kind;
 	char name[120];
 	bool none_left = false;
@@ -87,11 +89,24 @@ void do_cmd_larder_donate(struct command *cmd)
 	}
 	updated = player->larder;
 	if (!world_larder_donate(&updated, kind, quantity, &report)) return;
+	requests = player->village_requests;
+	report.request_completed = world_objective_donation_request(player, obj);
+	if (report.request_completed) {
+		report.request_gold = report.request_completed->donation_gold;
+		if (player->au > INT32_MAX - report.request_gold ||
+				!world_request_record(&requests, report.request_completed->id)) {
+			msg("The request reward cannot be recorded. You keep your fish.");
+			return;
+		}
+	}
 	object_desc(name, sizeof(name), obj,
 		ODESC_PREFIX | ODESC_BASE | ODESC_ALTNUM | (quantity << 16), player);
 	used = gear_object_for_use(player, obj, quantity, false, &none_left);
 	if (!used) return;
 	player->larder = updated;
+	player->village_requests = requests;
+	player->au += report.request_gold;
+	if (report.request_gold) player->upkeep->redraw |= PR_GOLD;
 	if (used->known) object_delete(player->cave, NULL, &used->known);
 	object_delete(cave, player->cave, &used);
 	if (report.experience) player_exp_gain(player, report.experience);
@@ -101,6 +116,11 @@ void do_cmd_larder_donate(struct command *cmd)
 		report.contributed_points == 1 ? "" : "s");
 	if (report.experience) {
 		msg("You gain %d XP for the donation.", report.experience);
+	}
+	if (report.request_completed) {
+		msgt(report.request_completed->completion_message,
+			"Village request complete: %s. You receive %d gold (once only).",
+			report.request_completed->title, report.request_gold);
 	}
 	if (report.milestone_reached) {
 		store_sync_larder_unlocks();

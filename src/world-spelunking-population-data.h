@@ -23,6 +23,12 @@
 #define WORLD_SPELUNK_POPULATION_COUNT_MAX 16
 #define WORLD_SPELUNK_POPULATION_TVAL_LEN 32
 #define WORLD_SPELUNK_POPULATION_SVAL_LEN 80
+#define WORLD_SPELUNK_DISCOVERY_ENTRY_MAX 8
+
+struct world_spelunk_population_discovery_entry {
+	const char *fixture_id;
+	uint16_t weight, minimum_depth_percent, maximum_depth_percent;
+};
 
 struct world_spelunk_population_actor_entry {
 	const char *actor_id;
@@ -50,6 +56,13 @@ struct world_spelunk_population_profile {
 	const char *door_id;
 	const char *trap_id;
 	const char *chest_id;
+	uint16_t discovery_chance;
+	/** Optional extra member of the normal roster, using its existing depth band. */
+	const char *discovery_guardian_id;
+	uint16_t discovery_guardian_chance;
+	uint16_t discovery_entry_count;
+	struct world_spelunk_population_discovery_entry
+		discoveries[WORLD_SPELUNK_DISCOVERY_ENTRY_MAX];
 	uint16_t version;
 	uint16_t entrance_exclusion_radius;
 	uint16_t landmark_exclusion_radius;

@@ -28,7 +28,7 @@ owner:20000:Kett Brassbuttons
 owner-art:kett-brassbuttons
 owner:30000:Selra Reed the Even-Handed
 owner-art:selra-reed-the-even-handed
-welcome:Supplies from the Nine Near Lands, weighed fairly and kept dry.
+welcome:Supplies kept dry. One-time fish requests pay gold: see Shift+C > Quests; Shift+D donates.
 slots:0:4
 turnover:2
 always:cloak:Cloak
@@ -297,6 +297,7 @@ store:STORE_BROKER
 broker
 art:black-market
 owner:0:The Catalogue Keeper
+owner-art:the-catalogue-keeper
 welcome:A finite catalogue for this lifetime only. Type and appraisal are known; identity and powers are sealed. No promise of a useful fit. Offers may become unavailable elsewhere; there are no replacements.
 slots:0:0
 turnover:0

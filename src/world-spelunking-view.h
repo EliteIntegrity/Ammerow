@@ -174,6 +174,7 @@ struct world_spelunk_inspect {
 	uint8_t fixture_state;
 	uint8_t trap_known;
 	const char *fixture_name;
+	const char *fixture_description;
 };
 
 /**

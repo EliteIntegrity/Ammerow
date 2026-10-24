@@ -44,6 +44,46 @@ donated. Glassfins give 2 XP for each. Donation XP counts fish, not portions;
 giving a stack at once pays the same as donating its fish individually. These
 small rewards continue after the larder unlock. Selling fish gives gold, not XP.
 
+Rare catches
+------------
+
+Fernscale lives only in forest pools, at line depths 7-11. Bring an Ash Water
+Rod or better. Its green fin and copper stripe are distinctive: a catch can
+be eaten, sold, or donated for 3 portions. Catching and donating each give 1 XP.
+
+Cistern Bream lives only in ruined cisterns, at line depths 10-16. An Ash Water
+Rod reaches the shallow end; a Yew Longline reaches the whole band. Expect a
+stronger pull. Eat it, sell it, or donate it for 6 portions; 2 XP for each catch
+and each donation.
+
+Blind Deepfish is rare in the deeper side-view cave pools: at least three
+section descents below the root cavern. It lives at line depths 13-16, requiring
+a Yew Longline. Lowering the line in a shallow cave section will not find one.
+It sells well, provides a generous meal, or contributes 10 portions; catching
+and donating each give 3 XP. It does not replace Glassfin in Sound the Underflow.
+
+All three remain optional. Your existing catches and village quest still work
+as before. Fishing and selling can fund supplies, but take turns, pack space
+and a journey back to a willing shop. Examine a catch for its habitat and uses.
+
+One-time village requests
+-------------------------
+
+The larder cook has three optional requests. Donate one Fernscale for 40 gold,
+one Cistern Bream for 120, or one Blind Deepfish for 240. All are available from
+the start: no need to accept them or finish the emergency reserve first.
+In the General Store use Shift+D (Donate), then choose a fish and quantity.
+Ordinary d sells instead; selling or eating a fish does not fulfil a request.
+
+The donation receipt announces the gold as well as the usual portions and XP.
+Each request pays once per character, even if you donate a stack. Keep surplus
+fish for food, sale, or further donations at the normal portions and XP rate.
+These are small thank-you gifts, not repeatable bounties or required progression.
+Shift+C > Quests shows the habitats, rewards and which requests are complete.
+
+Older characters can fulfil these requests too. Earlier catches and donations
+are not counted retrospectively; only a new donation fulfils a request.
+
 Cave pools
 ----------
 

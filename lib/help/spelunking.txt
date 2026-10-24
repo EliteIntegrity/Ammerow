@@ -91,6 +91,27 @@ Supplies are placed on the ground for g to pick up. An empty chest is marked _;
 it cannot be closed, reset or looted again. Existing saves retain their explored
 sections unchanged; new fixtures appear only in newly generated sections.
 
+Small discoveries off the route
+------------------------------
+
+Some newly explored sections contain an abandoned survey camp, a ledge cache
+or a specimen niche on a dry shelf. They are optional detours, not mandatory
+stops. Look describes the find. Stand beside it or on it and use o to open it:
+the contents go onto the ground for g to pick up. Reading a note again is free,
+but revisiting or reloading never replenishes its supplies.
+
+These named discoveries are unlocked and untrapped. That does not make every
+chest safe: ordinary survey supply chests may still have locks and traps.
+Camps hold modest supplies; ledge caches can hold healing; specimen niches
+hold survey curios. A Brass Survey Counter, Clouded Survey Lens or Knotted
+Stone Sample can be sold at the Fishing Shop. They have no secret powers and
+are not needed for a quest. The short notes tell you about earlier expeditions.
+
+Rats, skitters or beetles sometimes occupy the shelf beyond a find. They are
+present before you open it, not an ambush conjured by taking the supplies.
+Look and peek before committing; keep a clear retreat. You can leave the find
+alone. Not every section has a discovery, and visited sections are not restocked.
+
 Tunnelling and terrain
 ----------------------
 

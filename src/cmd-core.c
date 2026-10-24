@@ -548,13 +548,19 @@ void cmdq_release(void)
 {
 	int i;
 
-	cmdq_flush();
 	for (i = 0; i < CMD_QUEUE_SIZE; ++i) {
 		cmd_release(cmd_queue + i);
 	}
 	cmd_release(&last_command);
-	last_command.code = CMD_NULL;
+	/* Item arguments borrow objects owned by the run being torn down.
+	 * Clear all history after freeing strings so no later command or level
+	 * transition can inspect those objects after cleanup_angband() frees them. */
+	memset(cmd_queue, 0, sizeof(cmd_queue));
+	memset(&last_command, 0, sizeof(last_command));
+	cmd_head = cmd_tail = 0;
 	last_command_idx = -1;
+	repeat_prev_allowed = false;
+	repeating = false;
 }
 
 /**

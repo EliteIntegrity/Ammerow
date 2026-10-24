@@ -64,6 +64,36 @@
 #include "world-spelunking-layout-data.h"
 #include "world-spelunking-recipe-data.h"
 
+int rd_village_requests(void)
+{
+	struct world_request_state state = { 0 };
+	uint8_t end;
+	if (player->village_requests.initialized || rd_bytes_remaining() < 2) return -1;
+	state.initialized = true;
+	rd_byte(&state.count);
+	if (state.count > WORLD_OBJECTIVE_MAX) return -1;
+	for (int i = 0; i < state.count; i++) {
+		/* Reject exhaustion and overlength IDs, never silently accept a prefix. */
+		char id[WORLD_ID_LEN];
+		for (size_t j = 0; j < sizeof(id); j++) {
+			uint8_t c;
+			if (!rd_bytes_remaining()) return -1;
+			rd_byte(&c);
+			id[j] = (char)c;
+			if (!c) break;
+			if (j == sizeof(id) - 1) return -1;
+		}
+		if (!world_id_is_valid(id)) return -1;
+		my_strcpy(state.completed[i], id, WORLD_ID_LEN);
+	}
+	if (!rd_bytes_remaining()) return -1;
+	rd_byte(&end);
+	if (end != 0xa7) return -1;
+	if (!world_request_state_valid(&state)) return -1;
+	player->village_requests = state;
+	return 0;
+}
+
 int rd_advancement(void)
 {
 	struct player_advancement state = { 0 };
@@ -662,6 +692,17 @@ int rd_object_memory(void)
 		struct object_kind *kind = &k_info[i];
 
 		rd_byte(&tmp8u);
+
+		/* Known pre-Rare-Finds (408) and fish-only (411) tables end with an
+		 * empty sentinel, 20 class books and two artefact bases. Appended kinds
+		 * move that 23-entry tail, without changing the authored kind indices.
+		 * Do not reinterpret its knowledge/ignore flags as new fish or curios. */
+		if ((tmp16u == 408 || tmp16u == 411) &&
+			z_info->k_max > tmp16u && i >= tmp16u - 23) {
+			size_t moved = i + z_info->k_max - tmp16u;
+			if (moved >= z_info->k_max) return -1;
+			kind = &k_info[moved];
+		}
 
 		kind->aware = (tmp8u & 0x01) ? true : false;
 		kind->tried = (tmp8u & 0x02) ? true : false;

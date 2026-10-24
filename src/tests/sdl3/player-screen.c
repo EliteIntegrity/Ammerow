@@ -96,8 +96,8 @@ static int present_objectives(int cursor, bool briefing)
 	int row_offset = 0;
 	int count;
 
-	test_term.wid = 100;
-	test_term.hgt = 30;
+	test_term.wid = 80;
+	test_term.hgt = 24;
 	test_term.screen_hook = capture_screen;
 	Term = &test_term;
 	sdl3_screen_clear(&captured_screen);
@@ -117,12 +117,13 @@ static int test_quest_selection_owns_one_description(void *state)
 
 	require(first != NULL);
 	require(second != NULL);
-	eq(present_objectives(2, false), 5);
+	eq(present_objectives(2, false), 8);
 	eq(captured_screen.kind, UI_SCREEN_CHARACTER_DOSSIER);
 	eq(captured_screen.cursor, 2);
-	eq(captured_screen.row_count, 5);
+	eq(captured_screen.row_count, 8);
 	require(streq(captured_screen.context_title, first->title));
-	require(streq(captured_screen.context, first->description));
+	require(strstr(captured_screen.context, first->description));
+	require(strstr(captured_screen.context, first->reward));
 	require(streq(captured_screen.rows[0].label, quests[0].name));
 	require(streq(captured_screen.rows[0].prefix, "MAIN"));
 	require(streq(captured_screen.rows[2].label, first->title));
@@ -132,10 +133,10 @@ static int test_quest_selection_owns_one_description(void *state)
 	require(streq(captured_screen.tabs[2].label, "Quests"));
 	require(captured_screen.tabs[2].active);
 
-	eq(present_objectives(3, false), 5);
+	eq(present_objectives(3, false), 8);
 	eq(captured_screen.cursor, 3);
 	require(streq(captured_screen.context_title, second->title));
-	require(streq(captured_screen.context, second->description));
+	require(strstr(captured_screen.context, second->description));
 	require(!streq(captured_screen.context, first->description));
 	ok;
 }
@@ -153,14 +154,85 @@ static int test_selection_clamps_and_briefing_remains_collective(void *state)
 	require(first != NULL);
 	require(second != NULL);
 	require(third != NULL);
-	eq(present_objectives(99, false), 5);
-	eq(captured_screen.cursor, 4);
-	require(streq(captured_screen.context_title, third->title));
-	eq(present_objectives(-1, true), 3);
+	eq(present_objectives(99, false), 8);
+	eq(captured_screen.cursor, 7);
+	require(streq(captured_screen.context_title,
+		world_objective_by_id("deepwater-supper")->title));
+	eq(present_objectives(-1, true), 6);
 	eq(captured_screen.cursor, -1);
 	require(strstr(captured_screen.context, first->description) != NULL);
 	require(strstr(captured_screen.context, second->description) != NULL);
 	require(strstr(captured_screen.context, third->description) != NULL);
+	ok;
+}
+
+static int test_request_progress_and_description(void *state)
+{
+	const struct world_objective_definition *d = world_objective_by_id("forest-supper");
+	(void)state;
+	notnull(d);
+	eq(present_objectives(5, false), 8);
+	require(strstr(captured_screen.context, d->description));
+	require(strstr(captured_screen.context, d->reward));
+	require(strstr(captured_screen.context, "Shift+D"));
+	require(strstr(captured_screen.rows[5].detail, "40 gold once"));
+	require(streq(captured_screen.rows[5].prefix, "OPTIONAL"));
+	require(world_request_record(&player->village_requests, d->id));
+	eq(present_objectives(5, false), 8);
+	require(streq(captured_screen.rows[5].prefix, "COMPLETE"));
+	require(strstr(captured_screen.rows[5].detail, "1/1"));
+	memset(&player->village_requests, 0, sizeof(player->village_requests));
+	ok;
+}
+
+static int terminal_step;
+static bool terminal_request_visible;
+
+static errr terminal_quest_input(int action, int value)
+{
+	(void)value;
+	if (action == TERM_XTRA_EVENT) {
+		/* Only the quest page uses the legacy presenter in this fixture. */
+		if (terminal_step == 1) Term->screen_hook = NULL;
+		if (terminal_step < 2) Term_keypress(ARROW_RIGHT, 0);
+		else if (terminal_step < 9) Term_keypress(ARROW_DOWN, 0);
+		else if (terminal_step == 9) {
+			char text[80 * 24 + 1];
+			int pos = 0;
+			for (int y = 0; y < Term->hgt; y++) {
+				for (int x = 0; x < Term->wid; x++) {
+					int attr; wchar_t c;
+					Term_what(x, y, &attr, &c);
+					text[pos++] = c < 128 ? (char)c : '?';
+				}
+			}
+			text[pos] = '\0';
+			terminal_request_visible = strstr(text, "A Taste of the Deep") &&
+				strstr(text, "Donate one Blind Deepfish") && strstr(text, "240 gold once");
+			Term_keypress(ESCAPE, 0);
+		} else quit("Unexpected terminal quest prompt");
+		terminal_step++;
+	}
+	return 0;
+}
+
+static int test_terminal_requests_are_accessible(void *state)
+{
+	term terminal;
+	(void)state;
+	term_init(&terminal, 80, 24, 128);
+	terminal.screen_hook = capture_screen;
+	terminal.xtra_hook = terminal_quest_input;
+	term_screen = angband_term[0] = &terminal;
+	Term_activate(&terminal);
+	inkey_next = NULL;
+	terminal_step = 0; terminal_request_visible = false;
+	do_cmd_change_name();
+	term_nuke(&terminal);
+	term_screen = angband_term[0] = NULL;
+	eq(terminal_step, 10);
+	eq(screen_save_depth, 0);
+	require(terminal_request_visible);
 	ok;
 }
 
@@ -252,6 +324,8 @@ static int test_empty_survey_cannot_focus(void *state)
 
 const char *suite_name = "sdl3/player-screen";
 struct test tests[] = {
+	{ "terminal requests remain accessible at 80x24", test_terminal_requests_are_accessible },
+	{ "request progress and description", test_request_progress_and_description },
 	{ "quest selection owns one description",
 		test_quest_selection_owns_one_description },
 	{ "selection clamps and briefing remains collective",

@@ -19,6 +19,7 @@
 #define WORLD_LARDER_MILESTONE_NONE 0U
 
 struct world_larder_milestone_definition;
+struct world_objective_definition;
 
 struct world_larder_state {
 	uint32_t food_points;
@@ -29,6 +30,8 @@ struct world_larder_report {
 	uint32_t contributed_points;
 	int32_t experience;
 	const struct world_larder_milestone_definition *milestone_reached;
+	const struct world_objective_definition *request_completed;
+	int32_t request_gold;
 };
 
 void world_larder_reset(struct world_larder_state *state);

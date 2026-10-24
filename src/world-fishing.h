@@ -82,6 +82,7 @@ struct world_fishing_runtime {
 	int maximum_depth;
 	enum world_fishing_habitat habitat;
 	int location_danger;
+	int cave_depth;
 	char rig_id[WORLD_ID_LEN];
 	char rig_name[WORLD_FISHING_RIG_NAME_LEN];
 	int fish_move_chance_percent;
@@ -109,7 +110,7 @@ struct world_fishing_report {
 
 void world_fishing_runtime_start(struct world_fishing_runtime *runtime,
 		uint32_t seed, enum world_fishing_habitat habitat,
-		int location_danger, int maximum_reach, int maximum_depth,
+		int location_danger, int cave_depth, int maximum_reach, int maximum_depth,
 		const char *rig_id, const char *rig_name, struct loc origin);
 void world_fishing_runtime_cancel(struct world_fishing_runtime *runtime);
 bool world_fishing_runtime_is_valid(const struct world_fishing_runtime *runtime);

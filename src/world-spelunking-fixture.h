@@ -18,6 +18,8 @@ enum world_spelunk_trap_knowledge {
 struct world_spelunk_fixture_definition {
 	char id[WORLD_ID_LEN], name[80], trap_id[WORLD_ID_LEN];
 	char tval[32], sval[80];
+	/* Optional discovery text; stable fixture ID owns it, not the save payload. */
+	char description[160], note[256];
 	uint8_t kind, lock_power, quantity;
 	uint16_t search_power, disarm_power, damage;
 };

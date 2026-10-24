@@ -1,5 +1,6 @@
 # Compact optional objectives. Progress is derived from the named source of
-# truth; this file owns presentation and target linkage, never a second tally.
+# truth. Donation requests record completed stable IDs in the player save.
+# Keep IDs stable: changing a completed request's ID would make it payable again.
 
 objective:lost-longline:item:Lost Longline
 description:Acquire a Yew Longline Rod by recovering the one in the Deepwell or buying Mara's costly spare.
@@ -16,3 +17,24 @@ objective:underflow-sounding:route:Sound the Underflow
 description:Land a Glassfin at full Yew Longline depth in the Deepwell and trace the buried current.
 route:core.route.underflow.out
 reward:Reveal a reciprocal passage between the deepest cave and Meridian 5.
+
+objective:forest-supper:donation:Something Green for Supper
+description:The larder cook would like one Fernscale from a forest pool (line depth 7-11; Ash rod or better). Donate it at the General Store with Shift+D. No need to accept first; selling or eating it does not count.
+item:food:Fernscale
+donation-gold:40
+completion-sound:OBJECTIVE_COMPLETE
+reward:40 gold once per character, plus the normal donation portions and XP.
+
+objective:cistern-supper:donation:Not Another Minnow
+description:Bring the larder cook one Cistern Bream from a ruined cistern (line depth 10-16; Ash rod reaches the shallows, Yew the rest). Use Shift+D at the General Store. This is an optional, one-time request, not a shop unlock.
+item:food:Cistern Bream
+donation-gold:120
+completion-sound:OBJECTIVE_COMPLETE
+reward:120 gold once per character, plus the normal donation portions and XP.
+
+objective:deepwater-supper:donation:A Taste of the Deep
+description:Donate one Blind Deepfish at the General Store with Shift+D. Seek cave pools at section depth 3 or deeper, line depth 13-16, with a Yew Longline. Entirely optional: the cook can wait, and you still need a safe way home.
+item:food:Blind Deepfish
+donation-gold:240
+completion-sound:OBJECTIVE_COMPLETE
+reward:240 gold once per character, plus the normal donation portions and XP.

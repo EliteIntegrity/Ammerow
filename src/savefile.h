@@ -77,6 +77,7 @@ void wr_string(const char *str);
 void pad_bytes(int n);
 
 /* Reading bits */
+size_t rd_bytes_remaining(void);
 void rd_byte(uint8_t *ip);
 void rd_u16b(uint16_t *ip);
 void rd_s16b(int16_t *ip);
@@ -98,6 +99,7 @@ int rd_artifacts(void);
 int rd_player(void);
 int rd_player_resources(void);
 int rd_advancement(void);
+int rd_village_requests(void);
 int rd_ignore(void);
 int rd_misc(void);
 int rd_player_hp(void);
@@ -138,6 +140,7 @@ void wr_artifacts(void);
 void wr_player(void);
 void wr_player_resources(void);
 void wr_advancement(void);
+void wr_village_requests(void);
 void wr_ignore(void);
 void wr_misc(void);
 void wr_player_hp(void);

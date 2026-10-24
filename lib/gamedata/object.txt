@@ -5503,3 +5503,98 @@ flags:INSTA_ART | QUEST_ART
 
 #The "Special Artifacts" are now automatically generated from artifact.txt
 
+# Append new catch kinds: retain existing object-kind and food subtype indices.
+name:& Fernscale~
+art:fernscale
+type:food
+graphics:,:g
+level:0
+weight:2
+cost:24
+power:0
+msg:The Fernscale tastes faintly of rain and green hazelnuts.
+effect:NOURISH:INC_BY
+dice:10
+desc:Its copper stripe vanishes beneath a fern-shaped fin whenever it turns.
+desc: Village anglers claim it can hear a boot on moss; village anglers also
+desc: claim they meant to catch the small ones. Found only in forest pools at
+desc: line depths 7-11, beyond a Reed Bank Rod's reach. A nourishing catch worth
+desc: three larder portions, or gold at a willing shop. Catching and donating
+desc: each grant 1 XP.
+
+name:& Cistern Bream~
+art:cistern-bream
+type:food
+graphics:,:s
+level:0
+weight:5
+cost:90
+power:0
+msg:The Cistern Bream is firm, rich and surprisingly sweet.
+effect:NOURISH:INC_BY
+dice:18
+desc:A broad slate-blue fish with a brass-coloured gill plate. It has lived
+desc: among fallen masonry long enough to regard a fishing line as a boundary
+desc: dispute. Found only in ruined cisterns at line depths 10-16; an Ash Water
+desc: Rod reaches the shallowest fish, while a Yew Longline reaches them all.
+desc: A substantial meal, six larder portions, or a useful sale. Catching and
+desc: donating each grant 2 XP.
+
+name:& Blind Deepfish~
+art:blind-deepfish
+type:food
+graphics:,:w
+level:0
+weight:4
+cost:240
+power:0
+msg:The pale Deepfish provides a rich, delicate meal.
+effect:NOURISH:INC_BY
+dice:24
+desc:Ivory skin, pale fins and two searching whiskers: a fish that has no use
+desc: for daylight. The fishing shop pays well for proof that you went looking
+desc: for one. Rare in cave pools three or more section descents below the root
+desc: cavern, at line depths 13-16; requires a Yew Longline. A generous meal,
+desc: ten larder portions, or a valuable sale. Catching and donating each grant
+desc: 3 XP. Unlike Glassfin, this catch does not reveal the Underflow.
+
+# Optional survey curios. No powers and no ordinary loot/shop allocation.
+# Existing neutral treasure artwork is deliberately shared, not new source art.
+name:& Brass Survey Counter~
+art:gold
+type:tool
+graphics:*:y
+level:0
+weight:2
+cost:75
+flags:EASY_KNOW
+desc:A thumb-sized brass disc punched with a survey tally. It once counted
+desc: chambers; now it counts as a small curiosity. Sell it to the Fishing
+desc: Shop or Black Market if you wish. It has no powers and is not a quest key.
+
+name:& Clouded Survey Lens~
+art:amulet
+type:tool
+graphics:*:W
+level:0
+weight:3
+cost:120
+flags:EASY_KNOW
+desc:A cloudy glass lens in a plain metal rim, retired from an expedition's
+desc: sighting frame. Village collectors enjoy instruments with no remaining
+desc: responsibility. Sell it to the Fishing Shop or Black Market; it has no
+desc: powers and is not needed for a quest.
+
+name:& Knotted Stone Sample~
+art:loot-pile
+type:tool
+graphics:*:u
+level:0
+weight:8
+cost:180
+flags:EASY_KNOW
+desc:A palm-sized mineral knot, labelled by a surveyor who gave up explaining
+desc: it. Its only special property is somebody else's willingness to buy it.
+desc: Sell it to the Fishing Shop or Black Market. It grants no powers and
+desc: is not required for any quest.
+

@@ -43,7 +43,7 @@ static int test_start_is_bounded_and_valid(void *unused)
 
 	(void)unused;
 	world_fishing_runtime_start(&runtime, 7,
-		WORLD_FISHING_HABITAT_RAINWATER, 0,
+		WORLD_FISHING_HABITAT_RAINWATER, 0, 0,
 		WORLD_FISHING_BASELINE_MAX_REACH, WORLD_FISHING_DEPTH_ROWS,
 		"test-rig", "Test rig", loc(4, 5));
 	require(world_fishing_runtime_is_valid(&runtime));
@@ -82,7 +82,7 @@ static int test_moving_submerged_hook_causes_evasion(void *unused)
 
 	(void)unused;
 	world_fishing_runtime_start(&runtime, 29,
-		WORLD_FISHING_HABITAT_RAINWATER, 0,
+		WORLD_FISHING_HABITAT_RAINWATER, 0, 0,
 		WORLD_FISHING_BASELINE_MAX_REACH, WORLD_FISHING_DEPTH_ROWS,
 		"test-rig", "Test rig", loc(0, 0));
 	runtime.depth = 8;
@@ -116,7 +116,7 @@ static int test_only_stationary_exact_hook_bites(void *unused)
 
 	(void)unused;
 	world_fishing_runtime_start(&runtime, 11,
-		WORLD_FISHING_HABITAT_RAINWATER, 0, 15,
+		WORLD_FISHING_HABITAT_RAINWATER, 0, 0, 15,
 		WORLD_FISHING_DEPTH_ROWS, "test-rig", "Test rig", loc(0, 0));
 	runtime.depth = 2;
 	runtime.fish_move_chance_percent = 0;
@@ -150,7 +150,7 @@ static int test_strike_and_reel_land_fish(void *unused)
 
 	(void)unused;
 	world_fishing_runtime_start(&runtime, 19,
-		WORLD_FISHING_HABITAT_RAINWATER, 0, 15,
+		WORLD_FISHING_HABITAT_RAINWATER, 0, 0, 15,
 		WORLD_FISHING_DEPTH_ROWS, "test-rig", "Test rig", loc(0, 0));
 	exact_fish(&runtime);
 	require(world_fishing_apply(&runtime, WORLD_FISHING_WAIT, &report));
@@ -174,7 +174,7 @@ static int test_bite_timeout_and_cancel_are_safe(void *unused)
 
 	(void)unused;
 	world_fishing_runtime_start(&runtime, 23,
-		WORLD_FISHING_HABITAT_RAINWATER, 0, 15,
+		WORLD_FISHING_HABITAT_RAINWATER, 0, 0, 15,
 		WORLD_FISHING_DEPTH_ROWS, "test-rig", "Test rig", loc(0, 0));
 	exact_fish(&runtime);
 	require(world_fishing_apply(&runtime, WORLD_FISHING_WAIT, &report));
@@ -200,7 +200,7 @@ static int test_patience_attracts_visible_fish(void *unused)
 
 	(void)unused;
 	world_fishing_runtime_start(&runtime, 43,
-		WORLD_FISHING_HABITAT_RAINWATER, 0, 15,
+		WORLD_FISHING_HABITAT_RAINWATER, 0, 0, 15,
 		WORLD_FISHING_DEPTH_ROWS, "test-rig", "Test rig", loc(0, 0));
 	runtime.depth = 2;
 	runtime.patience_turns = 3;
@@ -244,7 +244,7 @@ static int test_patience_without_compatible_fish_remains_valid(void *unused)
 
 	(void)unused;
 	world_fishing_runtime_start(&runtime, 47,
-		WORLD_FISHING_HABITAT_RAINWATER, 0, 15,
+		WORLD_FISHING_HABITAT_RAINWATER, 0, 0, 15,
 		WORLD_FISHING_DEPTH_ROWS, "test-rig", "Test rig", loc(0, 0));
 	runtime.depth = 16;
 	runtime.patience_turns = 2;
@@ -314,7 +314,7 @@ static int test_habitat_and_rig_capabilities(void *unused)
 	eq(world_fishing_habitat_weight(WORLD_FISHING_HABITAT_OPEN_LAKE,
 		INT_MAX, glassfin), 20 + INT16_MAX * 3);
 	world_fishing_runtime_start(&runtime, 31,
-		WORLD_FISHING_HABITAT_OPEN_LAKE, 3, 4, 3,
+		WORLD_FISHING_HABITAT_OPEN_LAKE, 3, 0, 4, 3,
 		"short-test-rig", "Short test rig", loc(0, 0));
 	require(world_fishing_runtime_is_valid(&runtime));
 	for (i = 0; i < 3; i++) {
@@ -330,6 +330,134 @@ static int test_habitat_and_rig_capabilities(void *unused)
 	}
 	eq(runtime.rod_reach, 4);
 	require(!world_fishing_apply(&runtime, WORLD_FISHING_EXTEND, &report));
+	ok;
+}
+
+static int test_specialist_habitats_and_section_depth(void *unused)
+{
+	const char *ids[] = { "fernscale", "cistern-bream", "blind-deepfish" };
+	const enum world_fishing_habitat habitats[] = {
+		WORLD_FISHING_HABITAT_FOREST_POOL, WORLD_FISHING_HABITAT_RUIN_CISTERN,
+		WORLD_FISHING_HABITAT_CAVE_POOL };
+	int habitat, depth, seed;
+	int found[3] = { 0 };
+	(void)unused;
+
+	for (habitat = WORLD_FISHING_HABITAT_NONE + 1;
+			habitat < WORLD_FISHING_HABITAT_MAX; habitat++) {
+		for (depth = 0; depth <= 4; depth++) {
+			for (seed = 1; seed <= 512; seed++) {
+				struct world_fishing_runtime a, b;
+				int i;
+
+				world_fishing_runtime_start(&a, seed,
+					(enum world_fishing_habitat)habitat, 5, depth, 71, 16,
+					"yew-longline-rod", "Yew Longline Rod", loc(1, 1));
+				world_fishing_runtime_start(&b, seed,
+					(enum world_fishing_habitat)habitat, 5, depth, 71, 16,
+					"yew-longline-rod", "Yew Longline Rod", loc(1, 1));
+				require(world_fishing_runtime_is_valid(&a));
+				eq(memcmp(&a, &b, sizeof(a)), 0);
+				for (i = 0; i < a.fish_count; i++) {
+					int j;
+					for (j = 0; j < 3; j++) {
+						world_fishing_kind kind = world_fishing_kind_by_id(ids[j]);
+						require(kind != WORLD_FISHING_KIND_NONE);
+						if (a.fish[i].kind != kind) continue;
+						eq(habitat, habitats[j]);
+						if (j == 2) require(depth >= 3);
+						found[j]++;
+					}
+				}
+			}
+		}
+	}
+	require(found[0] > 0 && found[1] > 0 && found[2] > 0);
+	/* Existing registry IDs are unchanged, including the discovery fish. */
+	eq(rain_minnow, 0);
+	eq(mudbelly, 1);
+	eq(glassfin, 2);
+	ok;
+}
+
+static int test_specialist_depth_and_catch_effort(void *unused)
+{
+	const char *ids[] = { "fernscale", "cistern-bream", "blind-deepfish" };
+	const enum world_fishing_habitat habitats[] = {
+		WORLD_FISHING_HABITAT_FOREST_POOL, WORLD_FISHING_HABITAT_RUIN_CISTERN,
+		WORLD_FISHING_HABITAT_CAVE_POOL };
+	int j;
+	(void)unused;
+
+	for (j = 0; j < 3; j++) {
+		world_fishing_kind kind = world_fishing_kind_by_id(ids[j]);
+		const struct world_fishing_species *species = world_fishing_species_by_kind(kind);
+		int seed, catches = 0, total_reels = 0, total_fish = 0, total_specialist = 0;
+		const struct world_fishing_rig *reed = world_fishing_rig_by_id("reed-bank-rod");
+		const struct world_fishing_rig *ash = world_fishing_rig_by_id("ash-water-rod");
+		const struct world_fishing_rig *yew = world_fishing_rig_by_id("yew-longline-rod");
+
+		notnull(species);
+		notnull(reed); notnull(ash); notnull(yew);
+		require(species->depth_min > reed->maximum_depth);
+		require(species->depth_max <= yew->maximum_depth);
+		if (j < 2) require(species->depth_min <= ash->maximum_depth);
+		else require(species->depth_min > ash->maximum_depth);
+		for (seed = 1; seed <= 1024; seed++) {
+			struct world_fishing_runtime runtime;
+			struct world_fishing_report report;
+			struct world_fishing_fish specimen = { 0 };
+			bool present = false;
+			int i, reels;
+
+			world_fishing_runtime_start(&runtime, seed, habitats[j], 5, 3,
+				71, 16, yew->id, yew->name, loc(1, 1));
+			total_fish += runtime.fish_count;
+			for (i = 0; i < runtime.fish_count; i++) {
+				if (runtime.fish[i].kind == kind) {
+					specimen = runtime.fish[i];
+					present = true;
+					total_specialist++;
+				}
+			}
+			if (!present) continue;
+			/* Their normal motion/attraction cannot pull them into shallow water. */
+			runtime.fish[0] = specimen;
+			runtime.fish_count = 1;
+			runtime.depth = species->depth_min - 1;
+			for (i = 0; i < 100; i++) {
+				require(world_fishing_apply(&runtime, WORLD_FISHING_WAIT, &report));
+				require(runtime.fish[0].row >= species->depth_min);
+				require(runtime.fish[0].row <= species->depth_max);
+				require(report.event != WORLD_FISHING_EVENT_BITE);
+			}
+			/* Isolate the bite; keep the authored pull chance and winding effort. */
+			runtime.depth = species->depth_min;
+			runtime.fish[0].row = runtime.depth;
+			runtime.fish[0].col = world_fishing_hook_col(&runtime);
+			runtime.fish_move_chance_percent = 0;
+			runtime.fish_depth_move_chance_percent = 0;
+			require(world_fishing_apply(&runtime, WORLD_FISHING_WAIT, &report));
+			eq(report.event, WORLD_FISHING_EVENT_BITE);
+			require(world_fishing_apply(&runtime, WORLD_FISHING_STRIKE, &report));
+			for (reels = 1; reels <= 200; reels++) {
+				require(world_fishing_apply(&runtime, WORLD_FISHING_REEL, &report));
+				if (report.event == WORLD_FISHING_EVENT_LANDED) break;
+			}
+			require(reels <= 200);
+			eq(report.landed_kind, kind);
+			eq(runtime.fish_count, 0);
+			total_reels += reels;
+			catches++;
+			require(world_fishing_apply(&runtime, WORLD_FISHING_WAIT, &report));
+			require(report.event != WORLD_FISHING_EVENT_LANDED);
+		}
+		require(catches > 0);
+		printf("\nRare fish %s: %d/%d fish across 1024 sessions; %d catches, "
+			"%.2f mean reel turns (excludes finding/casting/waiting/travel).\n",
+			ids[j], total_specialist, total_fish, catches,
+			(double)total_reels / catches);
+	}
 	ok;
 }
 
@@ -366,5 +494,7 @@ struct test tests[] = {
 		test_patience_without_compatible_fish_remains_valid },
 	{ "phase-aware input", test_phase_aware_input },
 	{ "habitat and rig capabilities", test_habitat_and_rig_capabilities },
+	{ "specialist habitats and section depth", test_specialist_habitats_and_section_depth },
+	{ "specialist depth and catch effort", test_specialist_depth_and_catch_effort },
 	{ NULL, NULL }
 };

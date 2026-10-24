@@ -550,6 +550,7 @@ bool world_spelunk_view_inspect_system(
 			inspect->fixture_state = f->known;
 			inspect->trap_known = f->trap_known;
 			inspect->fixture_name = def->name;
+			inspect->fixture_description = def->description[0] ? def->description : NULL;
 			inspect->decoration = NULL;
 		}
 	}

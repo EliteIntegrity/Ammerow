@@ -152,7 +152,7 @@ struct expected_store_owner {
 
 static const struct expected_store_identity expected_store_identities[] = {
 	{ FEAT_STORE_GENERAL, 4,
-		"Supplies from the Nine Near Lands, weighed fairly and kept dry." },
+		"Supplies kept dry. One-time fish requests pay gold: see Shift+C > Quests; Shift+D donates." },
 	{ FEAT_STORE_ARMOR, 4,
 		"Repairs cost less than funerals. Try every strap before you trust it." },
 	{ FEAT_STORE_WEAPON, 4,
@@ -365,7 +365,7 @@ static int test_newgame(void *state) {
 	eq(store_kind_quantity(fishing_store, piton_kind), 24);
 	eq(store_kind_quantity(fishing_store, rope_kind), 200);
 	eq(store_kind_quantity(fishing_store, scuba_kind), 2);
-	eq(world_objective_count(), 3);
+	eq(world_objective_count(), 6);
 	longline_objective = world_objective_by_id("lost-longline");
 	reserve_objective = world_objective_by_id("emergency-reserve");
 	underflow_objective = world_objective_by_id("underflow-sounding");
@@ -821,6 +821,115 @@ static int test_standing_mark(void *state)
 	ok;
 }
 
+/* Home/reload cleanup must not leave item pointers for the next level exit. */
+static int test_command_cleanup_items(void *state)
+{
+	struct command *cmd;
+	int i;
+
+	(void)state;
+	reset_before_load();
+	require(savefile_load("Test1", false));
+	notnull(player->gear);
+	/* HELP has no handler: exercise repeat bookkeeping without using the item. */
+	eq(cmdq_push(CMD_HELP), 0);
+	cmd_set_arg_item(cmdq_peek(), "item", player->gear);
+	cmd_set_arg_string(cmdq_peek(), "note", "previous run");
+	require(cmdq_pop(CTX_GAME));
+	reset_before_load();
+	require(savefile_load("Test1", false));
+
+	/* Before the fix this reads the freed gear, reliably caught under ASan. */
+	cmd_disable_repeat_floor_item();
+	cmd = cmdq_peek();
+	eq(cmd->code, CMD_NULL);
+	for (i = 0; i < CMD_MAX_ARGS; ++i) eq(cmd->arg[i].type, arg_NONE);
+	require(!cmdq_pop(CTX_GAME));
+	require(cmdq_push(CMD_REPEAT) != 0);
+	/* Commands and ordinary repeat still work in the new run. */
+	eq(cmdq_push(CMD_HELP), 0);
+	require(cmdq_pop(CTX_GAME));
+	eq(cmdq_push(CMD_REPEAT), 0);
+	eq(cmdq_peek()->code, CMD_HELP);
+	require(cmdq_pop(CTX_GAME));
+	ok;
+}
+
+static int test_command_cleanup_pending_repeats(void *state)
+{
+	struct command *pending[64];
+	struct object *item;
+	struct object_kind *kind;
+	int count = 0, i, j;
+
+	(void)state;
+	reset_before_load();
+	require(savefile_load("Test1", false));
+	item = player->gear;
+	notnull(item);
+	kind = item->kind;
+	eq(cmdq_push(CMD_HELP), 0);
+	require(cmdq_pop(CTX_GAME));
+	cmd_set_repeat(4);
+	/* Fill every available slot, including owned strings and borrowed items. */
+	while (count < (int)N_ELEMENTS(pending) && !cmdq_push(CMD_HELP)) {
+		pending[count] = cmdq_peek();
+		cmd_set_arg_item(pending[count], "item", item);
+		cmd_set_arg_string(pending[count], "note", "pending command");
+		++count;
+	}
+	require(count > 0 && count < (int)N_ELEMENTS(pending));
+	cmdq_release();
+	eq(cmd_get_nrepeats(), 0);
+	require(!cmdq_pop(CTX_GAME));
+	require(cmdq_push(CMD_REPEAT) != 0);
+	for (i = 0; i < count; ++i) {
+		eq(pending[i]->code, CMD_NULL);
+		for (j = 0; j < CMD_MAX_ARGS; ++j) {
+			eq(pending[i]->arg[j].type, arg_NONE);
+		}
+	}
+	/* Releasing commands must not free their borrowed objects. */
+	ptreq(item->kind, kind);
+	cmdq_release();
+	cmd_disable_repeat_floor_item();
+	require(!cmdq_pop(CTX_GAME));
+	ok;
+}
+
+static int test_command_cleanup_wrapped_history(void *state)
+{
+	struct command *first;
+	const char *note;
+	int i;
+
+	(void)state;
+	reset_before_load();
+	require(savefile_load("Test1", false));
+	eq(cmdq_push(CMD_HELP), 0);
+	first = cmdq_peek();
+	cmd_set_arg_item(first, "item", player->gear);
+	cmd_set_arg_string(first, "note", "saved last command");
+	require(cmdq_pop(CTX_GAME));
+	/* Wrap the queue so the last foreground command lives in its own copy. */
+	for (i = 0; i < 64; ++i) {
+		eq(cmdq_push(CMD_HELP), 0);
+		cmdq_peek()->background_command = 1;
+		require(cmdq_pop(CTX_GAME));
+		if (cmdq_peek() == first) break;
+	}
+	require(i < 64);
+	eq(cmdq_push(CMD_REPEAT), 0);
+	eq(cmd_get_arg_string(cmdq_peek(), "note", &note), CMD_OK);
+	require(streq(note, "saved last command"));
+	cmdq_release();
+	cmdq_release();
+	cmd_disable_repeat_floor_item();
+	require(!cmdq_pop(CTX_GAME));
+	require(cmdq_push(CMD_REPEAT) != 0);
+	ok;
+}
+
 const char *suite_name = "game/basic";
 struct test tests[] = {
 	{ "newgame", test_newgame },
@@ -832,5 +941,8 @@ struct test tests[] = {
 	{ "dropeat", test_drop_eat },
 	{ "store backfill", test_store_backfill },
 	{ "standing mark", test_standing_mark },
+	{ "command cleanup discards old item references", test_command_cleanup_items },
+	{ "command cleanup cancels pending commands and repeats", test_command_cleanup_pending_repeats },
+	{ "command cleanup releases wrapped history twice safely", test_command_cleanup_wrapped_history },
 	{ NULL, NULL }
 };

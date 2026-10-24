@@ -8,8 +8,8 @@ This index uses the roguelike keyset. Choose a section by letter:
     (b) Map symbols
     (c) Interface and accessibility
     (d) The known world and travel
-    (e) Fishing
-    (f) Side-view cave controls
+    (e) Fishing and village requests
+    (f) Side-view caves and discoveries
 
 
 

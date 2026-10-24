@@ -21,6 +21,7 @@
 #include "ui-story.h"
 #include "world-larder.h"
 #include "world-larder-data.h"
+#include "world-objective-data.h"
 
 #define UI_STORE_SCREEN_CAPACITY 64
 
@@ -51,7 +52,14 @@ void ui_store_screen_present_donation(const struct store *store,
 		}
 		my_strcat(body, progress, sizeof(body));
 	}
-	ui_story_show(report->milestone_reached ? "The larder is ready" :
+	if (report->request_completed) {
+		strnfmt(progress, sizeof(progress), "\n\nRequest complete: %s\n"
+			"One-time reward: %d gold. Further donations give normal portions and XP.",
+			report->request_completed->title, report->request_gold);
+		my_strcat(body, progress, sizeof(body));
+	}
+	ui_story_show(report->request_completed ? "A request fulfilled" :
+		report->milestone_reached ? "The larder is ready" :
 		"A gift for the village", store && store->owner ?
 		store->owner->name : "General Store", body,
 		"Shift+C > Quests records your objectives and progress.", wait_for_ack);

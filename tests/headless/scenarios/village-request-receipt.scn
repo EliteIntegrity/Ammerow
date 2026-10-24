@@ -1,0 +1,16 @@
+# Preview a request and reserve completion together, without granting rewards.
+name:village-request-receipt
+seed:20261023
+race:Nearlander
+class:Warrior
+player:Request Tester
+location:core.hub
+entry:default
+bot:scripted
+capture:final
+expect:complete
+screen-width:1024
+screen-height:768
+action:inspect:settings:density
+action:inspect:settings:density
+action:inspect:donation-request

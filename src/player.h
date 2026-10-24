@@ -32,6 +32,7 @@
 #include "option.h"
 #include "world-location.h"
 #include "world-larder.h"
+#include "world-objective-data.h"
 #include "relic-broker.h"
 #include "player-advancement.h"
 
@@ -581,6 +582,7 @@ struct player {
 	struct world_id_ledger activated_travel_nodes;
 	struct world_overworld_layout overworld_layout;
 	struct world_larder_state larder;
+	struct world_request_state village_requests;
 	struct relic_broker_state broker;
 	/** Owns every visited side-view section. */
 	struct world_spelunk_system *spelunking_system;

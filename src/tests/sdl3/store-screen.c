@@ -416,13 +416,15 @@ static int test_quest_briefing_requires_acknowledgement(void *state)
 
 static int test_donation_receipt_returns_to_shop(void *state)
 {
-	struct object_kind *kind = lookup_kind(TV_FOOD, lookup_sval(TV_FOOD, "Rain Minnow"));
 	(void)state;
-	notnull(kind);
 	square_set_feat(cave, player->grid, FEAT_STORE_GENERAL);
-	for (int completion = 0; completion < 2; completion++) {
+	for (int completion = 0; completion < 4; completion++) {
+		struct object_kind *kind = lookup_kind(TV_FOOD, lookup_sval(TV_FOOD,
+			completion >= 2 ? "Fernscale" : "Rain Minnow"));
 		struct object *obj = object_new();
 		int32_t experience = player->exp;
+		int32_t gold = player->au;
+		notnull(kind);
 		world_larder_reset(&player->larder);
 		if (completion) {
 			const struct world_larder_milestone_definition *next =
@@ -437,7 +439,8 @@ static int test_donation_receipt_returns_to_shop(void *state)
 		inven_carry(player, obj, false, false);
 		for (obj = player->gear; obj && obj->kind != kind; obj = obj->next) { }
 		notnull(obj);
-		story_text = completion ? "Expedition Rations" : "Experience earned: 1 XP";
+		story_text = completion == 2 ? "One-time reward: 40 gold" :
+			completion ? "Expedition Rations" : "Experience earned: 1 XP";
 		begin_input();
 		input_step('D', STOCK);
 		input_step(gear_to_label(player, obj), ITEM);
@@ -449,6 +452,7 @@ static int test_donation_receipt_returns_to_shop(void *state)
 		require(views_ok);
 		eq(screen_save_depth, 0);
 		eq(player->exp, experience + 1);
+		eq(player->au, gold + (completion == 2 ? 40 : 0));
 	}
 	ok;
 }

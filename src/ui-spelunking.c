@@ -222,6 +222,15 @@ bool textui_spelunking_describe(const struct player *p, int x, int y,
 			inspect.fixture_state == SPELUNK_FIXTURE_SPENT ? "" : " Use D to disarm.");
 		break;
 	case WORLD_SPELUNK_INSPECT_CHEST:
+		if (inspect.fixture_description) {
+			strnfmt(description, capacity, "%s%s (%s). %s %s", memory,
+				inspect.fixture_name,
+				inspect.fixture_state == SPELUNK_FIXTURE_SPENT ? "empty" : "closed",
+				inspect.fixture_state == SPELUNK_FIXTURE_SPENT ?
+				"Use o to reread its note." : "Use o to search it.",
+				inspect.fixture_description);
+			break;
+		}
 		strnfmt(description, capacity, "%s%s (%s%s).%s", memory, inspect.fixture_name,
 			inspect.fixture_state == SPELUNK_FIXTURE_SPENT ? "open, empty" :
 			inspect.fixture_state == SPELUNK_FIXTURE_LOCKED ? "locked" : "closed",

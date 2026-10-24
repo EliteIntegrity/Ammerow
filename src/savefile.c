@@ -129,6 +129,7 @@ static const struct {
 	{ "player", wr_player, 1 },
 	{ "resources", wr_player_resources, 1 },
 	{ "advancement", wr_advancement, 1 },
+	{ "village claims", wr_village_requests, 1 },
 	{ "ignore", wr_ignore, 1 },
 	{ "misc", wr_misc, 1 },
 	{ "artifacts", wr_artifacts, 1 },
@@ -162,6 +163,7 @@ static const struct blockinfo loaders[] = {
 	{ "player", rd_player, 1 },
 	{ "resources", rd_player_resources, 1 },
 	{ "advancement", rd_advancement, 1 },
+	{ "village claims", rd_village_requests, 1 },
 	{ "ignore", rd_ignore, 1 },
 	{ "misc", rd_misc, 1 },
 	{ "artifacts", rd_artifacts, 1 },
@@ -249,6 +251,12 @@ static uint8_t sf_get(void)
 	buffer_check += buffer[buffer_pos];
 
 	return buffer[buffer_pos++];
+}
+
+/* For bounded readers inside load_block(); includes at most three pad bytes. */
+size_t rd_bytes_remaining(void)
+{
+	return buffer && buffer_size > buffer_pos ? buffer_size - buffer_pos : 0;
 }
 
 
@@ -439,6 +447,7 @@ bool savefile_save(const char *path)
 	player_resources_ensure(player);
 	player_advancement_ensure(player);
 	if (!player_advancement_valid(&player->advancement)) return false;
+	if (!world_request_state_valid(&player->village_requests)) return false;
 	if (!relic_broker_state_valid(&player->broker)) return false;
 	if (player->spelunking && !world_spelunk_player_sync_resources(player)) {
 		return false;
@@ -713,8 +722,10 @@ bool savefile_load(const char *path, bool cheat_death)
 		return false;
 	}
 
-	/* A missing block is an older save, not a supply of unclaimed rewards. */
+	/* Older saves must not receive retrospective level rewards. */
 	memset(&player->advancement, 0, sizeof(player->advancement));
+	/* Old runs have no completed requests; only a new donation can pay. */
+	memset(&player->village_requests, 0, sizeof(player->village_requests));
 	ok = try_load(f, loaders);
 	file_close(f);
 	if (ok) player_advancement_ensure(player);

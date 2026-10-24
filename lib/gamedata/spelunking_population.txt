@@ -1,8 +1,18 @@
 # Deterministic population profiles for generated side-view cave sections.
 # Counts, depth bands and protected-space radii are data. Placement uses the
 # section seed and never advances gameplay randomness.
+# discovery-guardian is a conditional extra actor from this profile's roster,
+# retaining its depth band. Unsafe/crowded sites skip it, without moving the find.
 
 profile:deepwell.upper-sparse:1
+discovery-chance:40
+discovery-guardian:60:core.spelunk.actor.cave-rat
+discovery:core.spelunk.find.rope-camp:3:24:85
+discovery:core.spelunk.find.ration-camp:3:24:85
+discovery:core.spelunk.find.ledge-cache:3:24:85
+discovery:core.spelunk.find.counter-niche:2:24:85
+discovery:core.spelunk.find.lens-niche:2:24:85
+discovery:core.spelunk.find.stone-niche:1:24:85
 trap:core.spelunk.trap.spring
 chest:core.spelunk.chest.supplies
 door:core.spelunk.door.survey
@@ -16,6 +26,14 @@ object:potion:1:2:20:88:Cure Light Wounds
 object:scroll:0:1:30:88:Magic Mapping
 
 profile:deepwell.gallery-sparse:1
+discovery-chance:40
+discovery-guardian:60:core.spelunk.actor.chasm-skitter
+discovery:core.spelunk.find.rope-camp:3:24:85
+discovery:core.spelunk.find.ration-camp:3:24:85
+discovery:core.spelunk.find.ledge-cache:3:24:85
+discovery:core.spelunk.find.counter-niche:2:24:85
+discovery:core.spelunk.find.lens-niche:2:24:85
+discovery:core.spelunk.find.stone-niche:1:24:85
 trap:core.spelunk.trap.spring
 chest:core.spelunk.chest.store
 door:core.spelunk.door.survey
@@ -29,6 +47,14 @@ object:potion:1:2:18:92:Cure Light Wounds
 object:scroll:0:1:28:92:Magic Mapping
 
 profile:deepwell.fault-sparse:1
+discovery-chance:40
+discovery-guardian:60:core.spelunk.actor.stone-beetle
+discovery:core.spelunk.find.rope-camp:3:24:85
+discovery:core.spelunk.find.ration-camp:3:24:85
+discovery:core.spelunk.find.ledge-cache:3:24:85
+discovery:core.spelunk.find.counter-niche:2:24:85
+discovery:core.spelunk.find.lens-niche:2:24:85
+discovery:core.spelunk.find.stone-niche:1:24:85
 trap:core.spelunk.trap.stone
 chest:core.spelunk.chest.store
 door:core.spelunk.door.store

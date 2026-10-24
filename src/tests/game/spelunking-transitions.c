@@ -863,7 +863,33 @@ static int test_spelunking_fishing_site(void *state)
 	require(loc_eq(site.origin, loc(2, 4)));
 	eq(site.habitat, WORLD_FISHING_HABITAT_CAVE_POOL);
 	eq(site.action_energy, 100);
+	eq(site.cave_depth, 0); /* Legacy standalone runtime is not a deep section. */
 	require(world_fishing_site_matches(player, NULL, &site));
+	{
+		/* A synthetic section identity isolates the site's authority from danger
+		 * and Angband's envelope depth. Restore the fixture before continuing. */
+		struct world_spelunk_system system = { 0 };
+		struct world_spelunk_system *saved_system = player->spelunking_system;
+		int16_t saved_depth = player->depth;
+
+		my_strcpy(system.active_node_id, "test.deep", sizeof(system.active_node_id));
+		my_strcpy(system.nodes[0].id, "test.deep", sizeof(system.nodes[0].id));
+		system.node_count = 1;
+		system.nodes[0].runtime = player->spelunking;
+		system.nodes[0].depth = 3;
+		player->spelunking_system = &system;
+		player->depth = 99;
+		eq(world_fishing_site_query(player, NULL, &site), WORLD_FISHING_SITE_OK);
+		eq(site.cave_depth, 3);
+		require(world_fishing_site_matches(player, NULL, &site));
+		system.nodes[0].depth = 2;
+		require(!world_fishing_site_matches(player, NULL, &site));
+		system.nodes[0].runtime = NULL;
+		eq(world_fishing_site_query(player, NULL, &site), WORLD_FISHING_SITE_OK);
+		eq(site.cave_depth, 0); /* Mismatched system must not unlock rare fish. */
+		player->spelunking_system = saved_system;
+		player->depth = saved_depth;
+	}
 	player->spelunking->state.x = 3;
 	player->spelunking->state.movement = WORLD_SPELUNK_SWIMMING;
 	require(world_fishing_site_query(player, NULL, &site) ==
@@ -1060,10 +1086,13 @@ static bool generated_node_population_is_valid(
 			if (depth < entry->minimum_depth_percent || depth > entry->maximum_depth_percent) return false;
 			count++;
 		}
-		if (count < entry->minimum_count || count > entry->maximum_count) return false;
+		if (count < entry->minimum_count || count > entry->maximum_count +
+			(population->discovery_guardian_id &&
+			 streq(entry->actor_id, population->discovery_guardian_id) ? 1u : 0u)) return false;
 		actor_minimum += population->actors[i].minimum_count;
 		actor_maximum += population->actors[i].maximum_count;
 	}
+	if (population->discovery_guardian_id) actor_maximum++;
 	for (i = 0; i < population->object_entry_count; i++) {
 		object_minimum += population->objects[i].minimum_count;
 		object_maximum += population->objects[i].maximum_count;

@@ -1668,23 +1668,34 @@ bool headless_run_scenario(const struct headless_scenario *scenario,
 			}
 			ui_player_present_fishing_quest_briefing(shop->objective_briefing, false);
 		} else if (streq(action, "inspect:donation") ||
-				streq(action, "inspect:donation-complete")) {
+				streq(action, "inspect:donation-complete") ||
+				streq(action, "inspect:donation-request")) {
 			/* Read-only UI fixture: calculate the normal command's report on a
 			 * copy of larder state. Neither inventory nor XP is changed. */
 			struct world_larder_state preview = player->larder;
 			struct world_larder_report receipt;
 			const struct world_larder_milestone_definition *next =
 				world_larder_next_milestone(&preview);
-			uint32_t value = world_larder_fish_value(0);
+			bool request = streq(action, "inspect:donation-request");
+			world_fishing_kind kind = request ? world_fishing_kind_by_id("fernscale") : 0;
+			uint32_t value = world_larder_fish_value(kind);
 			int quantity = 1;
-			if (next && value && streq(action, "inspect:donation-complete"))
+			if (next && value && (request || streq(action, "inspect:donation-complete")))
 				quantity = (int)((next->target - preview.food_points + value - 1) / value);
-			if (!world_larder_donate(&preview, 0, quantity, &receipt)) {
+			if (!world_larder_donate(&preview, kind, quantity, &receipt)) {
 				runner_error(error, error_size, "could not preview donation", action);
 				goto cleanup;
 			}
+			if (request) {
+				receipt.request_completed = world_objective_by_id("forest-supper");
+				if (!receipt.request_completed) goto cleanup;
+				receipt.request_gold = receipt.request_completed->donation_gold;
+			}
 			ui_store_screen_present_donation(NULL, "your catch", &preview,
 				&receipt, false);
+		} else if (streq(action, "inspect:requests")) {
+			int offset = 0;
+			ui_player_present_objectives(&offset, z_info->quest_max + 3, false, NULL);
 		} else if (prefix(action, "inspect:help:")) {
 			if (!ui_help_preview(action + strlen("inspect:help:"), 0)) {
 				runner_error(error, error_size, "could not inspect help", action);

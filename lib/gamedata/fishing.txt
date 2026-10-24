@@ -67,6 +67,51 @@ habitat:marsh-pool:10
 habitat:ruin-cistern:40
 habitat:cave-pool:55
 
+# Rare Finds: zero habitat weights are strict exclusions. Section depth is
+# independent of line depth; the cave system's root section has depth zero.
+species:fernscale:Fernscale
+graphics:f:Green
+depth-band:7:11
+behavior:30:5:3
+danger-bonus:0
+larder-value:3
+experience:1:1
+habitat:rainwater:0
+habitat:open-lake:0
+habitat:forest-pool:12
+habitat:marsh-pool:0
+habitat:ruin-cistern:0
+habitat:cave-pool:0
+
+species:cistern-bream:Cistern Bream
+graphics:b:Slate
+depth-band:10:16
+behavior:45:7:3
+danger-bonus:0
+larder-value:6
+experience:2:2
+habitat:rainwater:0
+habitat:open-lake:0
+habitat:forest-pool:0
+habitat:marsh-pool:0
+habitat:ruin-cistern:8
+habitat:cave-pool:0
+
+species:blind-deepfish:Blind Deepfish
+graphics:d:White
+depth-band:13:16
+minimum-cave-depth:3
+behavior:55:9:3
+danger-bonus:0
+larder-value:10
+experience:3:3
+habitat:rainwater:0
+habitat:open-lake:0
+habitat:forest-pool:0
+habitat:marsh-pool:0
+habitat:ruin-cistern:0
+habitat:cave-pool:4
+
 # Optional discoveries bind a precise catch to persistent world topology.
 # They never gate the larder or main launch progression.
 discovery:underflow-sounding:glassfin:yew-longline-rod:core.spelunk.east.001:cave-pool:16:deepwell:deepwell.underflow:core.route.underflow.out:core.route.underflow.in:The Glassfin's transparent fins answer with a thin mineral chime. The current below runs toward the Meridian. Your survey marks the Underflow in the deepest cave section.
