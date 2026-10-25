@@ -23,10 +23,12 @@
 #include "sdl3/inspect-card-presenter.h"
 #include "sdl3/map-view.h"
 #include "sdl3/monster-card-presenter.h"
+#include "sdl3/terrain.h"
 #include "ui-map.h"
 #include "ui-object.h"
 #include "ui-term.h"
 #include "world-spelunking-actor-data.h"
+#include "world-spelunking-geology-data.h"
 #include "world-spelunking-view.h"
 
 static bool cursor_grid(const struct sdl3_map_view *view,
@@ -164,8 +166,15 @@ static void configure_terrain(struct sdl3_inspect_card *card,
 	card->attr = terrain_attr % MAX_COLORS;
 	card->cursor_col = cursor_col;
 	card->cursor_row = cursor_row;
-	sdl3_ascii_art_make_key(card->asset_key, sizeof(card->asset_key),
-		SDL3_ASCII_ART_TERRAIN, feature->art_id, NULL);
+	{
+		const struct terrain_visual_recipe *recipe =
+			sdl3_terrain_recipe_for_grid(cave, grid, data.f_idx);
+		const char *art = sdl3_terrain_full_tile_for_grid(cave,
+			player->cave, grid, data.f_idx);
+		if (!art && recipe) art = recipe->tile_id;
+		sdl3_ascii_art_make_key(card->asset_key, sizeof(card->asset_key),
+			SDL3_ASCII_ART_TERRAIN, art ? art : feature->art_id, feature->art_id);
+	}
 	my_strcpy(card->name, square_apparent_name(player->cave, grid),
 		sizeof(card->name));
 	my_strcpy(card->subtitle, "Terrain", sizeof(card->subtitle));
@@ -236,6 +245,34 @@ void sdl3_inspect_card_configure_spelunking(
 		(view->focus_row * view->rows) / MAX(1, view->source_rows);
 	if (inspect.kind == WORLD_SPELUNK_INSPECT_OBJECT && inspect.object) {
 		configure_item_object(card, inspect.object, cursor_col, cursor_row, big);
+		return;
+	}
+	if (inspect.kind == WORLD_SPELUNK_INSPECT_ROCK ||
+			inspect.kind == WORLD_SPELUNK_INSPECT_STALACTITE ||
+			inspect.kind == WORLD_SPELUNK_INSPECT_STALAGMITE) {
+		const struct map_visual_binding *binding = inspect.material ?
+			map_visual_for("cave-material", inspect.material->id) : NULL;
+		const struct map_visual_binding *decoration = inspect.decoration ?
+			map_visual_for("cave-decoration", inspect.decoration->id) : NULL;
+		const char *formation = inspect.kind == WORLD_SPELUNK_INSPECT_STALACTITE ?
+			"cave-stalactite" : (inspect.kind == WORLD_SPELUNK_INSPECT_STALAGMITE ?
+			"cave-stalagmite" : NULL);
+		const char *art = decoration ? decoration->art_id :
+			(formation ? formation : (binding ? binding->art_id : "cave-rock"));
+		card->active = true;
+		card->big = big;
+		card->glyph = inspect.decoration ? inspect.decoration->glyph : L'#';
+		card->attr = inspect.decoration ? inspect.decoration->attr : COLOUR_SLATE;
+		card->cursor_col = cursor_col;
+		card->cursor_row = cursor_row;
+		sdl3_ascii_art_make_key(card->asset_key, sizeof(card->asset_key),
+			SDL3_ASCII_ART_TERRAIN, art, "cave-rock");
+		my_strcpy(card->name, inspect.decoration ? inspect.decoration->name :
+			(formation ? formation + 5 :
+			 (inspect.material ? inspect.material->name : "Cave rock")), sizeof(card->name));
+		my_strcpy(card->subtitle, "Cave terrain", sizeof(card->subtitle));
+		my_strcpy(card->status, inspect.knowledge == WORLD_SPELUNK_INSPECT_VISIBLE ?
+			"In view" : "Remembered terrain", sizeof(card->status));
 		return;
 	}
 	if (inspect.kind != WORLD_SPELUNK_INSPECT_ACTOR || !inspect.actor ||

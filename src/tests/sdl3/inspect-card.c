@@ -25,6 +25,8 @@
 #include "world-spelunking-publication.h"
 #include "world-spelunking-system-data.h"
 #include "world-spelunking-actor-data.h"
+#include "world-location.h"
+#include "world-spelunking-view.h"
 #include "map-visual-data.h"
 
 int setup_tests(void **state)
@@ -221,7 +223,98 @@ static int test_cave_creature_art_and_knowledge(void *unused)
 	ok;
 }
 
+static int test_cave_terrain_memory(void *unused)
+{
+	struct world_spelunk_system *system = NULL;
+	struct world_spelunk_runtime *runtime;
+	struct sdl3_map_view view = { 0 };
+	struct sdl3_inspect_card card;
+	struct world_spelunk_inspect inspect;
+	bool found = false;
+	int x = 0, y = 0, index;
+	(void)unused;
+	view.active = true;
+	view.cols = view.source_cols = 30;
+	view.rows = view.source_rows = 20;
+	eq(world_spelunk_publish_system_candidate(world_spelunk_system_profile_by_id("deepwell"),
+		0, 100, "shaft.surface", &system), WORLD_SPELUNK_PUBLICATION_OK);
+	runtime = system->nodes[0].runtime;
+	for (y = 1; y < runtime->state.map.height - 1 && !found; y++) {
+		for (x = 1; x < runtime->state.map.width - 1; x++) {
+			index = y * runtime->state.map.width + x;
+			runtime->visible[index] = runtime->explored[index] = 1;
+			if (world_spelunk_view_inspect_system(system, runtime, x, y, &inspect) &&
+					inspect.kind == WORLD_SPELUNK_INSPECT_ROCK) {
+				found = true;
+				break;
+			}
+		}
+	}
+	require(found);
+	y--;
+	index = y * runtime->state.map.width + x;
+	sdl3_inspect_card_configure_spelunking(&card, system, runtime, &view, x, y, true, false, true);
+	require(card.active && strstr(card.asset_key, "terrain:"));
+	require(streq(card.status, "In view"));
+	runtime->visible[index] = 0;
+	sdl3_inspect_card_configure_spelunking(&card, system, runtime, &view, x, y, true, false, true);
+	require(card.active && streq(card.status, "Remembered terrain"));
+	runtime->explored[index] = 0;
+	sdl3_inspect_card_configure_spelunking(&card, system, runtime, &view, x, y, true, false, true);
+	require(!card.active);
+	world_spelunk_system_free(system);
+	ok;
+}
+
+static int test_terrain_identity_and_hidden_rock(void *unused)
+{
+	struct sdl3_inspect_card card;
+	struct sdl3_map_view view = { 0 };
+	term main_term = { 0 };
+	struct loc grid = loc(player->grid.x + 2, player->grid.y);
+	char actual_id[WORLD_ID_LEN], known_id[WORLD_ID_LEN];
+	int actual_depth = cave->depth, known_depth = player->cave->depth;
+	(void)unused;
+	my_strcpy(actual_id, cave->location_id, sizeof(actual_id));
+	my_strcpy(known_id, player->cave->location_id, sizeof(known_id));
+	view.active = true;
+	view.term_cols = view.term_rows = 3;
+	main_term.offset_x = grid.x - 1;
+	main_term.offset_y = grid.y - 1;
+	tile_width = tile_height = 1;
+	cave->depth = player->cave->depth = 7;
+	require(world_chunk_set_location(cave, "core.wild.scrub", false));
+	require(world_chunk_set_location(player->cave, "core.wild.scrub", true));
+	square_set_feat(cave, grid, FEAT_TREE);
+	square_set_feat(player->cave, grid, FEAT_TREE);
+	sqinfo_on(square(cave, grid)->info, SQUARE_WOOD);
+	sqinfo_on(square(player->cave, grid)->info, SQUARE_WOOD);
+	sqinfo_on(square(cave, grid)->info, SQUARE_SEEN);
+	sdl3_inspect_card_configure(&card, &view, &main_term, 1, 1, true, false, false);
+	require(card.active);
+	require(streq(card.name, "thorn bush"));
+	require(strstr(card.asset_key, "brake") != NULL);
+	sqinfo_off(square(cave, grid)->info, SQUARE_WOOD);
+	sqinfo_off(square(player->cave, grid)->info, SQUARE_WOOD);
+	square_set_feat(cave, grid, FEAT_SECRET);
+	square_set_feat(player->cave, grid, FEAT_GRANITE);
+	sdl3_inspect_card_configure(&card, &view, &main_term, 1, 1, true, false, false);
+	require(card.active);
+	require(!strstr(card.asset_key, "door"));
+	require(strstr(card.asset_key, "granite-wall"));
+	sqinfo_off(square(cave, grid)->info, SQUARE_SEEN);
+	square_set_feat(player->cave, grid, FEAT_NONE);
+	sdl3_inspect_card_configure(&card, &view, &main_term, 1, 1, true, false, false);
+	require(!card.active);
+	cave->depth = actual_depth; player->cave->depth = known_depth;
+	my_strcpy(cave->location_id, actual_id, sizeof(cave->location_id));
+	my_strcpy(player->cave->location_id, known_id, sizeof(player->cave->location_id));
+	ok;
+}
+
 struct test tests[] = {
+	{ "cave rock plates respect sight and exploration memory", test_cave_terrain_memory },
+	{ "biome terrain plates and concealed terrain", test_terrain_identity_and_hidden_rock },
 	{ "cave creature art and knowledge", test_cave_creature_art_and_knowledge },
 	{ "known trap precedes floor", test_known_trap_precedes_floor },
 	{ "target marker is not inspection", test_target_marker_is_not_inspection },

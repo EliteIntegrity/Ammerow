@@ -56,6 +56,7 @@
 #include "ui-mon-list.h"
 #include "ui-mon-lore.h"
 #include "ui-object.h"
+#include "ui-object-screen.h"
 #include "ui-obj-list.h"
 #include "ui-output.h"
 #include "ui-player.h"
@@ -2926,12 +2927,20 @@ static void see_floor_items(game_event_type type, game_event_data *data,
 
 		/* Display objects on the floor */
 		screen_save();
-		show_floor(floor_list, floor_num, OLIST_WEIGHT, NULL);
-		prt(format("You %s: ", p), 0, 0);
-
-		/* Wait for it.  Use key as next command. */
-		e = inkey_ex();
-		Term_event_push(&e);
+		if (Term->screen_hook) {
+			e = ui_floor_pile_show(floor_list, floor_num, blind,
+				can_pickup ? (blind ? "You feel several objects here." :
+				"Several objects lie here.") : "Your pack has no room for these objects.", false);
+			/* Deliberate movement/pickup remains the next game command.
+			 * Closing the notice with a click must not click through the map. */
+			if (e.type == EVT_KBRD && e.key.code != ESCAPE &&
+					e.key.code != KC_ENTER && e.key.code != ' ') Term_event_push(&e);
+		} else {
+			show_floor(floor_list, floor_num, OLIST_WEIGHT, NULL);
+			prt(format("You %s: ", p), 0, 0);
+			e = inkey_ex();
+			Term_event_push(&e);
+		}
 
 		/* Restore screen */
 		screen_load();

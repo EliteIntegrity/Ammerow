@@ -27,6 +27,9 @@ void ui_item_details_measure(int cols, int rows,
 /* Emits full, knowledge-filtered text and a knowledge-safe art identity. */
 int ui_item_details_present(const struct object *obj, int offset);
 void ui_item_details_show(struct object *obj);
+/* Read-only, paged floor notice. Non-navigation keys return to the caller. */
+ui_event ui_floor_pile_show(struct object **objects, int count, bool blind,
+		const char *subtitle, bool inspect);
 void ui_object_actions_present(struct menu *menu);
 
 struct ui_object_screen_item {

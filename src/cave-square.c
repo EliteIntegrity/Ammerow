@@ -1579,7 +1579,12 @@ const char *square_apparent_name(struct chunk *c, struct loc grid) {
 		return "region crossing (step here to travel)";
 	if (square_iswater(c, grid)) return "deep water";
 	if (square_isroad(c, grid)) return "packed road";
-	if (square_iswood(c, grid)) return "tree";
+	if (square_iswood(c, grid)) {
+		const struct level *level = world_chunk_level(c);
+		if (level && level->biome == WORLD_BIOME_SCRUB) return "thorn bush";
+		if (level && level->biome == WORLD_BIOME_PINE_WOOD) return "pine tree";
+		return "tree";
+	}
 	return fp->name;
 }
 

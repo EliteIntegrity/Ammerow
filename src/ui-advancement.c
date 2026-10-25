@@ -107,8 +107,18 @@ static bool show_card(int level)
 					player_advancement_dismiss(player, level);
 					acknowledged = true;
 				} else {
-					enum advancement_result result = player_advancement_claim(player,
-						level, (enum advancement_choice)cursor);
+					bool previous_auto_more = false;
+					enum advancement_result result;
+					/* The player has just explicitly chosen these supplies.
+					 * Keep their receipt in message history without a second,
+					 * invisible terminal -more- prompt behind the card. */
+					if (Term->screen_hook)
+						previous_auto_more = textui_message_set_auto_more(true);
+					result = player_advancement_claim(player, level,
+						(enum advancement_choice)cursor);
+					if (Term->screen_hook) event_signal(EVENT_MESSAGE_FLUSH);
+					if (Term->screen_hook)
+						textui_message_set_auto_more(previous_auto_more);
 					if (result == ADVANCEMENT_OK) {
 						sound(MSG_UI_ACCEPT);
 						acknowledged = true;

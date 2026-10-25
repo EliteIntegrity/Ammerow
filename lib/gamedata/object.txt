@@ -415,6 +415,7 @@ effect:CRUNCH
 desc:A filling if tooth-breaking biscuit made mostly of rye.
 
 name:& Apple~
+art:apple
 type:food
 graphics:,:R
 level:0

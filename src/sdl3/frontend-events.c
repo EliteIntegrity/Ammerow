@@ -153,6 +153,21 @@ static bool handle_semantic_selection_pointer(struct sdl3_app *app,
 		return true;
 	}
 
+	if (app && event && app->screen.active && app->screen.kind == UI_SCREEN_FLOOR_PILE) {
+		/* No hover-generated commands and no click through to the map.
+		 * Look piles have item tags; arrival notices simply close on click. */
+		if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+			keycode_t key = ESCAPE;
+			if (event->button.button == SDL_BUTTON_LEFT &&
+					pointer_event_cell(app, event, &col, &screen_row) &&
+					sdl3_screen_row_at(&app->screen, app->grid.cols,
+						app->grid.rows, col, screen_row, &index)) {
+				key = app->screen.rows[index].tag ? app->screen.rows[index].tag : KC_ENTER;
+			}
+			Term_keypress(key, 0);
+		}
+		return true;
+	}
 	if (!app || !event || !app->screen.active ||
 			(app->screen.kind != UI_SCREEN_CHARACTER_CREATION &&
 			app->screen.kind != UI_SCREEN_CHARACTER_DOSSIER &&
@@ -414,6 +429,11 @@ bool sdl3_frontend_dispatch_event(struct sdl3_app *app,
 		const SDL_Event *event)
 {
 	if (!app || !event) return false;
+	/* Steam's default screenshot key must not dismiss an any-key card or
+	 * become a game command. Idle presents below let the overlay capture
+	 * the current screen, including when Steam consumes the key itself. */
+	if ((event->type == SDL_EVENT_KEY_DOWN || event->type == SDL_EVENT_KEY_UP) &&
+			event->key.key == SDLK_F12) return false;
 	if (!sdl3_input_gate_accept(&app->input_gate, event)) return false;
 	/* Consume a deliberate interrupt before shortcuts can open an overlay
 	 * and accidentally leave the simulation running behind it. */
@@ -664,6 +684,11 @@ bool sdl3_frontend_dispatch_event(struct sdl3_app *app,
 			}
 			if (wheel_y == 0.0f) return false;
 			direction = wheel_y > 0.0f ? 1 : -1;
+			if (app->screen.active && app->screen.kind == UI_SCREEN_FLOOR_PILE &&
+					!app->settings.visible && !app->pause_menu.visible) {
+				Term_keypress(direction > 0 ? KC_PGUP : KC_PGDOWN, 0);
+				return true;
+			}
 			if (app->screen.active && app->screen.kind == UI_SCREEN_ITEM_DETAILS &&
 					!app->settings.visible && !app->pause_menu.visible) {
 				for (int i = 0; i < 3; i++)
@@ -783,20 +808,20 @@ bool sdl3_frontend_dispatch_event(struct sdl3_app *app,
 int sdl3_frontend_wait_event(struct sdl3_app *app, SDL_Event *event)
 {
 	bool fishing_active;
+	Uint64 next_present = SDL_GetTicks() + 250;
 
 	if (!app || !event) return -1;
-	fishing_active = app->window_active && player &&
-		sdl3_fishing_is_active(player->fishing);
-	if (!app->weather.visible && !app->combat_effects.active &&
-			!fishing_active) return SDL_WaitEvent(event) ? 1 : -1;
-	while ((app->weather.visible || app->combat_effects.active ||
-			(app->window_active && player &&
-				sdl3_fishing_is_active(player->fishing))) &&
-			!terms_disconnecting) {
+	while (!terms_disconnecting) {
 		Uint64 now = SDL_GetTicks();
 		Uint64 next_tick = UINT64_MAX;
 		bool redraw = false, weather_due, fishing_due = false;
+		bool idle_enabled = app->window_active;
+		bool idle_present;
 		int timeout;
+#ifdef USE_HEADLESS
+		idle_enabled = idle_enabled && !app->offscreen;
+#endif
+		idle_present = idle_enabled && now >= next_present;
 
 		/* Never make an already queued key wait for an animation present.
 		 * Ordinary movement frames advance weather too, so it keeps moving. */
@@ -828,18 +853,25 @@ int sdl3_frontend_wait_event(struct sdl3_app *app, SDL_Event *event)
 		} else {
 			app->fishing_next_tick_ms = 0;
 		}
-		if (redraw) {
+		if (redraw || idle_present) {
 			/* One present for all due overlays; discard missed cosmetic ticks. */
-			if (!sdl3_frontend_render_animated_overlay(app)) {
+			if (idle_present || !sdl3_frontend_render_animated_overlay(app)) {
 				sdl3_grid_mark_dirty(&app->grid);
 				sdl3_frontend_render(app);
 			}
 			now = SDL_GetTicks();
+			next_present = now + 250;
 			if (weather_due) app->weather_next_tick_ms = now + SDL3_WEATHER_TICK_MS;
 			if (fishing_due) app->fishing_next_tick_ms = now + SDL3_FISHING_ANIMATION_MS;
 			continue;
 		}
-		if (next_tick == UINT64_MAX) continue;
+		/* A quiet turn-based screen still needs occasional graphics presents
+		 * for external overlays/capture. Recompose from the cached layers:
+		 * SDL does not retain the window backbuffer after RenderPresent.
+		 * Never advance game turns or add idle presents while unfocused. */
+		if (idle_enabled)
+			next_tick = MIN(next_tick, next_present);
+		if (next_tick == UINT64_MAX) return SDL_WaitEvent(event) ? 1 : -1;
 		now = SDL_GetTicks();
 		timeout = next_tick > now ? (int)MIN((Uint64)INT_MAX, next_tick - now) : 0;
 		if (SDL_WaitEventTimeout(event, timeout)) return 1;

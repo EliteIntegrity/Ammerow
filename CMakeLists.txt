@@ -1260,6 +1260,7 @@ set(ANGBAND_TEST_CASE_SOURCES
       sdl3/inspect-card.c
       sdl3/item-screen.c
       sdl3/item-details.c
+      sdl3/frontend-lifecycle.c
       sdl3/layout.c
       sdl3/map-presenter.c
     sdl3/monster-art.c
@@ -1475,6 +1476,7 @@ foreach(ANGBAND_TEST_CASE_SOURCE ${ANGBAND_TEST_CASE_SOURCES})
           )
       elseif(ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/inspect-card.c")
           list(APPEND ANGBAND_TEST_CASE_EXTRA_SOURCES
+              src/sdl3/terrain.c
               src/sdl3/inspect-card-presenter.c
               src/sdl3/monster-card-presenter.c
               src/sdl3/monster-card-data.c
@@ -1484,6 +1486,18 @@ foreach(ANGBAND_TEST_CASE_SOURCE ${ANGBAND_TEST_CASE_SOURCES})
           ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/item-details.c")
           list(APPEND ANGBAND_TEST_CASE_EXTRA_SOURCES
               src/sdl3/screen-model.c
+          )
+      elseif(ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/frontend-lifecycle.c")
+          list(APPEND ANGBAND_TEST_CASE_EXTRA_SOURCES
+              src/sdl3/frontend-lifecycle.c
+              src/sdl3/term.c
+              src/sdl3/layout.c
+              src/sdl3/presentation.c
+              src/sdl3/screen-model.c
+              src/sdl3/effects.c
+              src/sdl3/weather.c
+              src/sdl3/store-art.c
+              src/sdl3/home-model.c
           )
       elseif(ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/player-screen.c")
           list(APPEND ANGBAND_TEST_CASE_EXTRA_SOURCES
@@ -1667,6 +1681,7 @@ foreach(ANGBAND_TEST_CASE_SOURCE ${ANGBAND_TEST_CASE_SOURCES})
     if(ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/audio-wav.c" OR
             ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/audio-mixer.c" OR
             ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/config.c" OR
+            ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/frontend-lifecycle.c" OR
 			ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/font.c" OR
             ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/input.c" OR
             ANGBAND_TEST_CASE_SOURCE STREQUAL "sdl3/inspect-card.c" OR

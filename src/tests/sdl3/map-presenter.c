@@ -305,6 +305,54 @@ static int test_death_64(void *state)
 	return check_death(state, 64, " dies.");
 }
 
+static int test_terrain_plates_stay_off_ascii_map(void *state)
+{
+	struct fixture *f = state;
+	struct sdl3_map_presenter_options saved = f->options;
+	struct loc grid = loc(player->grid.x + 1, player->grid.y);
+	square_set_feat(cave, grid, FEAT_GRANITE);
+	square_set_feat(player->cave, grid, FEAT_GRANITE);
+	f->options.tile_mode = false;
+	f->options.zoom_percent = 800;
+	configure(f);
+	for (int i = 0; i < f->presenter.view.art_subject_count; i++)
+		require(f->presenter.view.art_subjects[i].priority != SDL3_MAP_ART_TERRAIN);
+	square_set_feat(cave, grid, FEAT_FLOOR);
+	square_set_feat(player->cave, grid, FEAT_FLOOR);
+	f->options = saved;
+	ok;
+}
+
+static int test_visible_clear_monsters(void *state)
+{
+	struct fixture *f = state;
+	struct monster *mon;
+	move_player(f, loc(50, 30));
+	f->subject_grid = loc(51, 30);
+	mon = t_add_monster(cave, f->subject_grid, "clear worm mass");
+	notnull(mon);
+	f->options.tile_mode = true;
+	f->options.zoom_percent = 400;
+	mflag_on(mon->mflag, MFLAG_VISIBLE);
+	configure(f);
+	notnull(subject_at(f));
+	require(streq(subject_at(f)->tile_key, "monster:clear-worm-mass"));
+	/* Transparent glyph flags never grant sight of an invisible creature. */
+	mflag_off(mon->mflag, MFLAG_VISIBLE);
+	configure(f);
+	null(subject_at(f));
+	mflag_on(mon->mflag, MFLAG_VISIBLE);
+	player->timed[TMD_IMAGE] = 1;
+	configure(f);
+	null(subject_at(f));
+	player->timed[TMD_IMAGE] = 0;
+	f->options.tile_mode = false;
+	configure(f);
+	null(subject_at(f)); /* Classic transparent glyph behaviour is retained. */
+	delete_monster_idx(cave, mon->midx);
+	ok;
+}
+
 static int test_no_hidden_or_hallucinated_portraits(void *state)
 {
 	struct fixture *f = state;
@@ -616,6 +664,8 @@ static int test_trap_tiles_and_shop_labels(void *state)
 }
 
 struct test tests[] = {
+	{ "terrain plates stay off the ASCII map at maximum zoom", test_terrain_plates_stay_off_ascii_map },
+	{ "visible transparent monsters use tiles; unknown monsters stay hidden", test_visible_clear_monsters },
 	{ "known trap categories, foreground precedence and shop labels", test_trap_tiles_and_shop_labels },
 	{ "ASCII wall styling excludes subjects, floors and markers", test_ascii_wall_semantics },
 	{ "square source extent and Hybrid independence", test_square_source_extent },

@@ -481,7 +481,8 @@ bool sdl3_frontend_render_animated_overlay(struct sdl3_app *app)
 {
 	struct sdl3_overlay_frame frame;
 
-	if (!app) return false;
+	if (!app || app->screen.active || app->settings.visible ||
+			app->pause_menu.visible || app->home.visible) return false;
 	sdl3_effects_present(&app->combat_effects, SDL_GetTicks());
 	memset(&frame, 0, sizeof(frame));
 	frame.theme = app->theme;
@@ -662,7 +663,7 @@ static enum textui_escape_menu_action sdl3_escape_menu(void)
 	sdl3_frontend_render(&g_app);
 	while (!terms_disconnecting &&
 			g_app.pause_menu.action == SDL3_PAUSE_ACTION_NONE) {
-		if (!SDL_WaitEvent(&event)) {
+		if (sdl3_frontend_wait_event(&g_app, &event) < 1) {
 			sdl3_frontend_log_error("Could not wait for an SDL3 game-menu event");
 			terms_disconnecting = 1;
 			break;
@@ -708,7 +709,7 @@ static bool sdl3_load_failure_screen(const char *filename)
 	sdl3_frontend_render(&g_app);
 	while (!terms_disconnecting &&
 			g_app.home.action == SDL3_HOME_ACTION_NONE) {
-		if (!SDL_WaitEvent(&event)) {
+		if (sdl3_frontend_wait_event(&g_app, &event) < 1) {
 			sdl3_frontend_log_error("Could not wait for an SDL3 load-error event");
 			terms_disconnecting = 1;
 			break;
@@ -763,7 +764,7 @@ bool sdl3_startup_menu(enum game_mode_type *mode)
 		sdl3_frontend_render(&g_app);
 		while (!terms_disconnecting &&
 				g_app.home.action == SDL3_HOME_ACTION_NONE) {
-			if (!SDL_WaitEvent(&event)) {
+			if (sdl3_frontend_wait_event(&g_app, &event) < 1) {
 				sdl3_frontend_log_error(
 					"Could not wait for an SDL3 home-screen event");
 				terms_disconnecting = 1;

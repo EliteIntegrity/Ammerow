@@ -29,6 +29,9 @@
 #include "ui-event.h"
 #include "ui-term.h"
 
+/* Temporarily suppress -more- for an explicit UI receipt; returns prior state. */
+bool textui_message_set_auto_more(bool enabled);
+
 /**
  * Holds a generic command.  If hook is not NULL, that function
  * will be called.  Otherwise, if cmd is not CMD_NULL, that command

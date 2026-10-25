@@ -1,5 +1,22 @@
 # Ammerow release notes
 
+## 0.1.5 (2026-10-25)
+
+- Fixed inventory reopening on movement after an interrupted return to Home.
+  Closing inventory now releases its screen callbacks reliably.
+- Improved screenshot behaviour: F12 no longer dismisses Look/recall cards,
+  and quiet screens present periodically so capture need not wait for a move.
+- Loot piles use a paged Ammerow screen, with mouse-wheel paging and item
+  inspection through Look. Movement and pickup keys remain usable.
+- Removed the extra legacy acknowledgement pause after choosing a level reward.
+- Added an Apple illustration and 32x32/64x64 sprites. Visible Clear Worm Masses
+  now display their existing tiles correctly.
+- Look shows ASCII plates for trees, bushes, walls and cave formations, while
+  respecting exploration knowledge. Thorn Scrub vegetation is correctly named
+  as thorn bushes rather than trees.
+
+No save-format change from 0.1.4. Existing saves can continue.
+
 ## 0.1.4 (2026-10-24)
 
 - Three new fish give expeditions different destinations: Fernscale in forest

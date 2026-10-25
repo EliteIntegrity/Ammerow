@@ -661,6 +661,7 @@ src/tests/sdl3/command-screen.c
 src/tests/sdl3/config.c
 src/tests/sdl3/effects.c
 src/tests/sdl3/font.c
+src/tests/sdl3/frontend-lifecycle.c
 src/tests/sdl3/headless-scenario.c
 src/tests/sdl3/help-screen.c
 src/tests/sdl3/history-screen.c

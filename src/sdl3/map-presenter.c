@@ -228,14 +228,8 @@ static void configure_map_features_and_items(struct sdl3_map_view *view)
 					data.multiple_objects) {
 				continue;
 			}
-			if (view->zoom_percent >= 800 && data.f_idx > FEAT_NONE &&
-					data.f_idx < FEAT_MAX && f_info[data.f_idx].art_id &&
-					glyph == terrain_glyph && attr == terrain_attr) {
-				sdl3_ascii_art_make_key(key, sizeof(key),
-					SDL3_ASCII_ART_TERRAIN, f_info[data.f_idx].art_id, NULL);
-				add_map_art_subject(view, col, row, glyph, attr,
-					SDL3_MAP_ART_TERRAIN, key, NULL, NULL);
-			}
+			/* Terrain plates belong in Look cards. Keep ASCII walls and
+			 * floors as glyphs even at the closest map zoom. */
 		}
 	}
 }
@@ -261,8 +255,9 @@ static void configure_map_monsters(struct sdl3_map_view *view,
 		 * not a presentation-lifetime boundary (map_info also keeps its glyph). */
 		if (!mon || !mon->race ||
 				!monster_is_obvious(mon) || monster_is_mimicking(mon) ||
-				rf_has(mon->race->flags, RF_ATTR_CLEAR) ||
-				rf_has(mon->race->flags, RF_CHAR_CLEAR)) {
+				(!view->tile_mode &&
+				 (rf_has(mon->race->flags, RF_ATTR_CLEAR) ||
+				  rf_has(mon->race->flags, RF_CHAR_CLEAR)))) {
 			continue;
 		}
 		if (!source_position_for_grid(view, mon->grid, &col, &row)) continue;

@@ -46,6 +46,7 @@
 #include "ui-map.h"
 #include "ui-mon-lore.h"
 #include "ui-object.h"
+#include "ui-object-screen.h"
 #include "ui-output.h"
 #include "ui-target.h"
 #include "ui-term.h"
@@ -833,18 +834,22 @@ static bool aux_object(struct chunk *c, struct player *p,
 					/*
 					 * Use OLIST_DEATH to show item labels
 					 */
-					show_floor(floor_list, floor_num,
-						(OLIST_DEATH | OLIST_WEIGHT
-						| OLIST_GOLD), NULL);
-
-					/* Describe the pile */
-					prt(out_val, 0, 0);
-					auxst->press = inkey_m();
+					if (Term->screen_hook) {
+						auxst->press = ui_floor_pile_show(floor_list,
+							floor_num, false, out_val, true);
+					} else {
+						show_floor(floor_list, floor_num,
+							(OLIST_DEATH | OLIST_WEIGHT | OLIST_GOLD), NULL);
+						prt(out_val, 0, 0);
+						auxst->press = inkey_m();
+					}
 
 					/* Load screen */
 					screen_load();
 
-					if (auxst->press.type == EVT_MOUSE) {
+					if (auxst->press.type == EVT_MOUSE && Term->screen_hook) {
+						pos = -1;
+					} else if (auxst->press.type == EVT_MOUSE) {
 						pos = auxst->press.mouse.y - 1;
 					} else {
 						pos = auxst->press.key.code -
@@ -854,6 +859,8 @@ static bool aux_object(struct chunk *c, struct player *p,
 						track_object(p->upkeep,
 							floor_list[pos]);
 						handle_stuff(p);
+						if (Term->screen_hook)
+							ui_item_details_show(floor_list[pos]);
 						continue;
 					}
 					break;

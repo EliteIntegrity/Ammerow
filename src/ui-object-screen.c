@@ -26,6 +26,60 @@
 
 #define UI_OBJECT_SCREEN_CAPACITY 50
 
+ui_event ui_floor_pile_show(struct object **objects, int count, bool blind,
+		const char *subtitle, bool inspect)
+{
+	struct ui_screen screen = { 0 };
+	if (!Term || !Term->screen_hook || !objects || count <= 0) return EVENT_EMPTY;
+	struct ui_screen_row *rows = mem_zalloc(MAX(1, count) * sizeof(*rows));
+	char (*names)[160] = mem_zalloc(MAX(1, count) * sizeof(*names));
+	char (*weights)[32] = mem_zalloc(MAX(1, count) * sizeof(*weights));
+	ui_event e = EVENT_EMPTY;
+	int offset = 0, page = MIN(UI_OBJECT_SCREEN_CAPACITY, MAX(1, Term->hgt - 10));
+	for (int i = 0; i < count; i++) {
+		const struct object *obj = objects[i];
+		object_desc(names[i], sizeof(names[i]), obj,
+			ODESC_PREFIX | (blind ? ODESC_BASE : ODESC_FULL), player);
+		rows[i].label = names[i];
+		rows[i].glyph = blind ? L'?' : object_char(obj);
+		rows[i].attr = COLOUR_WHITE;
+		rows[i].glyph_attr = blind ? COLOUR_SLATE : object_attr(obj);
+		rows[i].has_glyph_attr = true;
+		rows[i].enabled = true;
+		rows[i].tag = inspect && i < 26 ? (char)('a' + i) : 0;
+		if (!blind) {
+			int weight = obj->weight * obj->number;
+			strnfmt(weights[i], sizeof(weights[i]), "%d.%d lb", weight / 10, weight % 10);
+			rows[i].detail = weights[i];
+		}
+	}
+	screen.kind = UI_SCREEN_FLOOR_PILE;
+	screen.title = inspect ? "Floor Pile" : "At Your Feet";
+	screen.subtitle = subtitle;
+	screen.help = inspect ? "Letter examines   PgUp/PgDn scroll   Escape returns" :
+		"g pick up   Move to continue   PgUp/PgDn pages   Enter/Esc close";
+	screen.content_col = 4;
+	screen.content_row = 7;
+	screen.content_cols = MAX(1, Term->wid - 8);
+	screen.content_rows = page;
+	screen.cursor = -1;
+	while (true) {
+		screen.rows = rows + offset;
+		screen.row_count = MIN(page, count - offset);
+		Term->screen_hook(&screen);
+		e = inkey_m();
+		if (e.type != EVT_KBRD ||
+				(e.key.code != KC_PGUP && e.key.code != KC_PGDOWN)) break;
+		offset = MAX(0, MIN(MAX(0, count - page), offset +
+			(e.key.code == KC_PGUP ? -page : page)));
+	}
+	Term->screen_hook(NULL);
+	mem_free(weights);
+	mem_free(names);
+	mem_free(rows);
+	return e;
+}
+
 struct item_tab_definition {
 	int work;
 	const char *label;

@@ -432,6 +432,7 @@ desc:Branches and foliage obscure the view and stop missiles. You can walk
 desc: between the trunks, but cannot see through the woodland.
 
 code:MERIDIAN_STONE
+art:meridian-marker-stone
 name:violet-veined marker rock
 graphics:#:v
 visual-material:meridian-stone

@@ -458,10 +458,12 @@ void sdl3_frontend_unregister_game_handlers(struct sdl3_app *app)
 
 void sdl3_frontend_reinitialize(struct sdl3_app *app)
 {
-	bool restored_handlers;
-
 	if (!app || !app->window) return;
-	restored_handlers = !app->game_handlers_registered;
+	/* A cancelled birth or failed load returns Home without LEAVE_GAME.
+	 * cleanup_angband() still removes every event handler, so the cached
+	 * registration flags can be stale. Remove before reinstalling: the same
+	 * hook also runs at startup, when the handlers are still present. */
+	sdl3_frontend_unregister_game_handlers(app);
 	sdl3_audio_set_in_store(false);
 	sdl3_presentation_set_phase(&app->presentation,
 		SDL3_PRESENTATION_GAME_SETUP);
@@ -480,8 +482,8 @@ void sdl3_frontend_reinitialize(struct sdl3_app *app)
 	sdl3_frontend_apply_dock_layout(app, app->config.dock_visible,
 		app->config.dock_placement, app->config.dock_rows,
 		app->config.dock_cols);
-	if (app->verbose && restored_handlers) {
-		SDL_Log("SDL3 frontend restored for in-process New Game; dock "
+	if (app->verbose) {
+		SDL_Log("SDL3 frontend reinitialized; dock "
 			"preference %s", app->config.dock_visible ? "enabled" :
 			"disabled");
 	}

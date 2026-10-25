@@ -19,8 +19,10 @@
 #include "option.h"
 #include "player-birth.h"
 #include "player-calcs.h"
+#include "player-advancement.h"
 #include "sdl3/screen-model.h"
 #include "ui-game.h"
+#include "ui-advancement.h"
 #include "ui-command.h"
 #include "ui-input.h"
 #include "ui-knowledge.h"
@@ -41,11 +43,17 @@ static struct step {
 } steps[128];
 static int position, count, enters, leaves, detail_frames;
 static bool parent_ok;
+static struct sdl3_screen last_pile;
+static int pile_pages;
 
 static void capture(const struct ui_screen *screen)
 {
 	sdl3_screen_present(&current, &parent, screen);
 	if (screen && screen->kind == UI_SCREEN_ITEM_DETAILS) detail_frames++;
+	if (screen && screen->kind == UI_SCREEN_FLOOR_PILE) {
+		sdl3_screen_capture(&last_pile, screen);
+		pile_pages++;
+	}
 }
 
 static void selector_event(game_event_type type, game_event_data *data, void *user)
@@ -328,8 +336,73 @@ static int test_command_dispatch_after_inspection(void *state)
 	ok;
 }
 
+static int test_floor_notice_paging_and_movement(void *unused)
+{
+	struct object *items[20];
+	ui_event e;
+	(void)unused;
+	for (int i = 0; i < 20; i++) items[i] = player->upkeep->inven[0];
+	notnull(items[0]);
+	begin(80, 24);
+	pile_pages = 0;
+	key(UI_SCREEN_FLOOR_PILE, -1, KC_PGDOWN);
+	key(UI_SCREEN_FLOOR_PILE, -1, KC_PGUP);
+	key(UI_SCREEN_FLOOR_PILE, -1, ARROW_LEFT);
+	e = ui_floor_pile_show(items, 20, false, "Several objects lie here.", false);
+	eq(position, count);
+	eq(pile_pages, 3);
+	eq(e.type, EVT_KBRD);
+	eq(e.key.code, ARROW_LEFT);
+	eq(last_pile.row_count, 14);
+	require(last_pile.rows[0].detail[0]);
+	require(!last_pile.rows[0].tag);
+	require(!current.active);
+	begin(80, 24);
+	key(UI_SCREEN_FLOOR_PILE, -1, ESCAPE);
+	(void)ui_floor_pile_show(items, 2, true, "You feel several objects here.", false);
+	eq(last_pile.rows[0].glyph, L'?');
+	require(!last_pile.rows[0].detail[0]);
+	require(!current.active);
+	ok;
+}
+
+static int test_reward_receipts_do_not_request_legacy_input(void *unused)
+{
+	const char *old_system = ANGBAND_SYS;
+	bool old_generated = character_generated;
+	(void)unused;
+	ANGBAND_SYS = "sdl3";
+	character_generated = true;
+	event_add_handler(EVENT_MESSAGE, display_message, NULL);
+	event_add_handler(EVENT_MESSAGE_FLUSH, message_flush, NULL);
+	for (int choice = 0; choice < 3; choice++) {
+		begin(80, 24);
+		OPT(player, auto_more) = false;
+		player_advancement_reset(player, 1);
+		player_advancement_gain(player, 5);
+		key(UI_SCREEN_ADVANCEMENT, 3, ARROW_DOWN);
+		for (int i = 0; i < choice; i++)
+			key(UI_SCREEN_ADVANCEMENT, i, ARROW_DOWN);
+		key(UI_SCREEN_ADVANCEMENT, choice, KC_ENTER);
+		do_cmd_level_rewards();
+		eq(position, count); /* A legacy -more- would request an extra key. */
+		eq(player_advancement_next_reward(player), 0);
+		eq(screen_save_depth, 0);
+		require(!current.active);
+		require(!OPT(player, auto_more));
+		require(!textui_message_set_auto_more(false));
+	}
+	event_remove_handler(EVENT_MESSAGE, display_message, NULL);
+	event_remove_handler(EVENT_MESSAGE_FLUSH, message_flush, NULL);
+	character_generated = old_generated;
+	ANGBAND_SYS = old_system;
+	ok;
+}
+
 const char *suite_name = "sdl3/item-details";
 struct test tests[] = {
+	{ "milestone receipts have no hidden legacy pause", test_reward_receipts_do_not_request_legacy_input },
+	{ "floor notices page and preserve the next movement", test_floor_notice_paging_and_movement },
 	{ "inventory preserves parent, selection and pointer return", test_inventory_return_and_pointer },
 	{ "equipment and tab return", test_equipment_and_tab_return },
 	{ "knowledge-safe full document", test_knowledge_safe_full_document },

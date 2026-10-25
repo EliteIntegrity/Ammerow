@@ -363,6 +363,16 @@ ui_event inkey_m(void)
 /**
  * Flush
  */
+static bool message_auto_more;
+
+/* Scoped UI receipts are logged without a second acknowledgement prompt. */
+bool textui_message_set_auto_more(bool enabled)
+{
+	bool previous = message_auto_more;
+	message_auto_more = enabled;
+	return previous;
+}
+
 static void msg_flush(int x)
 {
 	uint8_t a = COLOUR_L_BLUE;
@@ -370,7 +380,7 @@ static void msg_flush(int x)
 	/* Pause for response */
 	Term_putstr(x, 0, -1, a, "-more-");
 
-	if ((!OPT(player, auto_more)) && !keymap_auto_more)
+	if ((!OPT(player, auto_more)) && !keymap_auto_more && !message_auto_more)
 		anykey();
 
 	/* Clear the line */
